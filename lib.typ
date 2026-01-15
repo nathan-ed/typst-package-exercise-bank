@@ -275,14 +275,14 @@
 // =============================================================================
 
 #let exo(
-  content,
+  exercise: none,
   solution: none,
   id: auto,
   margin-content: none,  // Optional content below the badge (e.g., QR code, remarks)
   // Metadata fields
   topic: none,
   level: none,
-  author: none,
+  authors: (),  // Array of authors, e.g., ("Nathan", "Raph")
   ..extra-metadata
 ) = {
   // Step counter first (outside context)
@@ -305,7 +305,7 @@
   let metadata = (
     topic: topic,
     level: level,
-    author: author,
+    authors: authors,
   )
   // Add extra metadata
   for (key, value) in extra-metadata.named() {
@@ -317,7 +317,7 @@
     id: exercise-id,
     number: num,
     metadata: metadata,
-    content: content,
+    exercise: exercise,
     solution: solution,
     margin-content: margin-content,
   )
@@ -339,7 +339,7 @@
     exo-box(
       label: cfg.exercise-label,
       number: num,
-      content,
+      exercise,
       exercise-id: exercise-id,
       show-id: cfg.show-id,
       margin-content: margin-content,
@@ -416,7 +416,7 @@
 #let exo-filter(
   topic: none,
   level: none,
-  author: none,
+  author: none,  // Filter: matches if author is in exercise's authors array
   custom: none,  // Function (metadata) => bool
   show-solutions: true,
 ) = context {
@@ -430,14 +430,18 @@
     // Check filters
     if topic != none and meta.topic != topic { matches = false }
     if level != none and meta.level != level { matches = false }
-    if author != none and meta.author != author { matches = false }
+    // Author filter: check if author is in the authors array
+    if author != none {
+      let ex-authors = meta.at("authors", default: ())
+      if author not in ex-authors { matches = false }
+    }
     if custom != none and not custom(meta) { matches = false }
 
     if matches {
       exo-box(
         label: cfg.exercise-label,
         number: exercise.number,
-        exercise.content,
+        exercise.exercise,
         exercise-id: exercise.id,
         show-id: cfg.show-id,
       )
@@ -460,7 +464,7 @@
 
 // Define an exercise without displaying it (for exercise banks)
 #let exo-define(
-  content,
+  exercise: none,
   solution: none,
   id: auto,
   competencies: (),  // List of competency tags
@@ -468,7 +472,7 @@
   // Metadata fields
   topic: none,
   level: none,
-  author: none,
+  authors: (),  // Array of authors, e.g., ("Nathan", "Raph")
   ..extra-metadata
 ) = {
   // Generate unique ID using counter
@@ -488,7 +492,7 @@
     let metadata = (
       topic: topic,
       level: level,
-      author: author,
+      authors: authors,
     )
     // Add extra metadata
     for (key, value) in extra-metadata.named() {
@@ -500,7 +504,7 @@
       id: exercise-id,
       number: none,  // Not yet assigned
       metadata: metadata,
-      content: content,
+      exercise: exercise,
       solution: solution,
       competencies: competencies,
       points: points,
@@ -561,7 +565,7 @@
         exo-box(
           label: cfg.exercise-label,
           number: num,
-          found.content,
+          found.exercise,
           exercise-id: found.id,
           show-id: cfg.show-id,
           competencies: comps,
@@ -580,7 +584,7 @@
           exo-box(
             label: cfg.exercise-label,
             number: num,
-            found.content,
+            found.exercise,
             exercise-id: found.id,
             show-id: cfg.show-id,
             competencies: comps,
@@ -629,8 +633,8 @@
   // Simple filters (match exact value)
   topic: none,
   level: none,
-  author: none,
-  competency: none,  // Filter by single competency
+  author: none,       // Filter: matches if author is in exercise's authors array
+  competency: none,   // Filter by single competency
   // List filters (match any in list)
   topics: none,       // e.g., ("algebra", "geometry")
   levels: none,       // e.g., ("1M", "2M")
@@ -662,7 +666,11 @@
     // Simple exact filters
     if topic != none and meta.topic != topic { matches = false }
     if level != none and meta.level != level { matches = false }
-    if author != none and meta.author != author { matches = false }
+    // Author filter: check if author is in the authors array
+    if author != none {
+      let ex-authors = meta.at("authors", default: ())
+      if author not in ex-authors { matches = false }
+    }
 
     // List filters (match any)
     if topics != none {
@@ -728,7 +736,7 @@
       exo-box(
         label: cfg.exercise-label,
         number: num,
-        exercise.content,
+        exercise.exercise,
         exercise-id: exercise.id,
         show-id: cfg.show-id,
         competencies: ex-comps,
@@ -746,7 +754,7 @@
         exo-box(
           label: cfg.exercise-label,
           number: num,
-          exercise.content,
+          exercise.exercise,
           exercise-id: exercise.id,
           show-id: cfg.show-id,
           competencies: ex-comps,
@@ -789,7 +797,7 @@
 #let exo-count(
   topic: none,
   level: none,
-  author: none,
+  author: none,  // Filter: matches if author is in exercise's authors array
 ) = context {
   let registry = exo-registry.get()
   let count = 0
@@ -800,7 +808,11 @@
 
     if topic != none and meta.topic != topic { matches = false }
     if level != none and meta.level != level { matches = false }
-    if author != none and meta.author != author { matches = false }
+    // Author filter: check if author is in the authors array
+    if author != none {
+      let ex-authors = meta.at("authors", default: ())
+      if author not in ex-authors { matches = false }
+    }
 
     if matches { count += 1 }
   }
@@ -914,7 +926,7 @@
 
     // Build question content
     let q-content = {
-      found.content
+      found.exercise
       if supplement != none {
         supplement
       }
@@ -947,7 +959,7 @@
 #let _filter-exercises(
   topic: none,
   level: none,
-  author: none,
+  author: none,  // Filter: matches if author is in exercise's authors array
   competency: none,
   topics: none,
   levels: none,
@@ -966,7 +978,11 @@
     // Simple exact filters
     if topic != none and meta.topic != topic { matches = false }
     if level != none and meta.level != level { matches = false }
-    if author != none and meta.author != author { matches = false }
+    // Author filter: check if author is in the authors array
+    if author != none {
+      let ex-authors = meta.at("authors", default: ())
+      if author not in ex-authors { matches = false }
+    }
 
     // List filters (match any)
     if topics != none {
@@ -1018,7 +1034,7 @@
   // Simple filters (match exact value)
   topic: none,
   level: none,
-  author: none,
+  author: none,  // Filter: matches if author is in exercise's authors array
   competency: none,
   // List filters (match any in list)
   topics: none,
@@ -1042,7 +1058,11 @@
     // Simple exact filters
     if topic != none and meta.topic != topic { matches = false }
     if level != none and meta.level != level { matches = false }
-    if author != none and meta.author != author { matches = false }
+    // Author filter: check if author is in the authors array
+    if author != none {
+      let ex-authors = meta.at("authors", default: ())
+      if author not in ex-authors { matches = false }
+    }
 
     // List filters (match any)
     if topics != none {
@@ -1097,7 +1117,7 @@
 
     // Build question content
     let q-content = {
-      exercise.content
+      exercise.exercise
       // Show solution if configured
       if exam-cfg.show-solutions and exercise.solution != none {
         v(8pt)
