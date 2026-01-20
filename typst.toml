@@ -1,11 +1,11 @@
 [package]
 name = "exercise-bank"
-version = "0.1.0"
+version = "0.2.0"
 entrypoint = "lib.typ"
 authors = ["Nathan"]
 license = "MIT"
 description = "Exercise management with solutions, metadata, filtering, and exercise banks for educational documents"
-repository = "https://github.com/nathan-ed/exercise-bank"
+repository = "https://gitlab.com/nathan-ed/typst-package-exercise-bank"
 keywords = ["exercises", "solutions", "education", "bank", "teaching", "mathematics", "filtering"]
 categories = ["components", "utility"]
 disciplines = ["mathematics", "education"]
