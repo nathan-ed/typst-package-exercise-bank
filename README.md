@@ -2,6 +2,8 @@
 
 A comprehensive Typst package for creating and managing exercises with solutions, metadata, filtering, and exercise banks. Perfect for teachers, textbook authors, and educational content creators.
 
+**[Documentation (PDF)](docs/manual.pdf)**
+
 ## Gallery
 
 Click on an image to see the source code.
