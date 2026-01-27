@@ -28,8 +28,10 @@
   show-id: false,              // Show exercise UID below the badge
   show-competencies: false,    // Show competency tags below exercise
   display-mode: "exercise",    // "exercise" (default exo-box) or "exam" (g-exam question)
+  badge-style: "box",          // "box", "circled", "filled-circle", "pill", "tag", "border-accent", "underline", "rounded-box", "header-card"
+  badge-color: black,          // Color for badge (used by styles that support it)
   label-font-size: 12pt,       // Font size for badge label text
-  margin-position: 2cm,        // Fixed position of content margin from left (like env line-position)
+  margin-position: auto,       // Position of content margin from left (auto = computed from label size)
   label-extra: 1cm,            // Extra space for labels to extend into left margin
   page-break: "none",          // "none", "before", "after", "around" - page break behavior
   append-solution-to-correction: false,  // Append solution to correction content
@@ -102,6 +104,8 @@
   show-id: none,
   show-competencies: none,
   display-mode: none,  // "exercise" or "exam"
+  badge-style: none,   // "box", "circled", "filled-circle", "pill", "tag"
+  badge-color: none,   // Color for badge styles that support it
   label-font-size: none,
   margin-position: none,
   label-extra: none,
@@ -124,6 +128,8 @@
     if show-id != none { new.show-id = show-id }
     if show-competencies != none { new.show-competencies = show-competencies }
     if display-mode != none { new.display-mode = display-mode }
+    if badge-style != none { new.badge-style = badge-style }
+    if badge-color != none { new.badge-color = badge-color }
     if label-font-size != none { new.label-font-size = label-font-size }
     if margin-position != none { new.margin-position = margin-position }
     if label-extra != none { new.label-extra = label-extra }
@@ -178,6 +184,262 @@
   measure(badge).width
 }
 
+// Compute default margin based on badge style and longest label with 3-digit number
+// "Correction" is the longest among Exercise/Solution/Correction
+#let calc-default-margin(font-size: 12pt, style: "box") = {
+  let labels = ("Exercise", "Solution", "Correction", "Exercice", "Corrigé")
+
+  if style == "circled" or style == "filled-circle" {
+    // Circle styles only show number, size is font-size * 2
+    font-size * 2 + 16pt
+  } else if style == "tag" {
+    // Tag has arrow, measure with longest label
+    let max-width = 0pt
+    for label in labels {
+      let content = box(
+        inset: (x: 8pt, y: 3pt),
+        text(weight: "bold", size: font-size)[#label 100],
+      )
+      let width = measure(content).width
+      if width > max-width { max-width = width }
+    }
+    max-width + 8pt + 16pt  // arrow width + padding
+  } else if style == "pill" {
+    // Pill has more padding
+    let max-width = 0pt
+    for label in labels {
+      let content = box(
+        inset: (x: 10pt, y: 4pt),
+        text(weight: "medium", size: font-size)[#label 100],
+      )
+      let width = measure(content).width
+      if width > max-width { max-width = width }
+    }
+    max-width + 16pt
+  } else {
+    // Default box style
+    let max-width = 0pt
+    for label in labels {
+      let width = calc-badge-width(label, 100, font-size)
+      if width > max-width { max-width = width }
+    }
+    max-width + 16pt
+  }
+}
+
+// =============================================================================
+// Badge Styles
+// =============================================================================
+
+// Style: box (default) - Rectangle with stroke
+#let badge-box(label, number, font-size, color, is-solution) = {
+  let stroke-color = if is-solution { 0.8pt + rgb("#4a7c59") } else { 0.8pt + color }
+  let fill-color = if is-solution { rgb("#e8f5e9") } else { white }
+  box(
+    stroke: stroke-color,
+    fill: fill-color,
+    inset: (x: 4pt, y: 3pt),
+  )[#text(weight: "bold", size: font-size, fill: color)[#label~#number]]
+}
+
+// Style: circled - Number in a circle (no label)
+#let badge-circled(label, number, font-size, color, is-solution) = {
+  let size = font-size * 2
+  let stroke-color = if is-solution { 1.2pt + rgb("#4a7c59") } else { 1.2pt + color }
+  box(
+    width: size,
+    height: size,
+    stroke: stroke-color,
+    radius: 50%,
+    align(center + horizon)[
+      #text(weight: "bold", size: font-size, fill: color)[#number]
+    ]
+  )
+}
+
+// Style: filled-circle - Number in a filled circle
+#let badge-filled-circle(label, number, font-size, color, is-solution) = {
+  let size = font-size * 2
+  let fill-color = if is-solution { rgb("#4a7c59") } else { color }
+  box(
+    width: size,
+    height: size,
+    fill: fill-color,
+    radius: 50%,
+    align(center + horizon)[
+      #text(weight: "bold", size: font-size, fill: white)[#number]
+    ]
+  )
+}
+
+// Style: pill - Rounded pill shape
+#let badge-pill(label, number, font-size, color, is-solution) = {
+  let stroke-color = if is-solution { 0.8pt + rgb("#4a7c59") } else { 0.8pt + color }
+  let fill-color = if is-solution { rgb("#e8f5e9") } else { rgb("#f3f4f6") }
+  box(
+    stroke: stroke-color,
+    fill: fill-color,
+    radius: 12pt,
+    inset: (x: 10pt, y: 4pt),
+  )[#text(weight: "medium", size: font-size, fill: color)[#label~#number]]
+}
+
+// Style: tag - Arrow-shaped tag
+#let badge-tag(label, number, font-size, color, is-solution) = {
+  let arrow-width = 8pt
+  let tag-height = font-size + 10pt
+  let fill-color = if is-solution { rgb("#4a7c59") } else { color }
+  stack(dir: ltr, spacing: 0pt,
+    box(
+      height: tag-height,
+      fill: fill-color,
+      radius: (left: 3pt, right: 0pt),
+      inset: (x: 8pt, y: 3pt),
+    )[
+      #align(horizon)[
+        #text(weight: "bold", size: font-size, fill: white)[#label~#number]
+      ]
+    ],
+    box(
+      width: arrow-width,
+      height: tag-height,
+    )[
+      #polygon(
+        fill: fill-color,
+        (0pt, 0pt),
+        (arrow-width, tag-height / 2),
+        (0pt, tag-height),
+      )
+    ]
+  )
+}
+
+// Get badge based on style name (for badge-based styles only)
+#let get-badge(style, label, number, font-size, color, is-solution) = {
+  if style == "circled" {
+    badge-circled(label, number, font-size, color, is-solution)
+  } else if style == "filled-circle" {
+    badge-filled-circle(label, number, font-size, color, is-solution)
+  } else if style == "pill" {
+    badge-pill(label, number, font-size, color, is-solution)
+  } else if style == "tag" {
+    badge-tag(label, number, font-size, color, is-solution)
+  } else {
+    // Default: box
+    badge-box(label, number, font-size, color, is-solution)
+  }
+}
+
+// Check if style is a "full-width" style (wraps content instead of badge+content grid)
+#let is-fullwidth-style(style) = {
+  style in ("border-accent", "underline", "rounded-box", "header-card")
+}
+
+// =============================================================================
+// Full-Width Styles (wrap entire content)
+// =============================================================================
+
+// Style: border-accent - Left vertical bar with inline header
+#let style-border-accent(label, number, body, font-size, color, is-solution) = {
+  let bar-color = if is-solution { rgb("#4a7c59") } else { color }
+  block(
+    stroke: (left: 3pt + bar-color),
+    inset: (left: 12pt, y: 8pt),
+    width: 100%,
+  )[
+    #text(weight: "bold", size: font-size, fill: bar-color)[#label~#number]
+    #v(0.3em)
+    #body
+  ]
+}
+
+// Style: underline - Bold header with underline
+#let style-underline(label, number, body, font-size, color, is-solution) = {
+  let line-color = if is-solution { rgb("#4a7c59") } else { color }
+  block(width: 100%)[
+    #text(weight: "bold", size: font-size + 1pt, fill: line-color)[#label~#number]
+    #v(-0.3em)
+    #line(length: 100%, stroke: 0.8pt + line-color)
+    #v(0.5em)
+    #body
+  ]
+}
+
+// Style: rounded-box - Clean rounded border around entire exercise
+#let style-rounded-box(label, number, body, font-size, color, is-solution) = {
+  let border-color = if is-solution { rgb("#4a7c59") } else { color }
+  block(
+    width: 100%,
+    stroke: 1.2pt + border-color,
+    radius: 10pt,
+    inset: 14pt,
+  )[
+    #text(weight: "bold", size: font-size, fill: border-color)[#label~#number]
+    #v(8pt)
+    #body
+  ]
+}
+
+// Style: header-card - Rounded box with colored header strip
+#let style-header-card(label, number, body, font-size, color, is-solution) = {
+  let header-color = if is-solution { rgb("#4a7c59") } else { color }
+  block(
+    width: 100%,
+    stroke: 1pt + header-color,
+    radius: 8pt,
+    clip: true,
+  )[
+    #block(
+      width: 100%,
+      fill: header-color,
+      inset: (x: 12pt, y: 6pt),
+    )[
+      #text(weight: "bold", size: font-size, fill: white)[#label~#number]
+    ]
+    #block(
+      width: 100%,
+      inset: 12pt,
+    )[#body]
+  ]
+}
+
+// Get full-width style block
+#let get-fullwidth-style(style, label, number, body, font-size, color, is-solution) = {
+  if style == "border-accent" {
+    style-border-accent(label, number, body, font-size, color, is-solution)
+  } else if style == "underline" {
+    style-underline(label, number, body, font-size, color, is-solution)
+  } else if style == "rounded-box" {
+    style-rounded-box(label, number, body, font-size, color, is-solution)
+  } else if style == "header-card" {
+    style-header-card(label, number, body, font-size, color, is-solution)
+  } else {
+    // Fallback - should not happen
+    body
+  }
+}
+
+// Compute margin for badge layout (fits "Correction 100")
+#let compute-margin(font-size: 11pt) = {
+  let test-badge = box(
+    stroke: 0.8pt,
+    inset: (x: 4pt, y: 3pt),
+    text(weight: "bold", size: font-size)[Correction 100],
+  )
+  measure(test-badge).width + 12pt
+}
+
+// Layout function for custom badge styles
+#let exo-layout(badge, body, margin: auto) = context {
+  let m = if margin == auto { compute-margin() } else { margin }
+  grid(
+    columns: (m, 1fr),
+    column-gutter: 8pt,
+    align(right + top)[#badge],
+    body,
+  )
+}
+
 // Competency tag styling
 #let competency-tag(comp) = {
   box(
@@ -204,43 +466,6 @@
 ) = context {
   let cfg = exo-config.get()
 
-  let badge-stroke = if is-solution { 0.8pt + rgb("#4a7c59") } else { 0.8pt }
-  let badge-fill = if is-solution { rgb("#e8f5e9") } else { white }
-
-  // Badge box
-  let badge = box(
-    stroke: badge-stroke,
-    fill: badge-fill,
-    inset: (x: 4pt, y: 3pt),
-    text(weight: "bold", size: cfg.label-font-size)[#label #number],
-  )
-
-  // Badge with optional points displayed inline after the box
-  let badge-with-points = if points != none {
-    box[#badge#h(6pt)#text(size: 9pt, fill: rgb("#555"), style: "italic")[(#points #points-label)]]
-  } else {
-    badge
-  }
-
-  // ID display below badge
-  let id-block = if show-id and exercise-id != none {
-    linebreak()
-    text(size: 7pt, fill: rgb("#666666"), style: "italic")[#exercise-id]
-  }
-
-  // Build the label column content
-  let label-column = {
-    set text(hyphenate: false)
-    align(right)[
-      #box[#badge-with-points]
-      #if show-id and exercise-id != none { id-block }
-      #if margin-content != none {
-        v(4pt)
-        margin-content
-      }
-    ]
-  }
-
   // Competencies display
   let comp-block = if show-competencies and competencies.len() > 0 {
     v(4pt)
@@ -250,38 +475,116 @@
     }
   }
 
-  // Margin position and label space (like environments)
-  let margin-pos = cfg.margin-position
-  let label-extra = cfg.label-extra
-  let gap = 6pt
+  // ID display
+  let id-display = if show-id and exercise-id != none {
+    text(size: 7pt, fill: rgb("#666666"), style: "italic")[#exercise-id]
+  }
 
-  // Use grid - shifted left so labels can extend into page margin
-  block(
-    above: 0.8em,
-    below: 0.8em,
-    width: 100% + label-extra,
-    breakable: true,
-    inset: (left: -label-extra, right: label-extra),  // Add right margin to compensate
-  )[
-    #grid(
-      columns: (margin-pos + label-extra, 1fr),
-      column-gutter: gap,
-      align: (right + top, left + top),
-      // Label column - has space for label, right-aligned
-      label-column,
-      // Content column
-      block(
-        width: 100%,
-        inset: (left: 0pt, y: 0pt),
-        breakable: true,
-      )[
-        #set par(first-line-indent: 0cm)
-        #v(3pt)  // Align with badge text
-        #body
-        #if show-competencies and competencies.len() > 0 { comp-block }
-      ],
+  // Full body with competencies
+  let full-body = {
+    set par(first-line-indent: 0cm)
+    body
+    if show-competencies and competencies.len() > 0 { comp-block }
+    if show-id and exercise-id != none {
+      v(4pt)
+      id-display
+    }
+  }
+
+  // Check if this is a full-width style
+  if is-fullwidth-style(cfg.badge-style) {
+    // Use full-width layout (style wraps the content)
+    block(
+      above: 0.8em,
+      below: 0.8em,
+      width: 100%,
+      breakable: true,
+    )[
+      #get-fullwidth-style(
+        cfg.badge-style,
+        label,
+        number,
+        full-body,
+        cfg.label-font-size,
+        cfg.badge-color,
+        is-solution,
+      )
+    ]
+  } else {
+    // Use badge + grid layout
+    let badge = get-badge(
+      cfg.badge-style,
+      label,
+      number,
+      cfg.label-font-size,
+      cfg.badge-color,
+      is-solution,
     )
-  ]
+
+    // Badge with optional points displayed inline after the box
+    let badge-with-points = if points != none {
+      box[#badge#h(6pt)#text(size: 9pt, fill: rgb("#555"), style: "italic")[(#points #points-label)]]
+    } else {
+      badge
+    }
+
+    // ID display below badge (for badge styles)
+    let id-block = if show-id and exercise-id != none {
+      linebreak()
+      text(size: 7pt, fill: rgb("#666666"), style: "italic")[#exercise-id]
+    }
+
+    // Build the label column content
+    let label-column = {
+      set text(hyphenate: false)
+      align(right)[
+        #box[#badge-with-points]
+        #if show-id and exercise-id != none { id-block }
+        #if margin-content != none {
+          v(4pt)
+          margin-content
+        }
+      ]
+    }
+
+    // Margin position and label space (like environments)
+    // If margin-position is auto, compute based on badge style and label size
+    let margin-pos = if cfg.margin-position == auto {
+      calc-default-margin(font-size: cfg.label-font-size, style: cfg.badge-style)
+    } else {
+      cfg.margin-position
+    }
+    let label-extra = cfg.label-extra
+    let gap = 6pt
+
+    // Use grid - shifted left so labels can extend into page margin
+    block(
+      above: 0.8em,
+      below: 0.8em,
+      width: 100% + label-extra,
+      breakable: true,
+      inset: (left: -label-extra, right: label-extra),  // Add right margin to compensate
+    )[
+      #grid(
+        columns: (margin-pos + label-extra, 1fr),
+        column-gutter: gap,
+        align: (right + top, left + top),
+        // Label column - has space for label, right-aligned
+        label-column,
+        // Content column
+        block(
+          width: 100%,
+          inset: (left: 0pt, y: 0pt),
+          breakable: true,
+        )[
+          #set par(first-line-indent: 0cm)
+          #v(3pt)  // Align with badge text
+          #body
+          #if show-competencies and competencies.len() > 0 { comp-block }
+        ],
+      )
+    ]
+  }
 }
 
 #let exo-solution-box(number: 1, body, exercise-id: none, show-id: false) = context {

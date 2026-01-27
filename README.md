@@ -14,12 +14,14 @@ Click on an image to see the source code.
 | Filtering by Topic | Competency Tags | Solutions at End |
 | [![Append Solution](gallery/append-solution.png)](gallery/append-solution.typ) | [![Corrections](gallery/corrections.png)](gallery/corrections.typ) | [![Draft Mode OFF](gallery/draft-mode-1.png)](gallery/draft-mode.typ) |
 | Append Solution | Teacher Corrections | Draft Mode OFF |
-| [![Draft Mode ON](gallery/draft-mode-2.png)](gallery/draft-mode.typ) | [![Draft with Append](gallery/draft-mode-3.png)](gallery/draft-mode.typ) | |
-| Draft Mode ON | Draft with Append | |
+| [![Draft Mode ON](gallery/draft-mode-2.png)](gallery/draft-mode.typ) | [![Draft with Append](gallery/draft-mode-3.png)](gallery/draft-mode.typ) | [![Visual Styles](gallery/styles-1.png)](gallery/styles.typ) |
+| Draft Mode ON | Draft with Append | Visual Styles |
 
 ## Features
 
 - **Exercises with solutions** - Create exercises with inline or deferred solutions
+- **9 visual styles** - Box, circled, filled-circle, pill, tag, border-accent, underline, rounded-box, header-card
+- **Customizable colors** - Set badge colors for any style
 - **Teacher corrections** - Add detailed corrections for teachers with optional fallback when solutions are missing
 - **Append solutions to corrections** - Combine corrections and solutions with custom formatting to avoid duplication
 - **Draft mode** - Show placeholders for empty corrections/solutions, or hide them for clean student output
@@ -36,7 +38,7 @@ Click on an image to see the source code.
 ## Quick Start
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo
+#import "@preview/exercise-bank:0.3.0": exo
 
 #exo(
   exercise: [
@@ -50,7 +52,7 @@ Click on an image to see the source code.
 ### Simple Exercise
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo
+#import "@preview/exercise-bank:0.3.0": exo
 
 #exo(
   exercise: [
@@ -62,7 +64,7 @@ Click on an image to see the source code.
 ### Exercise with Solution
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo
+#import "@preview/exercise-bank:0.3.0": exo
 
 #exo(
   exercise: [
@@ -77,7 +79,7 @@ Click on an image to see the source code.
 ### Multiple Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo
+#import "@preview/exercise-bank:0.3.0": exo
 
 #exo(exercise: [Simplify $x^2 + 2x + 1$.])
 #exo(exercise: [Factor $x^2 - 4$.])
@@ -93,7 +95,7 @@ Control how and where solutions appear in your document.
 Solutions appear immediately after each exercise:
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo, exo-setup
+#import "@preview/exercise-bank:0.3.0": exo, exo-setup
 
 #exo-setup(solution-mode: "inline")
 
@@ -108,7 +110,7 @@ Solutions appear immediately after each exercise:
 Hide all solutions:
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo, exo-setup
+#import "@preview/exercise-bank:0.3.0": exo, exo-setup
 
 #exo-setup(solution-mode: "none")
 
@@ -123,7 +125,7 @@ Hide all solutions:
 Collect solutions and display them at section end:
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo, exo-setup, exo-print-solutions
+#import "@preview/exercise-bank:0.3.0": exo, exo-setup, exo-print-solutions
 
 #exo-setup(solution-mode: "end-section")
 
@@ -140,7 +142,7 @@ Collect solutions and display them at section end:
 Similar to end-section, but grouped by chapter:
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo, exo-setup, exo-print-solutions, exo-chapter-start
+#import "@preview/exercise-bank:0.3.0": exo, exo-setup, exo-print-solutions, exo-chapter-start
 
 #exo-setup(solution-mode: "end-chapter")
 
@@ -163,7 +165,7 @@ Similar to end-section, but grouped by chapter:
 Show only the solutions (useful for answer keys):
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo, exo-setup
+#import "@preview/exercise-bank:0.3.0": exo, exo-setup
 
 #exo-setup(solution-mode: "only")
 
@@ -177,7 +179,7 @@ Corrections are detailed solutions intended for teachers. They can include pedag
 ### Exercise with Correction
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo
+#import "@preview/exercise-bank:0.3.0": exo
 
 #exo(
   exercise: [Solve $x^2 = 9$.],
@@ -195,7 +197,7 @@ Corrections are detailed solutions intended for teachers. They can include pedag
 When `fallback-to-correction` is enabled, corrections are shown when solutions are missing:
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo, exo-setup
+#import "@preview/exercise-bank:0.3.0": exo, exo-setup
 
 #exo-setup(
   solution-mode: "inline",
@@ -224,7 +226,7 @@ When `fallback-to-correction` is enabled, corrections are shown when solutions a
 Create teacher answer keys showing only corrections:
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo, exo-setup
+#import "@preview/exercise-bank:0.3.0": exo, exo-setup
 
 #exo-setup(
   solution-mode: "only",
@@ -242,7 +244,7 @@ Create teacher answer keys showing only corrections:
 When both correction and solution exist, you can append the solution to the correction content with custom formatting. This avoids duplication - write detailed pedagogical notes in the correction, then add the final answer in the solution.
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo, exo-setup
+#import "@preview/exercise-bank:0.3.0": exo, exo-setup
 
 #exo-setup(
   append-solution-to-correction: true,  // Enable appending
@@ -289,7 +291,7 @@ When creating exercise documents, you may have incomplete corrections or solutio
 - Hide placeholders in student versions
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo, exo-setup
+#import "@preview/exercise-bank:0.3.0": exo, exo-setup
 
 // Teacher draft version - shows placeholders
 #exo-setup(
@@ -339,7 +341,7 @@ When creating exercise documents, you may have incomplete corrections or solutio
 Tag exercises with metadata for organization and filtering:
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo
+#import "@preview/exercise-bank:0.3.0": exo
 
 #exo(
   exercise: [Solve $x + 1 = 5$.],
@@ -368,7 +370,7 @@ Tag exercises with metadata for organization and filtering:
 Display only exercises matching certain criteria:
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo, exo-filter
+#import "@preview/exercise-bank:0.3.0": exo, exo-filter
 
 // First, define exercises (they display normally)
 #exo(exercise: [Exercise 1], topic: "algebra")
@@ -386,7 +388,7 @@ Define exercises once, use them anywhere. Perfect for creating exercise collecti
 ### Defining Bank Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo-define
+#import "@preview/exercise-bank:0.3.0": exo-define
 
 // These don't display - just registered
 #exo-define(
@@ -417,7 +419,7 @@ Define exercises once, use them anywhere. Perfect for creating exercise collecti
 ### Displaying Bank Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo-show, exo-show-many
+#import "@preview/exercise-bank:0.3.0": exo-show, exo-show-many
 
 // Show a single exercise by ID
 #exo-show("quad-1")
@@ -431,7 +433,7 @@ Define exercises once, use them anywhere. Perfect for creating exercise collecti
 Use powerful filtering to select exercises:
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo-select
+#import "@preview/exercise-bank:0.3.0": exo-select
 
 // All quadratics exercises
 #exo-select(topic: "quadratics")
@@ -457,7 +459,7 @@ Use powerful filtering to select exercises:
 Tag exercises with competencies and display them visually:
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo-define, exo-show, exo-setup
+#import "@preview/exercise-bank:0.3.0": exo-define, exo-show, exo-setup
 
 #exo-setup(show-competencies: true)
 
@@ -474,7 +476,7 @@ Tag exercises with competencies and display them visually:
 ### Filter by Competency
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo-select
+#import "@preview/exercise-bank:0.3.0": exo-select
 
 // Exercises with specific competency
 #exo-select(competency: "C1.1")
@@ -488,7 +490,7 @@ Tag exercises with competencies and display them visually:
 ### Global Setup
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo-setup
+#import "@preview/exercise-bank:0.3.0": exo-setup
 
 #exo-setup(
   solution-mode: "inline",        // "inline", "end-section", "end-chapter", "none", "only"
@@ -518,7 +520,7 @@ Tag exercises with competencies and display them visually:
 Change labels for different languages:
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo-setup
+#import "@preview/exercise-bank:0.3.0": exo-setup
 
 // French
 #exo-setup(
@@ -539,12 +541,35 @@ Change labels for different languages:
 )
 ```
 
+### Visual Styles
+
+Choose from 9 different badge styles:
+
+```typst
+#import "@preview/exercise-bank:0.3.0": exo, exo-setup
+
+// Circled number style
+#exo-setup(badge-style: "circled")
+
+// Filled circle with custom color
+#exo-setup(badge-style: "filled-circle", badge-color: rgb("#2563eb"))
+
+// Tag style
+#exo-setup(badge-style: "tag", badge-color: rgb("#1e40af"))
+
+#exo(exercise: [Solve $x + 3 = 7$])
+```
+
+Available styles: `"box"` (default), `"circled"`, `"filled-circle"`, `"pill"`, `"tag"`, `"border-accent"`, `"underline"`, `"rounded-box"`, `"header-card"`
+
+See `docs/visual-styles.pdf` for a complete gallery.
+
 ### Counter Reset Options
 
 Control when exercise numbering resets:
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo-setup, exo-section-start, exo-chapter-start
+#import "@preview/exercise-bank:0.3.0": exo-setup, exo-section-start, exo-chapter-start
 
 // Reset at each section
 #exo-setup(counter-reset: "section")
@@ -565,7 +590,7 @@ Control when exercise numbering resets:
 Display exercise IDs for reference:
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo-setup, exo
+#import "@preview/exercise-bank:0.3.0": exo-setup, exo
 
 #exo-setup(show-id: true)
 
@@ -582,7 +607,7 @@ Display exercise IDs for reference:
 ### Reset Counter
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo-reset-counter
+#import "@preview/exercise-bank:0.3.0": exo-reset-counter
 
 #exo-reset-counter()  // Reset exercise numbering to 0
 ```
@@ -590,7 +615,7 @@ Display exercise IDs for reference:
 ### Clear Registry
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo-clear-registry
+#import "@preview/exercise-bank:0.3.0": exo-clear-registry
 
 #exo-clear-registry()  // Clear all registered exercises
 ```
@@ -598,7 +623,7 @@ Display exercise IDs for reference:
 ### Count Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": exo-count
+#import "@preview/exercise-bank:0.3.0": exo-count
 
 Total algebra exercises: #exo-count(topic: "algebra")
 Level 1M exercises: #exo-count(level: "1M")
@@ -681,7 +706,7 @@ Level 1M exercises: #exo-count(level: "1M")
 ## Complete Example
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": *
+#import "@preview/exercise-bank:0.3.0": *
 
 // Setup
 #exo-setup(
@@ -746,7 +771,7 @@ When using the g-exam integration, you get:
 Set the display mode to "exam" to use g-exam formatting:
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": *
+#import "@preview/exercise-bank:0.3.0": *
 
 // Define exercises with points
 #exo-define(
@@ -807,7 +832,7 @@ The package provides exam-specific functions when g-exam integration is active:
 Use the same exercise bank for both versions:
 
 ```typst
-#import "@preview/exercise-bank:0.2.0": *
+#import "@preview/exercise-bank:0.3.0": *
 
 // Define exercises once
 #exo-define(id: "q1", exercise: [...], solution: [...], points: 4)
@@ -849,6 +874,31 @@ MIT License - see LICENSE file for details.
 ## Changelog
 
 All notable changes to exercise-bank are documented here.
+
+### [0.3.0] - 2026-01-27
+
+#### Added
+- **9 visual badge styles**: Configure with `exo-setup(badge-style: "...")`
+  - `"box"` - Rectangle with stroke (default)
+  - `"circled"` - Circled number only, clean and minimal
+  - `"filled-circle"` - Filled circle with white number
+  - `"pill"` - Rounded pill shape
+  - `"tag"` - Arrow-shaped tag
+  - `"border-accent"` - Left vertical colored bar
+  - `"underline"` - Bold header with underline
+  - `"rounded-box"` - Rounded border around entire exercise
+  - `"header-card"` - Box with colored header strip
+- **Badge color customization**: `exo-setup(badge-color: rgb("#2563eb"))`
+- **Visual styling parameters**:
+  - `label-font-size` - Font size for badge labels
+  - `margin-position` - Width reserved for badge column (auto = computed)
+  - `label-extra` - Extra space for labels to extend into left margin
+- **Comprehensive documentation**: New `docs/manual.pdf` with full examples
+- **Visual styles gallery**: `docs/visual-styles.pdf` showcasing all styles
+
+#### Fixed
+- Badge text no longer breaks across lines (uses non-breaking spaces)
+- Improved margin computation for all badge styles
 
 ### [0.2.0] - 2026-01-15
 
