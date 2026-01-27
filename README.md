@@ -559,6 +559,12 @@ Choose from 9 different badge styles:
 // Tag style
 #exo-setup(badge-style: "tag", badge-color: rgb("#1e40af"))
 
+// Custom colors for solutions and corrections
+#exo-setup(
+  solution-color: rgb("#059669"),    // Green for solutions
+  correction-color: rgb("#dc2626"),  // Red for corrections
+)
+
 #exo(exercise: [Solve $x + 3 = 7$])
 ```
 
@@ -694,6 +700,10 @@ Level 1M exercises: #exo-count(level: "1M")
 | `draft-mode` | bool | false | Show placeholders for empty corrections/solutions |
 | `correction-placeholder` | content | `[_To be completed_]` | Placeholder for empty corrections (draft mode) |
 | `solution-placeholder` | content | `[_To be completed_]` | Placeholder for empty solutions (draft mode) |
+| `badge-style` | string | "box" | Visual style for badges |
+| `badge-color` | color | black | Color for exercise badges |
+| `solution-color` | color | green | Color for solution badges |
+| `correction-color` | color | green | Color for correction badges |
 
 **Default `solution-in-correction-style`:**
 ```typst
@@ -891,6 +901,9 @@ All notable changes to exercise-bank are documented here.
   - `"rounded-box"` - Rounded border around entire exercise
   - `"header-card"` - Box with colored header strip
 - **Badge color customization**: `exo-setup(badge-color: rgb("#2563eb"))`
+- **Separate solution/correction colors**: Set distinct colors for solution and correction badges
+  - `solution-color` - Color for solution badges
+  - `correction-color` - Color for correction badges
 - **Visual styling parameters**:
   - `label-font-size` - Font size for badge labels
   - `margin-position` - Width reserved for badge column (auto = computed)

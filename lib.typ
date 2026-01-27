@@ -29,7 +29,9 @@
   show-competencies: false,    // Show competency tags below exercise
   display-mode: "exercise",    // "exercise" (default exo-box) or "exam" (g-exam question)
   badge-style: "box",          // "box", "circled", "filled-circle", "pill", "tag", "border-accent", "underline", "rounded-box", "header-card"
-  badge-color: black,          // Color for badge (used by styles that support it)
+  badge-color: black,          // Color for exercise badges
+  solution-color: rgb("#4a7c59"),    // Color for solution badges (green)
+  correction-color: rgb("#4a7c59"),  // Color for correction badges (green)
   label-font-size: 12pt,       // Font size for badge label text
   margin-position: auto,       // Position of content margin from left (auto = computed from label size)
   label-extra: 1cm,            // Extra space for labels to extend into left margin
@@ -105,7 +107,9 @@
   show-competencies: none,
   display-mode: none,  // "exercise" or "exam"
   badge-style: none,   // "box", "circled", "filled-circle", "pill", "tag"
-  badge-color: none,   // Color for badge styles that support it
+  badge-color: none,   // Color for exercise badges
+  solution-color: none,   // Color for solution badges
+  correction-color: none, // Color for correction badges
   label-font-size: none,
   margin-position: none,
   label-extra: none,
@@ -130,6 +134,8 @@
     if display-mode != none { new.display-mode = display-mode }
     if badge-style != none { new.badge-style = badge-style }
     if badge-color != none { new.badge-color = badge-color }
+    if solution-color != none { new.solution-color = solution-color }
+    if correction-color != none { new.correction-color = correction-color }
     if label-font-size != none { new.label-font-size = label-font-size }
     if margin-position != none { new.margin-position = margin-position }
     if label-extra != none { new.label-extra = label-extra }
@@ -233,10 +239,9 @@
 
 // Style: box (default) - Rectangle with stroke
 #let badge-box(label, number, font-size, color, is-solution) = {
-  let stroke-color = if is-solution { 0.8pt + rgb("#4a7c59") } else { 0.8pt + color }
-  let fill-color = if is-solution { rgb("#e8f5e9") } else { white }
+  let fill-color = if is-solution { color.lighten(85%) } else { white }
   box(
-    stroke: stroke-color,
+    stroke: 0.8pt + color,
     fill: fill-color,
     inset: (x: 4pt, y: 3pt),
   )[#text(weight: "bold", size: font-size, fill: color)[#label~#number]]
@@ -245,11 +250,10 @@
 // Style: circled - Number in a circle (no label)
 #let badge-circled(label, number, font-size, color, is-solution) = {
   let size = font-size * 2
-  let stroke-color = if is-solution { 1.2pt + rgb("#4a7c59") } else { 1.2pt + color }
   box(
     width: size,
     height: size,
-    stroke: stroke-color,
+    stroke: 1.2pt + color,
     radius: 50%,
     align(center + horizon)[
       #text(weight: "bold", size: font-size, fill: color)[#number]
@@ -260,11 +264,10 @@
 // Style: filled-circle - Number in a filled circle
 #let badge-filled-circle(label, number, font-size, color, is-solution) = {
   let size = font-size * 2
-  let fill-color = if is-solution { rgb("#4a7c59") } else { color }
   box(
     width: size,
     height: size,
-    fill: fill-color,
+    fill: color,
     radius: 50%,
     align(center + horizon)[
       #text(weight: "bold", size: font-size, fill: white)[#number]
@@ -274,8 +277,8 @@
 
 // Style: pill - Rounded pill shape
 #let badge-pill(label, number, font-size, color, is-solution) = {
-  let stroke-color = if is-solution { 0.8pt + rgb("#4a7c59") } else { 0.8pt + color }
-  let fill-color = if is-solution { rgb("#e8f5e9") } else { rgb("#f3f4f6") }
+  let stroke-color = 0.8pt + color
+  let fill-color = if is-solution { color.lighten(85%) } else { rgb("#f3f4f6") }
   box(
     stroke: stroke-color,
     fill: fill-color,
@@ -288,7 +291,7 @@
 #let badge-tag(label, number, font-size, color, is-solution) = {
   let arrow-width = 8pt
   let tag-height = font-size + 10pt
-  let fill-color = if is-solution { rgb("#4a7c59") } else { color }
+  let fill-color = color
   stack(dir: ltr, spacing: 0pt,
     box(
       height: tag-height,
@@ -341,7 +344,7 @@
 
 // Style: border-accent - Left vertical bar with inline header
 #let style-border-accent(label, number, body, font-size, color, is-solution) = {
-  let bar-color = if is-solution { rgb("#4a7c59") } else { color }
+  let bar-color = color
   block(
     stroke: (left: 3pt + bar-color),
     inset: (left: 12pt, y: 8pt),
@@ -355,7 +358,7 @@
 
 // Style: underline - Bold header with underline
 #let style-underline(label, number, body, font-size, color, is-solution) = {
-  let line-color = if is-solution { rgb("#4a7c59") } else { color }
+  let line-color = color
   block(width: 100%)[
     #text(weight: "bold", size: font-size + 1pt, fill: line-color)[#label~#number]
     #v(-0.3em)
@@ -367,7 +370,7 @@
 
 // Style: rounded-box - Clean rounded border around entire exercise
 #let style-rounded-box(label, number, body, font-size, color, is-solution) = {
-  let border-color = if is-solution { rgb("#4a7c59") } else { color }
+  let border-color = color
   block(
     width: 100%,
     stroke: 1.2pt + border-color,
@@ -382,7 +385,7 @@
 
 // Style: header-card - Rounded box with colored header strip
 #let style-header-card(label, number, body, font-size, color, is-solution) = {
-  let header-color = if is-solution { rgb("#4a7c59") } else { color }
+  let header-color = color
   block(
     width: 100%,
     stroke: 1pt + header-color,
@@ -455,7 +458,7 @@
   label: "Exercice",
   number: 1,
   body,
-  is-solution: false,
+  box-type: "exercise",    // "exercise", "solution", or "correction"
   exercise-id: none,       // For UID display
   show-id: false,          // Whether to show the UID
   competencies: (),        // List of competencies
@@ -465,6 +468,18 @@
   margin-content: none,    // Optional content below the badge (e.g., QR code, remarks)
 ) = context {
   let cfg = exo-config.get()
+
+  // Determine the color based on box type
+  let actual-color = if box-type == "solution" {
+    cfg.solution-color
+  } else if box-type == "correction" {
+    cfg.correction-color
+  } else {
+    cfg.badge-color
+  }
+
+  // Is this a solution or correction (for styling purposes)?
+  let is-solution = box-type == "solution" or box-type == "correction"
 
   // Competencies display
   let comp-block = if show-competencies and competencies.len() > 0 {
@@ -506,7 +521,7 @@
         number,
         full-body,
         cfg.label-font-size,
-        cfg.badge-color,
+        actual-color,
         is-solution,
       )
     ]
@@ -517,7 +532,7 @@
       label,
       number,
       cfg.label-font-size,
-      cfg.badge-color,
+      actual-color,
       is-solution,
     )
 
@@ -593,7 +608,7 @@
     label: cfg.solution-label,
     number: number,
     body,
-    is-solution: true,
+    box-type: "solution",
     exercise-id: exercise-id,
     show-id: show-id,
   )
@@ -605,7 +620,7 @@
     label: cfg.correction-label,
     number: number,
     body,
-    is-solution: true,
+    box-type: "correction",
     exercise-id: exercise-id,
     show-id: show-id,
   )
