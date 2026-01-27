@@ -141,7 +141,7 @@
   width: 100%,
 )[
 ```typst
-#import "@preview/exercise-bank:0.2.0": *
+#import "@preview/exercise-bank:0.3.0": *
 
 // Set your preferred style
 #exo-setup(badge-style: "circled")
