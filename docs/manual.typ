@@ -828,6 +828,42 @@ Control vertical spacing before and after exercises, solutions, and corrections 
 
 The default spacing is `0.8em` for all box types.
 
+== Advanced Exercises
+
+Mark exercises as advanced to display a visual cue before the label. The default symbol is `*`.
+
+#example(
+  [```typst
+#exo(
+  exercise: [A challenging problem.],
+  advanced: true,
+)
+  ```],
+  [
+    #exo-reset-counter()
+    #exo(exercise: [A challenging problem.], advanced: true)
+  ]
+)
+
+Customize the symbol:
+
+#example(
+  [```typst
+#exo-setup(advanced-symbol: sym.dagger)
+#exo(
+  exercise: [Advanced with dagger.],
+  advanced: true,
+)
+  ```],
+  [
+    #exo-reset-counter()
+    #exo-setup(advanced-symbol: sym.dagger)
+    #exo(exercise: [Advanced with dagger.], advanced: true)
+  ]
+)
+
+Disable with `advanced-symbol: none`.
+
 // =============================================================================
 // VISUAL STYLES
 // =============================================================================
@@ -1082,6 +1118,7 @@ Same as `exo`, plus:
   [`solution-below`], [length], [0.8em], [Space below solution boxes],
   [`correction-above`], [length], [0.8em], [Space above correction boxes],
   [`correction-below`], [length], [0.8em], [Space below correction boxes],
+  [`advanced-symbol`], [content/none], [`"*"`], [Symbol before label for advanced exercises],
 )
 
 #pagebreak()

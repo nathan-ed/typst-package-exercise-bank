@@ -53,6 +53,7 @@
   solution-below: 0.8em,    // Space below solution boxes
   correction-above: 0.8em,  // Space above correction boxes
   correction-below: 0.8em,  // Space below correction boxes
+  advanced-symbol: "*",     // Symbol shown before label for advanced exercises (none to disable)
 ))
 
 // Registry of all exercises (for filtering)
@@ -133,6 +134,7 @@
   solution-below: none,
   correction-above: none,
   correction-below: none,
+  advanced-symbol: none,  // Symbol for advanced exercises (use "*", "†", emoji, etc.)
 ) = {
   exo-config.update(cfg => {
     let new = cfg
@@ -166,6 +168,7 @@
     if solution-below != none { new.solution-below = solution-below }
     if correction-above != none { new.correction-above = correction-above }
     if correction-below != none { new.correction-below = correction-below }
+    if advanced-symbol != none { new.advanced-symbol = advanced-symbol }
     new
   })
 }
@@ -195,6 +198,25 @@
     }
   }
   exo-pending-solutions.update(())
+}
+
+// =============================================================================
+// Advanced Exercise Label Helper
+// =============================================================================
+
+// Build exercise label with optional advanced symbol prefix
+#let get-exercise-label(cfg, metadata) = {
+  let label = cfg.exercise-label
+  if cfg.advanced-symbol != none {
+    let is-advanced = metadata.at("advanced", default: false)
+    if is-advanced {
+      [#cfg.advanced-symbol~#label]
+    } else {
+      label
+    }
+  } else {
+    label
+  }
 }
 
 // =============================================================================
@@ -835,7 +857,7 @@
   } else {
     // Show exercise
     exo-box(
-      label: cfg.exercise-label,
+      label: get-exercise-label(cfg, metadata),
       number: num,
       exercise,
       exercise-id: exercise-id,
@@ -956,7 +978,7 @@
 
     if matches {
       exo-box(
-        label: cfg.exercise-label,
+        label: get-exercise-label(cfg, meta),
         number: exercise.number,
         exercise.exercise,
         exercise-id: exercise.id,
@@ -1099,7 +1121,7 @@
 
         // Display exercise with points in the badge
         exo-box(
-          label: cfg.exercise-label,
+          label: get-exercise-label(cfg, found.metadata),
           number: num,
           found.exercise,
           exercise-id: found.id,
@@ -1121,7 +1143,7 @@
         // Display exercise
         if cfg.solution-mode != "only" {
           exo-box(
-            label: cfg.exercise-label,
+            label: get-exercise-label(cfg, found.metadata),
             number: num,
             found.exercise,
             exercise-id: found.id,
@@ -1286,7 +1308,7 @@
 
       // Display exercise with points in the badge
       exo-box(
-        label: cfg.exercise-label,
+        label: get-exercise-label(cfg, exercise.metadata),
         number: num,
         exercise.exercise,
         exercise-id: exercise.id,
@@ -1307,7 +1329,7 @@
       // EXERCISE MODE: Use default exo-box format (no points)
       if cfg.solution-mode != "only" {
         exo-box(
-          label: cfg.exercise-label,
+          label: get-exercise-label(cfg, exercise.metadata),
           number: num,
           exercise.exercise,
           exercise-id: exercise.id,

@@ -35,6 +35,7 @@ Click on an image to see the source code.
 - **Automatic numbering** - Counter resets per section, chapter, or globally
 - **Customizable labels** - Change "Exercise" and "Solution" labels (localization support)
 - **Exercise IDs** - Unique identifiers for referencing and bank management
+- **Advanced exercise markers** - Visual cue (customizable symbol) for advanced/challenging exercises
 - **g-exam integration** - Optional integration with g-exam for exam-style formatting and features
 
 ## Quick Start
@@ -521,6 +522,8 @@ Tag exercises with competencies and display them visually:
   solution-below: 0.8em,    // Space below solutions
   correction-above: 0.8em,  // Space above corrections
   correction-below: 0.8em,  // Space below corrections
+  // Advanced exercises
+  advanced-symbol: "*",     // Symbol for advanced exercises (none to disable)
 )
 ```
 
@@ -647,6 +650,33 @@ Control the vertical spacing before and after exercises, solutions, and correcti
 
 The default spacing is `0.8em` for all box types. You can use any valid Typst length unit (em, pt, cm, etc.).
 
+### Advanced Exercises
+
+Mark exercises as advanced to display a visual cue before the label:
+
+```typst
+#import "@preview/exercise-bank:0.3.0": exo, exo-setup
+
+// Default symbol is "*"
+#exo(
+  exercise: [This is a challenging problem.],
+  advanced: true,
+)
+
+// Use a custom symbol
+#exo-setup(advanced-symbol: sym.dagger)
+#exo(exercise: [Advanced with dagger.], advanced: true)
+
+// Use an emoji
+#exo-setup(advanced-symbol: emoji.pepper)
+#exo(exercise: [Spicy exercise!], advanced: true)
+
+// Disable the feature
+#exo-setup(advanced-symbol: none)
+```
+
+The symbol appears before the label (e.g., `* Exercise 1`) without affecting layout alignment.
+
 ## Utility Functions
 
 ### Reset Counter
@@ -747,6 +777,7 @@ Level 1M exercises: #exo-count(level: "1M")
 | `solution-below` | length | 0.8em | Space below solution boxes |
 | `correction-above` | length | 0.8em | Space above correction boxes |
 | `correction-below` | length | 0.8em | Space below correction boxes |
+| `advanced-symbol` | content/none | "*" | Symbol shown before label for advanced exercises |
 
 **Default `solution-in-correction-style`:**
 ```typst
