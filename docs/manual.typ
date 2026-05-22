@@ -1,4 +1,4 @@
-#import "@preview/exercise-bank:0.4.0": *
+#import "@preview/exercise-bank:0.5.0": *
 
 // =============================================================================
 // DOCUMENT SETUP
@@ -95,7 +95,7 @@
   #v(1cm)
   #text(size: 11pt)[
     A comprehensive solution for creating, organizing, and filtering exercises\
-    Version 0.4.0\
+    Version 0.5.0\
     Nathan Scheinmann
   ]
 ]
@@ -135,7 +135,7 @@
 Import the package in your Typst document:
 
 ```typst
-#import "@preview/exercise-bank:0.4.0": exo, exo-setup
+#import "@preview/exercise-bank:0.5.0": exo, exo-setup
 ```
 
 == Quick Start
