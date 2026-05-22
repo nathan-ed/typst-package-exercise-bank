@@ -1,4 +1,4 @@
-#import "@preview/exercise-bank:0.3.0": *
+#import "@preview/exercise-bank:0.4.0": *
 
 // =============================================================================
 // DOCUMENT SETUP
@@ -95,7 +95,7 @@
   #v(1cm)
   #text(size: 11pt)[
     A comprehensive solution for creating, organizing, and filtering exercises\
-    Version 0.3.0\
+    Version 0.4.0\
     Nathan Scheinmann
   ]
 ]
@@ -121,9 +121,9 @@
 == Features
 
 - Exercises with inline or deferred solutions
-- Teacher corrections with fallback and append modes
+- Teacher corrections with flexible display modes
 - Draft mode for work-in-progress documents
-- Multiple solution display modes
+- Multiple display control options (what, where, which content)
 - Metadata support (topic, level, author, competencies)
 - Exercise banks: define once, display anywhere
 - Powerful filtering by any criteria
@@ -135,7 +135,7 @@
 Import the package in your Typst document:
 
 ```typst
-#import "@preview/exercise-bank:0.3.0": exo, exo-setup
+#import "@preview/exercise-bank:0.4.0": exo, exo-setup
 ```
 
 == Quick Start
@@ -213,43 +213,23 @@ Exercises are automatically numbered:
 #pagebreak()
 
 // =============================================================================
-// SOLUTION MODES
+// DISPLAY CONTROL
 // =============================================================================
 
-= Solution Display Modes
+= Display Control
 
-Control how and where solutions appear using `solution-mode`.
+The package uses three parameters to control display behavior.
 
-== Inline (Default)
+== `display` - What to Display
 
-Solutions appear immediately after each exercise:
-
-#example-full(
-  [```typst
-#exo-setup(solution-mode: "inline")
-
-#exo(
-  exercise: [Solve $x + 3 = 7$.],
-  solution: [$x = 4$],
-)
-  ```],
-  [
-    #exo-reset-counter()
-    #exo-setup(solution-mode: "inline")
-    #exo(
-      exercise: [Solve $x + 3 = 7$.],
-      solution: [$x = 4$],
-    )
-  ]
-)
-
-== No Solutions
-
-Hide all solutions (for student worksheets):
+Controls what content is displayed:
+- `"both"` (default) - Show exercises and solutions/corrections
+- `"ex"` - Show only exercises
+- `"sol"` - Show only solutions/corrections
 
 #example-full(
   [```typst
-#exo-setup(solution-mode: "none")
+#exo-setup(display: "ex")  // Exercises only
 
 #exo(
   exercise: [Solve $x + 3 = 7$.],
@@ -258,7 +238,7 @@ Hide all solutions (for student worksheets):
   ```],
   [
     #exo-reset-counter()
-    #exo-setup(solution-mode: "none")
+    #exo-setup(display: "ex")
     #exo(
       exercise: [Solve $x + 3 = 7$.],
       solution: [$x = 4$],
@@ -266,13 +246,49 @@ Hide all solutions (for student worksheets):
   ]
 )
 
-== Solutions at End of Section
+== `corr-display` - Which Content to Show
 
-Collect solutions and display them later:
+Controls whether to show solutions or corrections:
+- `"solution"` (default) - Show solution content
+- `"correction"` - Show correction content
+- `"mixed"` - Default to solution, but use correction for exercises with `show-corr: true`
 
 #example-full(
   [```typst
-#exo-setup(solution-mode: "end-section")
+#exo-setup(corr-display: "correction")
+
+#exo(
+  exercise: [Simplify $2x + 3x$.],
+  correction: [
+    $2x + 3x = 5x$
+    (Combine like terms)
+  ],
+)
+  ```],
+  [
+    #exo-reset-counter()
+    #exo-setup(display: "both", corr-display: "correction")
+    #exo(
+      exercise: [Simplify $2x + 3x$.],
+      correction: [
+        $2x + 3x = 5x$
+        (Combine like terms)
+      ],
+    )
+  ]
+)
+
+== `corr-loc` - Where to Display
+
+Controls where solutions/corrections appear:
+- `"after"` (default) - Immediately after each exercise
+- `"pagebreak"` - With a page break between
+- `"end-section"` - Collected at section end
+- `"end-chapter"` - Collected at chapter end
+
+#example-full(
+  [```typst
+#exo-setup(corr-loc: "end-section")
 
 #exo(exercise: [Exercise 1], solution: [Answer 1])
 #exo(exercise: [Exercise 2], solution: [Answer 2])
@@ -281,33 +297,10 @@ Collect solutions and display them later:
   ```],
   [
     #exo-reset-counter()
-    #exo-setup(solution-mode: "end-section")
+    #exo-setup(display: "both", corr-display: "solution", corr-loc: "end-section")
     #exo(exercise: [Exercise 1], solution: [Answer 1])
     #exo(exercise: [Exercise 2], solution: [Answer 2])
     #exo-print-solutions()
-  ]
-)
-
-== Solutions Only
-
-Show only solutions (for answer keys):
-
-#example-full(
-  [```typst
-#exo-setup(solution-mode: "only")
-
-#exo(
-  exercise: [This is hidden],
-  solution: [Only this solution is shown],
-)
-  ```],
-  [
-    #exo-reset-counter()
-    #exo-setup(solution-mode: "only")
-    #exo(
-      exercise: [This is hidden],
-      solution: [Only this solution is shown],
-    )
   ]
 )
 
@@ -325,6 +318,8 @@ Corrections are detailed solutions for teachers, including pedagogical notes and
 
 #example-full(
   [```typst
+#exo-setup(corr-display: "correction")
+
 #exo(
   exercise: [Solve $x^2 = 9$.],
   correction: [
@@ -337,7 +332,7 @@ Corrections are detailed solutions for teachers, including pedagogical notes and
   ```],
   [
     #exo-reset-counter()
-    #exo-setup(solution-mode: "inline")
+    #exo-setup(display: "both", corr-display: "correction")
     #exo(
       exercise: [Solve $x^2 = 9$.],
       correction: [
@@ -350,75 +345,111 @@ Corrections are detailed solutions for teachers, including pedagogical notes and
   ]
 )
 
-== Fallback to Correction
+== Solutions Only (Answer Key)
 
-When `fallback-to-correction` is enabled, corrections are shown when solutions are missing:
+Show only solutions for student answer keys:
 
 #example-full(
   [```typst
-#exo-setup(fallback-to-correction: true)
+#exo-setup(display: "sol")
 
 #exo(
-  exercise: [Simplify $2x + 3x$.],
-  correction: [
-    $2x + 3x = 5x$
-    (Combine like terms)
-  ],
+  exercise: [This is hidden],
+  solution: [Only this solution is shown],
 )
   ```],
   [
     #exo-reset-counter()
-    #exo-setup(solution-mode: "inline", fallback-to-correction: true)
+    #exo-setup(display: "sol", corr-display: "solution")
     #exo(
-      exercise: [Simplify $2x + 3x$.],
-      correction: [
-        $2x + 3x = 5x$
-        (Combine like terms)
-      ],
+      exercise: [This is hidden],
+      solution: [Only this solution is shown],
     )
   ]
 )
 
-== Appending Solutions to Corrections
+== The `sol-in-corr` Flag
 
-Combine corrections with solutions using custom formatting:
+When `corr-display: "correction"`, both correction AND solution are shown by default. Use `sol-in-corr: true` on an exercise to indicate the solution is already embedded in the correction (avoiding duplication):
 
 #example-full(
   [```typst
-#exo-setup(
-  append-solution-to-correction: true,
-  solution-in-correction-style: (
-    weight: "bold",
-    fill: rgb("#1565c0"),
-  ),
+#exo-setup(corr-display: "correction")
+
+// Without sol-in-corr: both correction and solution shown
+#exo(
+  exercise: [Problem A],
+  correction: [Teacher notes only],
+  solution: [$x = 5$],
 )
 
+// With sol-in-corr: only correction shown
 #exo(
-  exercise: [Solve $x^2 = 9$.],
+  exercise: [Problem B],
   correction: [
-    Look for values where x squared equals 9.
-    Don't forget both positive and negative roots.
+    *Solution:* $x = 3$
+
+    _Teaching tip: Watch for sign errors._
   ],
-  solution: [$x = 3$ or $x = -3$],
+  solution: [$x = 3$],
+  sol-in-corr: true,  // Solution already in correction
 )
   ```],
   [
     #exo-reset-counter()
-    #exo-setup(
-      solution-mode: "inline",
-      append-solution-to-correction: true,
-      solution-in-correction-style: (
-        weight: "bold",
-        fill: rgb("#1565c0"),
-      ),
+    #exo-setup(display: "both", corr-display: "correction")
+    #exo(
+      exercise: [Problem A],
+      correction: [Teacher notes only],
+      solution: [$x = 5$],
     )
     #exo(
-      exercise: [Solve $x^2 = 9$.],
+      exercise: [Problem B],
       correction: [
-        Look for values where x squared equals 9.
-        Don't forget both positive and negative roots.
+        *Solution:* $x = 3$
+
+        _Teaching tip: Watch for sign errors._
       ],
-      solution: [$x = 3$ or $x = -3$],
+      solution: [$x = 3$],
+      sol-in-corr: true,
+    )
+  ]
+)
+
+== Mixed Display Mode
+
+Use `corr-display: "mixed"` to default to solutions while showing corrections for specific exercises:
+
+#example-full(
+  [```typst
+#exo-setup(corr-display: "mixed")
+
+#exo(
+  exercise: [Simple problem],
+  solution: [Quick answer],
+  correction: [Detailed explanation],
+)
+
+#exo(
+  exercise: [Complex problem],
+  solution: [Answer],
+  correction: [Step-by-step solution],
+  show-corr: true,  // Shows correction
+)
+  ```],
+  [
+    #exo-reset-counter()
+    #exo-setup(display: "both", corr-display: "mixed")
+    #exo(
+      exercise: [Simple problem],
+      solution: [Quick answer],
+      correction: [Detailed explanation],
+    )
+    #exo(
+      exercise: [Complex problem],
+      solution: [Answer],
+      correction: [Step-by-step solution],
+      show-corr: true,
     )
   ]
 )
@@ -450,7 +481,8 @@ Show placeholders for incomplete exercises during document preparation.
   [
     #exo-reset-counter()
     #exo-setup(
-      solution-mode: "inline",
+      display: "both",
+      corr-display: "solution",
       draft-mode: true,
       solution-placeholder: [_\[To be written\]_],
     )
@@ -476,7 +508,7 @@ Empty solutions show minimal space without placeholders:
   ```],
   [
     #exo-reset-counter()
-    #exo-setup(solution-mode: "inline", draft-mode: false)
+    #exo-setup(display: "both", corr-display: "solution", draft-mode: false)
     #exo(
       exercise: [Solve $x + 5 = 12$],
       solution: [],
@@ -527,7 +559,7 @@ Use `exo-show` to display a specific exercise:
   [
     #exo-reset-counter()
     #exo-clear-registry()
-    #exo-setup(solution-mode: "inline")
+    #exo-setup(display: "both", corr-display: "solution")
     #exo-define(
       id: "quad-1",
       exercise: [Solve $x^2 - 5x + 6 = 0$.],
@@ -559,75 +591,6 @@ Use `exo-select` with filters:
 // Custom filter
 #exo-select(where: ex => ex.metadata.level == "hard")
 ```
-
-== Including Exercises from External Files
-
-For larger projects, organize exercises in separate files and import them as needed.
-
-*File structure:*
-```
-project/
-├── main.typ
-├── exercises/
-│   ├── algebra.typ
-│   ├── geometry.typ
-│   └── calculus.typ
-```
-
-*exercises/algebra.typ:*
-```typst
-#import "@preview/exercise-bank:0.3.0": exo-define
-
-#exo-define(
-  id: "alg-linear-1",
-  exercise: [Solve $2x + 5 = 13$.],
-  topic: "linear-equations",
-  level: "1M",
-  solution: [$x = 4$],
-)
-
-#exo-define(
-  id: "alg-linear-2",
-  exercise: [Solve $3x - 7 = 2x + 4$.],
-  topic: "linear-equations",
-  level: "1M",
-  solution: [$x = 11$],
-)
-
-#exo-define(
-  id: "alg-quadratic-1",
-  exercise: [Solve $x^2 - 5x + 6 = 0$.],
-  topic: "quadratics",
-  level: "2M",
-  solution: [$x = 2$ or $x = 3$],
-)
-```
-
-*main.typ:*
-```typst
-#import "@preview/exercise-bank:0.3.0": *
-
-// Import exercise definitions (registers them in the bank)
-#include "exercises/algebra.typ"
-#include "exercises/geometry.typ"
-
-// Now use them anywhere in your document
-= Linear Equations
-#exo-select(topic: "linear-equations")
-
-= Quadratics
-#exo-select(topic: "quadratics")
-
-// Or pick specific exercises
-= Mixed Review
-#exo-show("alg-linear-1")
-#exo-show("alg-quadratic-1")
-```
-
-*Tips:*
-- Use `#include` (not `#import`) to execute the file and register exercises
-- Exercise IDs must be unique across all included files
-- Exercises are registered globally, so include order doesn't matter for display
 
 #pagebreak()
 
@@ -686,7 +649,7 @@ Tag exercises with competencies and display them visually.
   [
     #exo-reset-counter()
     #exo-clear-registry()
-    #exo-setup(solution-mode: "inline", show-competencies: true)
+    #exo-setup(display: "both", corr-display: "solution", show-competencies: true)
     #exo-define(
       id: "comp-ex",
       exercise: [Solve and explain your reasoning.],
@@ -718,18 +681,24 @@ Use `exo-setup` to configure defaults:
 
 ```typst
 #exo-setup(
-  solution-mode: "inline",
+  // Display control
+  display: "both",               // "ex", "sol", "both"
+  corr-display: "solution",    // "solution", "correction", "mixed"
+  corr-loc: "after",           // "after", "pagebreak", "end-section", "end-chapter"
+  // Labels
   exercise-label: "Exercise",
   solution-label: "Solution",
   correction-label: "Correction",
-  counter-reset: "section",
+  // Counter behavior
+  counter-reset: "section",   // "section", "chapter", "global"
+  // Display options
   show-id: false,
   show-competencies: false,
-  fallback-to-correction: false,
-  append-solution-to-correction: false,
+  // Draft mode
   draft-mode: false,
-  badge-style: "box",      // "box", "circled", "filled-circle", "pill", "tag"
-  badge-color: black,      // Color for badge
+  // Badge styling
+  badge-style: "box",
+  badge-color: black,
 )
 ```
 
@@ -751,7 +720,7 @@ Change the visual style of exercise badges:
 #exo-setup(badge-style: "tag", badge-color: rgb("#1e40af"))
 ```
 
-Available styles: `"box"` (default), `"circled"`, `"filled-circle"`, `"pill"`, `"tag"`
+Available styles: `"box"` (default), `"circled"`, `"filled-circle"`, `"pill"`, `"tag"`, `"border-accent"`, `"underline"`, `"rounded-box"`, `"header-card"`
 
 == Localization
 
@@ -763,17 +732,12 @@ Change labels for different languages:
 #exo-setup(
   exercise-label: "Exercice",
   solution-label: "Solution",
-)
-
-// German
-#exo-setup(
-  exercise-label: "Aufgabe",
-  solution-label: "Lösung",
+  correction-label: "Corrigé",
 )
   ```],
   [
     #text(size: 9pt)[
-      *French:* Exercice, Solution\
+      *French:* Exercice, Solution, Corrigé\
       *German:* Aufgabe, Lösung\
       *Spanish:* Ejercicio, Solución
     ]
@@ -799,34 +763,6 @@ Use hooks to trigger resets:
 = New Chapter
 #exo-chapter-start()  // Resets if counter-reset: "chapter"
 ```
-
-== Spacing Control
-
-Control vertical spacing before and after exercises, solutions, and corrections independently:
-
-```typst
-// Compact layout
-#exo-setup(
-  exercise-above: 0.5em,
-  exercise-below: 0.5em,
-  solution-above: 0.3em,
-  solution-below: 0.3em,
-)
-
-// More space between exercises (e.g., for exams)
-#exo-setup(
-  exercise-above: 1.5em,
-  exercise-below: 1em,
-)
-
-// Different spacing for corrections
-#exo-setup(
-  correction-above: 1em,
-  correction-below: 0.5em,
-)
-```
-
-The default spacing is `0.8em` for all box types.
 
 == Advanced Exercises
 
@@ -1026,6 +962,8 @@ Set the badge style with `exo-setup(badge-style: "...")`.
   [`solution`], [content], [none], [Solution content],
   [`correction`], [content], [none], [Correction for teachers],
   [`id`], [string], [auto], [Unique exercise ID],
+  [`sol-in-corr`], [bool], [false], [If true, solution is already in correction (don't show both)],
+  [`show-corr`], [bool], [false], [If true, show correction in "mixed" mode],
   [`topic`], [string], [none], [Topic metadata],
   [`level`], [string], [none], [Difficulty level],
   [`authors`], [array], [()], [Author names],
@@ -1065,23 +1003,22 @@ Same as `exo`, plus:
 
 == `exo-setup` Function
 
-*Content & Behavior:*
+*Display Control:*
 
 #table(
   columns: (1.6fr, 0.8fr, 1fr, 2fr),
   stroke: (x: none, y: 0.3pt + luma(85%)),
   inset: 6pt,
   [*Parameter*], [*Type*], [*Default*], [*Description*],
-  [`solution-mode`], [string], ["inline"], ["inline", "end-section", "end-chapter", "none", "only"],
+  [`display`], [string], ["both"], ["ex", "sol", "both"],
+  [`corr-display`], [string], ["solution"], ["solution", "correction", "mixed"],
+  [`corr-loc`], [string], ["after"], ["after", "pagebreak", "end-section", "end-chapter"],
   [`exercise-label`], [string], ["Exercise"], [Label for exercises],
   [`solution-label`], [string], ["Solution"], [Label for solutions],
   [`correction-label`], [string], ["Correction"], [Label for corrections],
   [`counter-reset`], [string], ["section"], ["section", "chapter", "global"],
   [`show-id`], [bool], [false], [Show exercise IDs],
   [`show-competencies`], [bool], [false], [Show competency tags],
-  [`show-metadata`], [bool], [false], [Show metadata],
-  [`fallback-to-correction`], [bool], [false], [Show correction when solution missing],
-  [`append-solution-to-correction`], [bool], [false], [Append solution to correction],
   [`draft-mode`], [bool], [false], [Show placeholders for empty content],
   [`solution-placeholder`], [content], [_To be completed_], [Placeholder text],
   [`correction-placeholder`], [content], [_To be completed_], [Placeholder text],
@@ -1100,8 +1037,8 @@ Same as `exo`, plus:
   [`solution-color`], [color], [green], [Color for solution badges],
   [`correction-color`], [color], [green], [Color for correction badges],
   [`label-font-size`], [length], [12pt], [Font size for badge labels],
-  [`margin-position`], [length/auto], [auto], [Width reserved for badge column (auto = computed from label)],
-  [`label-extra`], [length], [1cm], [Extra space for labels to extend into left margin],
+  [`margin-position`], [length/auto], [auto], [Width reserved for badge column],
+  [`label-extra`], [length], [1cm], [Extra space for labels in margin],
 )
 
 #v(0.5em)

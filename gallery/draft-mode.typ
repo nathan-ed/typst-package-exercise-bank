@@ -1,4 +1,4 @@
-#import "@preview/exercise-bank:0.3.0": *
+#import "@preview/exercise-bank:0.4.0": *
 
 #set page(width: 16cm, height: auto, margin: 1cm)
 
@@ -56,29 +56,25 @@ Empty corrections/solutions show placeholders for completion.
 
 #pagebreak()
 
-== Part 3: With Append Mode
+== Part 3: With Correction Mode
 
 #exo-setup(
   draft-mode: true,
-  append-solution-to-correction: true,
-  correction-placeholder: [_[Explanation]_],
-  solution-placeholder: [_[Final answer]_],
+  corr-display: "correction",  // Show corrections
+  correction-placeholder: [_[Explanation to be written]_],
 )
 
 #exo(
   exercise: [Factor $x^2 - 4$],
-  correction: [],  // Empty correction
-  solution: [$x^2 - 4 = (x+2)(x-2)$],  // Real solution
+  correction: [],  // Empty correction - shows placeholder
 )
 
 #exo(
   exercise: [What is $5 + 7$?],
-  correction: [Add the two numbers.],  // Real correction
-  solution: [],  // Empty solution - shows placeholder
+  correction: [Add the two numbers to get 12.],  // Real correction
 )
 
 #exo(
   exercise: [Expand $(x+3)^2$],
-  correction: [],  // Both empty
-  solution: [],    // Shows single placeholder (not duplicated)
+  correction: [],  // Empty - shows placeholder
 )

@@ -6,9 +6,6 @@
 // External Package Imports
 // =============================================================================
 
-// Import g-exam for exam mode display
-#import "@preview/g-exam:0.4.4": exam as g-exam-template, question as g-exam-question, subquestion as g-exam-subquestion
-
 // =============================================================================
 // State and Counters
 // =============================================================================
@@ -18,42 +15,42 @@
 
 // Configuration state
 #let exo-config = state("exo-config", (
-  solution-mode: "inline",     // "inline", "end-section", "end-chapter", "none", "only"
-  solution-label: "Solution",
-  correction-label: "Correction",  // Label for corrections (teacher version)
-  fallback-to-correction: false,   // Show correction when solution is missing
-  exercise-label: "Exercise",
-  counter-reset: "section",    // "section", "chapter", "global"
-  show-metadata: false,
-  show-id: false,              // Show exercise UID below the badge
-  show-competencies: false,    // Show competency tags below exercise
-  display-mode: "exercise",    // "exercise" (default exo-box) or "exam" (g-exam question)
-  badge-style: "box",          // "box", "circled", "filled-circle", "pill", "tag", "border-accent", "underline", "rounded-box", "header-card"
-  badge-color: black,          // Color for exercise badges
-  solution-color: rgb("#4a7c59"),    // Color for solution badges (green)
-  correction-color: rgb("#4a7c59"),  // Color for correction badges (green)
-  label-font-size: 12pt,       // Font size for badge label text
-  margin-position: auto,       // Position of content margin from left (auto = computed from label size)
-  label-extra: 1cm,            // Extra space for labels to extend into left margin
-  page-break: "none",          // "none", "before", "after", "around" - page break behavior
-  append-solution-to-correction: false,  // Append solution to correction content
-  solution-in-correction-style: (        // Text styling when solution is appended
-    weight: "bold",
-    fill: rgb("#1565c0"),  // Blue to differentiate from correction
-    style: "normal",       // "normal" or "italic"
-    size: none,           // none = inherit size
-  ),
-  draft-mode: false,                            // Show placeholders for empty corrections/solutions
-  correction-placeholder: [_To be completed_],  // Placeholder when correction is empty (draft mode)
-  solution-placeholder: [_To be completed_],    // Placeholder when solution is empty (draft mode)
+  // Display control
+  "display": "both",              // "ex" (exercises only), "sol" (solutions/corrections only), "both"
+  "corrDisplay": "solution",   // "solution", "correction", "mixed"
+  "corrLoc": "after",          // "after", "pagebreak", "end-section", "end-chapter"
+  // Labels
+  "solution-label": "Solution",
+  "correction-label": "Correction",
+  "exercise-label": "Exercise",
+  // Counter behavior
+  "counter-reset": "section",    // "section", "chapter", "global"
+  // Display options
+  "show-metadata": false,
+  "show-id": false,              // Show exercise UID below the badge
+  "show-competencies": false,    // Show competency tags below exercise
+  "display-mode": "exercise",    // "exercise" (default exo-box) or "exam" (g-exam question)
+  // Visual styling
+  "badge-style": "box",          // "box", "circled", "filled-circle", "pill", "tag", "border-accent", "underline", "rounded-box", "header-card"
+  "badge-color": black,          // Color for exercise badges
+  "solution-color": rgb("#4a7c59"),    // Color for solution badges (green)
+  "correction-color": rgb("#4a7c59"),  // Color for correction badges (green)
+  "label-font-size": 12pt,       // Font size for badge label text
+  "margin-position": auto,       // Position of content margin from left (auto = computed from label size)
+  "label-extra": 1cm,            // Extra space for labels to extend into left margin
+  "page-break": "none",          // "none", "before", "after", "around" - page break behavior for exercises
+  // Draft mode
+  "draft-mode": false,                            // Show placeholders for empty corrections/solutions
+  "correction-placeholder": [_To be completed_],  // Placeholder when correction is empty (draft mode)
+  "solution-placeholder": [_To be completed_],    // Placeholder when solution is empty (draft mode)
   // Spacing parameters
-  exercise-above: 0.8em,    // Space above exercise boxes
-  exercise-below: 0.8em,    // Space below exercise boxes
-  solution-above: 0.8em,    // Space above solution boxes
-  solution-below: 0.8em,    // Space below solution boxes
-  correction-above: 0.8em,  // Space above correction boxes
-  correction-below: 0.8em,  // Space below correction boxes
-  advanced-symbol: "*",     // Symbol shown before label for advanced exercises (none to disable)
+  "exercise-above": 0.8em,    // Space above exercise boxes
+  "exercise-below": 0.8em,    // Space below exercise boxes
+  "solution-above": 0.8em,    // Space above solution boxes
+  "solution-below": 0.8em,    // Space below solution boxes
+  "correction-above": 0.8em,  // Space above correction boxes
+  "correction-below": 0.8em,  // Space below correction boxes
+  "advanced-symbol": "*",     // Symbol shown before label for advanced exercises (none to disable)
 ))
 
 // Registry of all exercises (for filtering)
@@ -67,16 +64,16 @@
 
 // Exam configuration state (for exam display mode)
 #let exam-config = state("exam-config", (
-  show-solutions: false,  // Whether to show solutions in exam
-  solution-label: "Solution",
+  "show-solutions": false,  // Whether to show solutions in exam
+  "solution-label": "Solution",
   // Solution box styling
-  solution-fill: rgb("#e8f5e9"),
-  solution-stroke: 0.8pt + rgb("#4a7c59"),
-  solution-radius: 3pt,
-  solution-inset: 8pt,
-  solution-label-color: rgb("#2e5a3a"),
+  "solution-fill": rgb("#e8f5e9"),
+  "solution-stroke": 0.8pt + rgb("#4a7c59"),
+  "solution-radius": 3pt,
+  "solution-inset": 8pt,
+  "solution-label-color": rgb("#2e5a3a"),
   // Question styling (for custom question wrappers)
-  question-spacing: 1em,
+  "question-spacing": 1em,
 ))
 
 // Custom solution box for exams (fully customizable)
@@ -104,16 +101,22 @@
 // =============================================================================
 
 #let exo-setup(
-  solution-mode: none,
+  // Display control
+  display: none,           // "ex", "sol", "both"
+  corr-display: none,    // "solution", "correction", "mixed"
+  corr-loc: none,        // "after", "pagebreak", "end-section", "end-chapter"
+  // Labels
   solution-label: none,
   correction-label: none,
-  fallback-to-correction: none,
   exercise-label: none,
+  // Counter behavior
   counter-reset: none,
+  // Display options
   show-metadata: none,
   show-id: none,
   show-competencies: none,
   display-mode: none,  // "exercise" or "exam"
+  // Visual styling
   badge-style: none,   // "box", "circled", "filled-circle", "pill", "tag"
   badge-color: none,   // Color for exercise badges
   solution-color: none,   // Color for solution badges
@@ -122,8 +125,7 @@
   margin-position: none,
   label-extra: none,
   page-break: none,    // "none", "before", "after", "around"
-  append-solution-to-correction: none,
-  solution-in-correction-style: none,
+  // Draft mode
   draft-mode: none,
   correction-placeholder: none,
   solution-placeholder: none,
@@ -138,10 +140,11 @@
 ) = {
   exo-config.update(cfg => {
     let new = cfg
-    if solution-mode != none { new.solution-mode = solution-mode }
+    if display != none { new.display = display }
+    if corr-display != none { new.corrDisplay = corr-display }
+    if corr-loc != none { new.corrLoc = corr-loc }
     if solution-label != none { new.solution-label = solution-label }
     if correction-label != none { new.correction-label = correction-label }
-    if fallback-to-correction != none { new.fallback-to-correction = fallback-to-correction }
     if exercise-label != none { new.exercise-label = exercise-label }
     if counter-reset != none { new.counter-reset = counter-reset }
     if show-metadata != none { new.show-metadata = show-metadata }
@@ -156,8 +159,6 @@
     if margin-position != none { new.margin-position = margin-position }
     if label-extra != none { new.label-extra = label-extra }
     if page-break != none { new.page-break = page-break }
-    if append-solution-to-correction != none { new.append-solution-to-correction = append-solution-to-correction }
-    if solution-in-correction-style != none { new.solution-in-correction-style = solution-in-correction-style }
     if draft-mode != none { new.draft-mode = draft-mode }
     if correction-placeholder != none { new.correction-placeholder = correction-placeholder }
     if solution-placeholder != none { new.solution-placeholder = solution-placeholder }
@@ -679,7 +680,7 @@
 }
 
 // =============================================================================
-// Helper Functions for Combining Corrections and Solutions
+// Helper Functions for Content Display
 // =============================================================================
 
 // Check if content is empty (none or empty content block)
@@ -700,87 +701,51 @@
   }
 }
 
-// Combine correction and solution content with custom formatting
-#let combine-correction-and-solution(correction, solution, style-dict, corr-placeholder, sol-placeholder, draft-mode) = {
-  let corr-is-empty = is-empty-content(correction)
-  let sol-is-empty = is-empty-content(solution)
+// Determine what content to show based on corrDisplay mode and exercise flags
+// Returns: array of (type: "solution" or "correction", content: content) - may contain 0, 1, or 2 items
+#let determine-content-to-show(solution, correction, cfg, exercise-flags) = {
+  let solInCorr = exercise-flags.at("solInCorr", default: false)
+  let showCorr = exercise-flags.at("showCorr", default: false)
+  let items = ()
 
-  // If both are empty, show only one placeholder (in draft mode) or empty space
-  if corr-is-empty and sol-is-empty {
-    if draft-mode {
-      corr-placeholder
-    } else {
-      [ ]  // Empty space to maintain box
-    }
-  } else {
-    // Show correction (or placeholder if empty and draft mode)
-    let corr-content = if corr-is-empty {
-      if draft-mode { corr-placeholder } else { [ ] }
-    } else {
-      correction
-    }
-    corr-content
-
-    // Add solution in new paragraph
-    parbreak()
-
-    let sol-content = if sol-is-empty {
-      if draft-mode { sol-placeholder } else { [ ] }
-    } else {
-      solution
-    }
-
-    // Build text styling parameters conditionally
-    let weight = style-dict.at("weight", default: "normal")
-    let fill = style-dict.at("fill", default: black)
-    let style = style-dict.at("style", default: "normal")
-    let size = style-dict.at("size", default: none)
-
-    // Apply styling based on whether size is specified
-    if size != none {
-      text(weight: weight, fill: fill, style: style, size: size)[#sol-content]
-    } else {
-      text(weight: weight, fill: fill, style: style)[#sol-content]
-    }
-  }
-}
-
-// Determine what content to show (solution, correction, or combined)
-#let determine-content-to-show(solution, correction, cfg) = {
-  if solution != none and correction == none {
-    // Solution only - apply placeholder if empty (in draft mode)
-    let sol-content = apply-placeholder(solution, cfg.solution-placeholder, cfg.draft-mode)
-    (type: "solution", content: sol-content)
-  } else if solution == none and correction != none {
-    // Correction only (with fallback check) - apply placeholder if empty (in draft mode)
-    if cfg.fallback-to-correction {
-      let corr-content = apply-placeholder(correction, cfg.correction-placeholder, cfg.draft-mode)
-      (type: "correction", content: corr-content)
-    } else {
-      none
-    }
-  } else if solution != none and correction != none {
-    // Both exist - decide based on append setting
-    if cfg.append-solution-to-correction {
-      // Combine correction and solution (handles empty content internally)
-      let combined = combine-correction-and-solution(
-        correction,
-        solution,
-        cfg.solution-in-correction-style,
-        cfg.correction-placeholder,
-        cfg.solution-placeholder,
-        cfg.draft-mode
-      )
-      (type: "correction", content: combined)
-    } else {
-      // Default: show solution only (solutions have priority) - apply placeholder if empty (in draft mode)
+  if cfg.corrDisplay == "solution" {
+    // Only show solution
+    if solution != none {
       let sol-content = apply-placeholder(solution, cfg.solution-placeholder, cfg.draft-mode)
-      (type: "solution", content: sol-content)
+      items.push((type: "solution", content: sol-content))
+    }
+  } else if cfg.corrDisplay == "correction" {
+    // Show correction, and also solution if solInCorr is false
+    if correction != none {
+      let corr-content = apply-placeholder(correction, cfg.correction-placeholder, cfg.draft-mode)
+      items.push((type: "correction", content: corr-content))
+    }
+    // If solution is NOT already in correction, also show solution
+    if not solInCorr and solution != none {
+      let sol-content = apply-placeholder(solution, cfg.solution-placeholder, cfg.draft-mode)
+      items.push((type: "solution", content: sol-content))
     }
   } else {
-    // Neither exists
-    none
+    // "mixed" mode: default to solution, but use correction for exercises with showCorr: true
+    if showCorr and correction != none {
+      let corr-content = apply-placeholder(correction, cfg.correction-placeholder, cfg.draft-mode)
+      items.push((type: "correction", content: corr-content))
+      // Also show solution if not already in correction
+      if not solInCorr and solution != none {
+        let sol-content = apply-placeholder(solution, cfg.solution-placeholder, cfg.draft-mode)
+        items.push((type: "solution", content: sol-content))
+      }
+    } else if solution != none {
+      let sol-content = apply-placeholder(solution, cfg.solution-placeholder, cfg.draft-mode)
+      items.push((type: "solution", content: sol-content))
+    } else if correction != none {
+      // Fallback to correction if no solution
+      let corr-content = apply-placeholder(correction, cfg.correction-placeholder, cfg.draft-mode)
+      items.push((type: "correction", content: corr-content))
+    }
   }
+
+  items
 }
 
 // =============================================================================
@@ -793,6 +758,9 @@
   correction: none,
   id: auto,
   margin-content: none,  // Optional content below the badge (e.g., QR code, remarks)
+  // Exercise-level display flags
+  sol-in-corr: false,      // If true, correction already contains solution (use solution in "correction" mode)
+  show-corr: false,       // If true, show correction in "mixed" mode
   // Metadata fields
   topic: none,
   level: none,
@@ -826,6 +794,12 @@
     metadata.insert(key, value)
   }
 
+  // Build exercise flags
+  let exercise-flags = (
+    solInCorr: sol-in-corr,
+    showCorr: show-corr,
+  )
+
   // Create exercise record
   let exercise-record = (
     id: exercise-id,
@@ -835,6 +809,8 @@
     solution: solution,
     correction: correction,
     margin-content: margin-content,
+    solInCorr: sol-in-corr,
+    showCorr: show-corr,
   )
 
   // Register exercise
@@ -843,18 +819,30 @@
     reg
   })
 
-  // Display based on mode
-  if cfg.solution-mode == "only" {
-    // Only show solution (or correction with appended solution)
-    let content-to-show = determine-content-to-show(solution, correction, cfg)
-    if content-to-show != none {
-      if content-to-show.type == "solution" {
-        exo-solution-box(number: num, content-to-show.content, exercise-id: exercise-id, show-id: cfg.show-id)
+  // Display based on show mode
+  if cfg.display == "sol" {
+    // Only show solution/correction
+    let items-to-show = determine-content-to-show(solution, correction, cfg, exercise-flags)
+    for item in items-to-show {
+      if item.type == "solution" {
+        exo-solution-box(number: num, item.content, exercise-id: exercise-id, show-id: cfg.show-id)
       } else {
-        exo-correction-box(number: num, content-to-show.content, exercise-id: exercise-id, show-id: cfg.show-id)
+        exo-correction-box(number: num, item.content, exercise-id: exercise-id, show-id: cfg.show-id)
       }
     }
+  } else if cfg.display == "ex" {
+    // Only show exercise
+    exo-box(
+      label: get-exercise-label(cfg, metadata),
+      number: num,
+      exercise,
+      exercise-id: exercise-id,
+      show-id: cfg.show-id,
+      margin-content: margin-content,
+    )
   } else {
+    // "both" mode - show exercise and solution/correction
+
     // Show exercise
     exo-box(
       label: get-exercise-label(cfg, metadata),
@@ -865,24 +853,36 @@
       margin-content: margin-content,
     )
 
-    // Handle solution display (with correction fallback or appending)
-    let content-to-show = determine-content-to-show(solution, correction, cfg)
+    // Handle solution/correction display
+    let items-to-show = determine-content-to-show(solution, correction, cfg, exercise-flags)
 
-    if content-to-show != none {
-      if cfg.solution-mode == "inline" {
-        if content-to-show.type == "solution" {
-          exo-solution-box(number: num, content-to-show.content, exercise-id: exercise-id, show-id: cfg.show-id)
-        } else {
-          exo-correction-box(number: num, content-to-show.content, exercise-id: exercise-id, show-id: cfg.show-id)
+    if items-to-show.len() > 0 {
+      if cfg.corrLoc == "after" {
+        for item in items-to-show {
+          if item.type == "solution" {
+            exo-solution-box(number: num, item.content, exercise-id: exercise-id, show-id: cfg.show-id)
+          } else {
+            exo-correction-box(number: num, item.content, exercise-id: exercise-id, show-id: cfg.show-id)
+          }
         }
-      } else if cfg.solution-mode == "end-section" or cfg.solution-mode == "end-chapter" {
-        // Store for later (include ID and type for later display)
-        exo-pending-solutions.update(pending => {
-          pending.push((number: num, content: content-to-show.content, type: content-to-show.type, id: exercise-id))
-          pending
-        })
+      } else if cfg.corrLoc == "pagebreak" {
+        pagebreak(weak: true)
+        for item in items-to-show {
+          if item.type == "solution" {
+            exo-solution-box(number: num, item.content, exercise-id: exercise-id, show-id: cfg.show-id)
+          } else {
+            exo-correction-box(number: num, item.content, exercise-id: exercise-id, show-id: cfg.show-id)
+          }
+        }
+      } else if cfg.corrLoc == "end-section" or cfg.corrLoc == "end-chapter" {
+        // Store for later display
+        for item in items-to-show {
+          exo-pending-solutions.update(pending => {
+            pending.push((number: num, content: item.content, type: item.type, id: exercise-id))
+            pending
+          })
+        }
       }
-      // "none" mode: don't display solution or correction
     }
   }
   }  // close context
@@ -908,8 +908,7 @@
     v(0.5em)
 
     for item in pending {
-      // Handle both old format (solution field) and new format (content + type fields)
-      let content = item.at("content", default: item.at("solution", default: none))
+      let content = item.at("content", default: none)
       let item-type = item.at("type", default: "solution")
 
       if item-type == "solution" {
@@ -936,14 +935,14 @@
 
 #let exo-section-end() = context {
   let cfg = exo-config.get()
-  if cfg.solution-mode == "end-section" {
+  if cfg.corrLoc == "end-section" {
     exo-print-solutions()
   }
 }
 
 #let exo-chapter-end() = context {
   let cfg = exo-config.get()
-  if cfg.solution-mode == "end-chapter" {
+  if cfg.corrLoc == "end-chapter" {
     exo-print-solutions()
   }
 }
@@ -977,33 +976,44 @@
     if custom != none and not custom(meta) { matches = false }
 
     if matches {
-      exo-box(
-        label: get-exercise-label(cfg, meta),
-        number: exercise.number,
-        exercise.exercise,
-        exercise-id: exercise.id,
-        show-id: cfg.show-id,
+      // Build exercise flags from stored data
+      let exercise-flags = (
+        solInCorr: exercise.at("solInCorr", default: false),
+        showCorr: exercise.at("showCorr", default: false),
       )
 
-      // Handle solution/correction display with fallback
-      if show-solutions {
+      if cfg.display != "sol" {
+        exo-box(
+          label: get-exercise-label(cfg, meta),
+          number: exercise.number,
+          exercise.exercise,
+          exercise-id: exercise.id,
+          show-id: cfg.show-id,
+        )
+      }
+
+      // Handle solution/correction display
+      if show-solutions and cfg.display != "ex" {
         let sol = exercise.at("solution", default: none)
         let corr = exercise.at("correction", default: none)
+        let items-to-show = determine-content-to-show(sol, corr, cfg, exercise-flags)
 
-        if sol != none {
-          exo-solution-box(
-            number: exercise.number,
-            sol,
-            exercise-id: exercise.id,
-            show-id: cfg.show-id,
-          )
-        } else if cfg.fallback-to-correction and corr != none {
-          exo-correction-box(
-            number: exercise.number,
-            corr,
-            exercise-id: exercise.id,
-            show-id: cfg.show-id,
-          )
+        for item in items-to-show {
+          if item.type == "solution" {
+            exo-solution-box(
+              number: exercise.number,
+              item.content,
+              exercise-id: exercise.id,
+              show-id: cfg.show-id,
+            )
+          } else {
+            exo-correction-box(
+              number: exercise.number,
+              item.content,
+              exercise-id: exercise.id,
+              show-id: cfg.show-id,
+            )
+          }
         }
       }
     }
@@ -1022,6 +1032,9 @@
   id: auto,
   competencies: (),  // List of competency tags
   points: none,      // Points for exam mode
+  // Exercise-level display flags
+  sol-in-corr: false,      // If true, correction already contains solution
+  show-corr: false,       // If true, show correction in "mixed" mode
   // Metadata fields
   topic: none,
   level: none,
@@ -1062,6 +1075,8 @@
       correction: correction,
       competencies: competencies,
       points: points,
+      solInCorr: sol-in-corr,
+      showCorr: show-corr,
     )
 
     // Register exercise without displaying
@@ -1101,7 +1116,7 @@
     if found != none {
       // Determine if we should show solution
       let do-show-solution = if show-solution == auto {
-        cfg.solution-mode == "inline"
+        cfg.display != "ex"
       } else {
         show-solution
       }
@@ -1110,9 +1125,15 @@
       let comps = found.at("competencies", default: ())
       let pts = found.at("points", default: none)
 
-      // Get solution and correction (with fallback logic)
+      // Get solution and correction
       let sol = found.at("solution", default: none)
       let corr = found.at("correction", default: none)
+
+      // Build exercise flags
+      let exercise-flags = (
+        solInCorr: found.at("solInCorr", default: false),
+        showCorr: found.at("showCorr", default: false),
+      )
 
       // Check display mode
       if cfg.display-mode == "exam" {
@@ -1131,17 +1152,17 @@
           points: pts,
         )
 
-        // Show solution if configured (with correction fallback or appending)
+        // Show solution if configured
         if exam-cfg.show-solutions {
-          let content-to-show = determine-content-to-show(sol, corr, cfg)
-          if content-to-show != none {
-            exam-solution-box(content-to-show.content)
+          let items-to-show = determine-content-to-show(sol, corr, cfg, exercise-flags)
+          for item in items-to-show {
+            exam-solution-box(item.content)
           }
         }
       } else {
         // EXERCISE MODE: Use default exo-box format (no points)
-        // Display exercise
-        if cfg.solution-mode != "only" {
+        // Display exercise based on show mode
+        if cfg.display != "sol" {
           exo-box(
             label: get-exercise-label(cfg, found.metadata),
             number: num,
@@ -1153,28 +1174,35 @@
           )
         }
 
-        // Determine what content to show (solution, correction, or combined)
-        let content-to-show = determine-content-to-show(sol, corr, cfg)
+        // Determine what content to show
+        let items-to-show = determine-content-to-show(sol, corr, cfg, exercise-flags)
 
         // Handle solution/correction display
-        if content-to-show != none {
-          if cfg.solution-mode == "only" {
-            if content-to-show.type == "solution" {
-              exo-solution-box(number: num, content-to-show.content, exercise-id: found.id, show-id: cfg.show-id)
-            } else {
-              exo-correction-box(number: num, content-to-show.content, exercise-id: found.id, show-id: cfg.show-id)
+        if items-to-show.len() > 0 and (cfg.display == "sol" or (cfg.display == "both" and do-show-solution)) {
+          if cfg.corrLoc == "after" or cfg.display == "sol" {
+            for item in items-to-show {
+              if item.type == "solution" {
+                exo-solution-box(number: num, item.content, exercise-id: found.id, show-id: cfg.show-id)
+              } else {
+                exo-correction-box(number: num, item.content, exercise-id: found.id, show-id: cfg.show-id)
+              }
             }
-          } else if cfg.solution-mode == "inline" or do-show-solution {
-            if content-to-show.type == "solution" {
-              exo-solution-box(number: num, content-to-show.content, exercise-id: found.id, show-id: cfg.show-id)
-            } else {
-              exo-correction-box(number: num, content-to-show.content, exercise-id: found.id, show-id: cfg.show-id)
+          } else if cfg.corrLoc == "pagebreak" {
+            pagebreak(weak: true)
+            for item in items-to-show {
+              if item.type == "solution" {
+                exo-solution-box(number: num, item.content, exercise-id: found.id, show-id: cfg.show-id)
+              } else {
+                exo-correction-box(number: num, item.content, exercise-id: found.id, show-id: cfg.show-id)
+              }
             }
-          } else if cfg.solution-mode == "end-section" or cfg.solution-mode == "end-chapter" {
-            exo-pending-solutions.update(pending => {
-              pending.push((number: num, content: content-to-show.content, type: content-to-show.type, id: found.id))
-              pending
-            })
+          } else if cfg.corrLoc == "end-section" or cfg.corrLoc == "end-chapter" {
+            for item in items-to-show {
+              exo-pending-solutions.update(pending => {
+                pending.push((number: num, content: item.content, type: item.type, id: found.id))
+                pending
+              })
+            }
           }
         }
       }
@@ -1224,7 +1252,7 @@
 
   // Determine solution display
   let do-show-solutions = if show-solutions == auto {
-    cfg.solution-mode == "inline"
+    cfg.display != "ex"
   } else {
     show-solutions
   }
@@ -1296,6 +1324,12 @@
     let sol = exercise.at("solution", default: none)
     let corr = exercise.at("correction", default: none)
 
+    // Build exercise flags
+    let exercise-flags = (
+      solInCorr: exercise.at("solInCorr", default: false),
+      showCorr: exercise.at("showCorr", default: false),
+    )
+
     // Apply page break before if configured
     if cfg.page-break == "before" or cfg.page-break == "around" {
       pagebreak(weak: true)
@@ -1318,16 +1352,16 @@
         points: pts,
       )
 
-      // Show solution if configured (with correction fallback or appending)
+      // Show solution if configured
       if exam-cfg.show-solutions {
-        let content-to-show = determine-content-to-show(sol, corr, cfg)
-        if content-to-show != none {
-          exam-solution-box(content-to-show.content)
+        let items-to-show = determine-content-to-show(sol, corr, cfg, exercise-flags)
+        for item in items-to-show {
+          exam-solution-box(item.content)
         }
       }
     } else {
       // EXERCISE MODE: Use default exo-box format (no points)
-      if cfg.solution-mode != "only" {
+      if cfg.display != "sol" {
         exo-box(
           label: get-exercise-label(cfg, exercise.metadata),
           number: num,
@@ -1339,25 +1373,43 @@
         )
       }
 
-      // Determine what content to show (solution, correction, or combined)
-      let content-to-show = determine-content-to-show(sol, corr, cfg)
+      // Determine what content to show
+      let items-to-show = determine-content-to-show(sol, corr, cfg, exercise-flags)
 
-      if content-to-show != none {
-        if cfg.solution-mode == "only" or do-show-solutions {
-          if content-to-show.type == "solution" {
-            exo-solution-box(
-              number: num,
-              content-to-show.content,
-              exercise-id: exercise.id,
-              show-id: cfg.show-id,
-            )
-          } else {
-            exo-correction-box(
-              number: num,
-              content-to-show.content,
-              exercise-id: exercise.id,
-              show-id: cfg.show-id,
-            )
+      if items-to-show.len() > 0 and (cfg.display == "sol" or do-show-solutions) {
+        if cfg.corrLoc == "after" or cfg.display == "sol" {
+          for item in items-to-show {
+            if item.type == "solution" {
+              exo-solution-box(
+                number: num,
+                item.content,
+                exercise-id: exercise.id,
+                show-id: cfg.show-id,
+              )
+            } else {
+              exo-correction-box(
+                number: num,
+                item.content,
+                exercise-id: exercise.id,
+                show-id: cfg.show-id,
+              )
+            }
+          }
+        } else if cfg.corrLoc == "pagebreak" {
+          pagebreak(weak: true)
+          for item in items-to-show {
+            if item.type == "solution" {
+              exo-solution-box(number: num, item.content, exercise-id: exercise.id, show-id: cfg.show-id)
+            } else {
+              exo-correction-box(number: num, item.content, exercise-id: exercise.id, show-id: cfg.show-id)
+            }
+          }
+        } else if cfg.corrLoc == "end-section" or cfg.corrLoc == "end-chapter" {
+          for item in items-to-show {
+            exo-pending-solutions.update(pending => {
+              pending.push((number: num, content: item.content, type: item.type, id: exercise.id))
+              pending
+            })
           }
         }
       }
@@ -1410,13 +1462,8 @@
 }
 
 // =============================================================================
-// Exam Integration (g-exam wrapper)
+// Exam Integration
 // =============================================================================
-
-// Re-export g-exam functions for direct use
-#let exam-template = g-exam-template
-#let exam-question-raw = g-exam-question
-#let exam-subquestion = g-exam-subquestion
 
 // Custom score table that works with exo-box questions
 #let exam-score-table(
@@ -1486,239 +1533,3 @@
 }
 
 // exam-solution-box is defined at top of file
-
-// Display an exercise from the bank as a g-exam question
-#let exam-question(
-  id,
-  points: auto,  // auto = use points from exercise, or specify manually
-  supplement: none,  // Additional content after the question
-) = context {
-  let registry = exo-registry.get()
-  let exam-cfg = exam-config.get()
-
-  // Find exercise by ID
-  let found = none
-  for exercise in registry {
-    if exercise.id == id {
-      found = exercise
-      break
-    }
-  }
-
-  if found != none {
-    // Determine points
-    let pts = if points == auto {
-      found.at("points", default: none)
-    } else {
-      points
-    }
-
-    // Build question content
-    let q-content = {
-      found.exercise
-      if supplement != none {
-        supplement
-      }
-      // Show solution if configured
-      if exam-cfg.show-solutions and found.solution != none {
-        v(8pt)
-        exam-solution-box(found.solution)
-      }
-    }
-
-    // Display as g-exam question
-    if pts != none {
-      g-exam-question(points: pts, q-content)
-    } else {
-      g-exam-question(q-content)
-    }
-  } else {
-    text(fill: red)[*Error: Exercise "#id" not found*]
-  }
-}
-
-// Display multiple exercises from the bank as g-exam questions
-#let exam-question-many(..ids, points: auto) = {
-  for id in ids.pos() {
-    exam-question(id, points: points)
-  }
-}
-
-// Helper to filter exercises and return them (for use in exam-select)
-#let _filter-exercises(
-  topic: none,
-  level: none,
-  author: none,  // Filter: matches if author is in exercise's authors array
-  competency: none,
-  topics: none,
-  levels: none,
-  competencies: none,
-  where: none,
-  max: none,
-) = context {
-  let registry = exo-registry.get()
-
-  // Filter exercises
-  let filtered = ()
-  for exercise in registry {
-    let meta = exercise.metadata
-    let matches = true
-
-    // Simple exact filters
-    if topic != none and meta.topic != topic { matches = false }
-    if level != none and meta.level != level { matches = false }
-    // Author filter: check if author is in the authors array
-    if author != none {
-      let ex-authors = meta.at("authors", default: ())
-      if author not in ex-authors { matches = false }
-    }
-
-    // List filters (match any)
-    if topics != none {
-      let found = false
-      for t in topics {
-        if meta.topic == t { found = true; break }
-      }
-      if not found { matches = false }
-    }
-    if levels != none {
-      let found = false
-      for l in levels {
-        if meta.level == l { found = true; break }
-      }
-      if not found { matches = false }
-    }
-
-    // Competency filters
-    let ex-comps = exercise.at("competencies", default: ())
-    if competency != none {
-      if competency not in ex-comps { matches = false }
-    }
-    if competencies != none {
-      let found = false
-      for c in competencies {
-        if c in ex-comps { found = true; break }
-      }
-      if not found { matches = false }
-    }
-
-    // Custom filter
-    if where != none and not where(exercise) { matches = false }
-
-    if matches {
-      filtered.push(exercise)
-    }
-  }
-
-  // Apply max limit
-  if max != none and filtered.len() > max {
-    filtered = filtered.slice(0, max)
-  }
-
-  filtered
-}
-
-// Select and display exercises as g-exam questions with filtering
-#let exam-select(
-  // Simple filters (match exact value)
-  topic: none,
-  level: none,
-  author: none,  // Filter: matches if author is in exercise's authors array
-  competency: none,
-  // List filters (match any in list)
-  topics: none,
-  levels: none,
-  competencies: none,
-  // Custom filter function
-  where: none,
-  // Display options
-  max: none,
-  points: auto,  // auto = use from exercise, or override all
-) = context {
-  let exam-cfg = exam-config.get()
-  let registry = exo-registry.get()
-
-  // Filter exercises
-  let filtered = ()
-  for exercise in registry {
-    let meta = exercise.metadata
-    let matches = true
-
-    // Simple exact filters
-    if topic != none and meta.topic != topic { matches = false }
-    if level != none and meta.level != level { matches = false }
-    // Author filter: check if author is in the authors array
-    if author != none {
-      let ex-authors = meta.at("authors", default: ())
-      if author not in ex-authors { matches = false }
-    }
-
-    // List filters (match any)
-    if topics != none {
-      let found = false
-      for t in topics {
-        if meta.topic == t { found = true; break }
-      }
-      if not found { matches = false }
-    }
-    if levels != none {
-      let found = false
-      for l in levels {
-        if meta.level == l { found = true; break }
-      }
-      if not found { matches = false }
-    }
-
-    // Competency filters
-    let ex-comps = exercise.at("competencies", default: ())
-    if competency != none {
-      if competency not in ex-comps { matches = false }
-    }
-    if competencies != none {
-      let found = false
-      for c in competencies {
-        if c in ex-comps { found = true; break }
-      }
-      if not found { matches = false }
-    }
-
-    // Custom filter
-    if where != none and not where(exercise) { matches = false }
-
-    if matches {
-      filtered.push(exercise)
-    }
-  }
-
-  // Apply max limit
-  if max != none and filtered.len() > max {
-    filtered = filtered.slice(0, max)
-  }
-
-  // Display as g-exam questions
-  for exercise in filtered {
-    // Determine points
-    let pts = if points == auto {
-      exercise.at("points", default: none)
-    } else {
-      points
-    }
-
-    // Build question content
-    let q-content = {
-      exercise.exercise
-      // Show solution if configured
-      if exam-cfg.show-solutions and exercise.solution != none {
-        v(8pt)
-        exam-solution-box(exercise.solution)
-      }
-    }
-
-    // Display as g-exam question
-    if pts != none {
-      g-exam-question(points: pts, q-content)
-    } else {
-      g-exam-question(q-content)
-    }
-  }
-}

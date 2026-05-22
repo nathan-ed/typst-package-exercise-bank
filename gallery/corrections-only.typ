@@ -1,10 +1,10 @@
-#import "@preview/exercise-bank:0.3.0": exo, exo-setup
+#import "@preview/exercise-bank:0.4.0": exo, exo-setup
 
 #set page(width: 14cm, height: auto, margin: 1cm)
 
 #exo-setup(
-  solution-mode: "only",
-  fallback-to-correction: true,
+  display: "sol",                // Only show solutions/corrections (hide exercises)
+  corr-display: "correction",  // Show corrections
 )
 
 = Teacher's Answer Key
@@ -32,7 +32,7 @@ Perfect for creating teacher answer keys.
 
 #exo(
   exercise: [Factor $x^2 - 4$. (Hidden)],
-  solution: [
+  correction: [
     $x^2 - 4 = (x + 2)(x - 2)$
   ],
 )

@@ -1,8 +1,8 @@
-#import "@preview/exercise-bank:0.3.0": exo-define, exo-select, exo-setup
+#import "@preview/exercise-bank:0.4.0": exo-define, exo-select, exo-setup
 
 #set page(width: 14cm, height: auto, margin: 1cm)
 
-#exo-setup(solution-mode: "none")
+#exo-setup(display: "ex")  // Only show exercises (no solutions)
 
 // Define exercises with metadata
 #exo-define(

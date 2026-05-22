@@ -1,8 +1,8 @@
-#import "@preview/exercise-bank:0.3.0": exo, exo-setup
+#import "@preview/exercise-bank:0.4.0": exo, exo-setup
 
 #set page(width: 14cm, height: auto, margin: 1cm)
 
-#exo-setup(solution-mode: "inline")
+// Default: display: "both", corr-display: "solution", corr-loc: "after"
 
 = Exercises with Solutions
 

@@ -1,8 +1,6 @@
-#import "@preview/exercise-bank:0.3.0": exo-define, exo-show, exo-show-many, exo-setup
+#import "@preview/exercise-bank:0.4.0": exo-define, exo-show, exo-show-many, exo-setup
 
 #set page(width: 14cm, height: auto, margin: 1cm)
-
-#exo-setup(solution-mode: "inline")
 
 = Exercise Bank
 
