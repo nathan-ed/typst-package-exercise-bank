@@ -1081,3 +1081,58 @@ Same as `exo`, plus:
   [`exo-show-many("a", "b")`], [Display multiple exercises by ID],
   [`exo-filter(topic: ..)`], [Filter and display matching exercises],
 )
+
+= Exam Integration
+
+These functions support building exam documents from an exercise bank, typically used alongside a layout package such as `texam`.
+
+== `exam-setup`
+
+Configure the exam correction box appearance and behaviour.
+
+#table(
+  columns: (auto, auto, auto, 1fr),
+  stroke: (x: none, y: 0.3pt + luma(85%)),
+  inset: 6pt,
+  [*Parameter*], [*Type*], [*Default*], [*Description*],
+  [`show-solutions`], [bool], [`false`], [Show `exam-solution-box` content],
+  [`solution-label`], [string], [`"Correction"`], [Label shown in bold at the top of the solution box],
+  [`solution-fill`], [color], [green tint], [Background fill of the solution box],
+  [`solution-stroke`], [stroke], [green stroke], [Border stroke of the solution box],
+  [`solution-radius`], [length], [`3pt`], [Corner radius of the solution box],
+  [`solution-inset`], [length], [`8pt`], [Inner padding of the solution box],
+  [`solution-label-color`], [color], [dark green], [Color of the label text],
+  [`question-spacing`], [length], [`1em`], [Vertical space between questions],
+)
+
+== `exam-solution-box`
+
+A green-highlighted answer block. Only rendered when `exam-setup(show-solutions: true)`.
+
+```typst
+#exam-solution-box[
+  $(x - 2)(x - 3)$
+]
+```
+
+Place it after an exercise. The same source file produces both the student version (box hidden) and the correction (box shown) by flipping `show-solutions`.
+
+== `exam-score-table`
+
+Builds a score grid from registered exercise IDs, reading point values from the registry.
+
+```typst
+#exam-score-table("ex-1", "ex-2", "ex-3")
+```
+
+#table(
+  columns: (auto, auto, auto, 1fr),
+  stroke: (x: none, y: 0.3pt + luma(85%)),
+  inset: 6pt,
+  [*Parameter*], [*Type*], [*Default*], [*Description*],
+  [`..exercise-ids`], [strings], [], [Positional — IDs of exercises to include],
+  [`question-label`], [string], [`"Question"`], [Header for the question column],
+  [`points-label`], [string], [`"Points"`], [Header for the points row],
+  [`grade-label`], [string], [`"Note"`], [Header for the grade row],
+  [`total-label`], [string], [`"Total"`], [Label for the total column],
+)
