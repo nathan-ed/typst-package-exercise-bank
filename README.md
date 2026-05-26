@@ -2,7 +2,7 @@
 
 A comprehensive Typst package for creating and managing exercises with solutions, metadata, filtering, and exercise banks. Perfect for teachers, textbook authors, and educational content creators.
 
-**[Documentation (PDF)](docs/manual.pdf)**
+**[Documentation (PDF)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/169ccb428cf164fc01daa266f0c3a50a733575ca/docs/manual.pdf)**
 
 ## Gallery
 
@@ -10,13 +10,13 @@ Click on an image to see the source code.
 
 | | | |
 |:---:|:---:|:---:|
-| [![Basic Exercises](gallery/basic.png)](gallery/basic.typ) | [![With Solutions](gallery/solutions.png)](gallery/solutions.typ) | [![Exercise Bank](gallery/bank.png)](gallery/bank.typ) |
+| [![Basic Exercises](gallery/basic.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/169ccb428cf164fc01daa266f0c3a50a733575ca/gallery/basic.typ) | [![With Solutions](gallery/solutions.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/169ccb428cf164fc01daa266f0c3a50a733575ca/gallery/solutions.typ) | [![Exercise Bank](gallery/bank.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/169ccb428cf164fc01daa266f0c3a50a733575ca/gallery/bank.typ) |
 | Basic Exercises | With Solutions | Exercise Bank |
-| [![Filtering](gallery/filtering.png)](gallery/filtering.typ) | [![Competencies](gallery/competencies.png)](gallery/competencies.typ) | [![End of Section](gallery/end-section.png)](gallery/end-section.typ) |
+| [![Filtering](gallery/filtering.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/169ccb428cf164fc01daa266f0c3a50a733575ca/gallery/filtering.typ) | [![Competencies](gallery/competencies.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/169ccb428cf164fc01daa266f0c3a50a733575ca/gallery/competencies.typ) | [![End of Section](gallery/end-section.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/169ccb428cf164fc01daa266f0c3a50a733575ca/gallery/end-section.typ) |
 | Filtering by Topic | Competency Tags | Solutions at End |
-| [![Corrections](gallery/corrections.png)](gallery/corrections.typ) | [![Mixed Display](gallery/mixed-display.png)](gallery/mixed-display.typ) | [![Draft Mode](gallery/draft-mode-1.png)](gallery/draft-mode.typ) |
+| [![Corrections](gallery/corrections.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/169ccb428cf164fc01daa266f0c3a50a733575ca/gallery/corrections.typ) | [![Mixed Display](gallery/mixed-display.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/169ccb428cf164fc01daa266f0c3a50a733575ca/gallery/mixed-display.typ) | [![Draft Mode](gallery/draft-mode-1.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/169ccb428cf164fc01daa266f0c3a50a733575ca/gallery/draft-mode.typ) |
 | Teacher Corrections | Mixed Display Mode | Draft Mode |
-| [![Visual Styles](gallery/styles-1.png)](gallery/styles.typ) | [![Pagebreak](gallery/pagebreak.png)](gallery/pagebreak.typ) | |
+| [![Visual Styles](gallery/styles-1.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/169ccb428cf164fc01daa266f0c3a50a733575ca/gallery/styles.typ) | [![Pagebreak](gallery/pagebreak.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/169ccb428cf164fc01daa266f0c3a50a733575ca/gallery/pagebreak.typ) | |
 | Visual Styles | Solutions with Page Break | |
 
 ## Features
