@@ -2,7 +2,7 @@
 
 A comprehensive Typst package for creating and managing exercises with solutions, metadata, filtering, and exercise banks. Perfect for teachers, textbook authors, and educational content creators.
 
-**[Documentation (PDF)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/67a17e6a3ae0659e35016bd680c5a4357cd752e5/docs/manual.pdf)**
+**[Documentation (PDF)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/ebe3346cbdfcaa7bb907e31ceb8b63de56b0df43/docs/manual.pdf)**
 
 ## Gallery
 
