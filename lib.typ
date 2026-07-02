@@ -10,6 +10,37 @@
 // State and Counters
 // =============================================================================
 
+#let optional-star-icon(size: 0.62em) = box(width: size, height: size, inset: 0pt)[
+  #polygon(
+    fill: black,
+    (0.50 * size, 0.00 * size),
+    (0.62 * size, 0.34 * size),
+    (0.98 * size, 0.35 * size),
+    (0.69 * size, 0.56 * size),
+    (0.79 * size, 0.91 * size),
+    (0.50 * size, 0.70 * size),
+    (0.21 * size, 0.91 * size),
+    (0.31 * size, 0.56 * size),
+    (0.02 * size, 0.35 * size),
+    (0.38 * size, 0.34 * size),
+  )
+]
+
+// Diagonal dumbbell (haltère, fitness-icon convention): marks exercises whose
+// correction will be handed out — students train on their own with the corrigé.
+// Solid silhouette, readable at badge size; students learn the icon, no
+// explanatory text needed.
+#let corr-given-icon(size: 0.75em) = box(width: size, height: size, inset: 0pt)[
+  #place(top + left, rotate(-45deg, origin: center, box(width: size, height: size)[
+    #place(top + left, dx: 0.02 * size, dy: 0.28 * size,
+      rect(width: 0.17 * size, height: 0.44 * size, fill: black, radius: 0.04 * size))
+    #place(top + left, dx: 0.81 * size, dy: 0.28 * size,
+      rect(width: 0.17 * size, height: 0.44 * size, fill: black, radius: 0.04 * size))
+    #place(top + left, dx: 0.17 * size, dy: 0.425 * size,
+      rect(width: 0.66 * size, height: 0.15 * size, fill: black))
+  ]))
+]
+
 // Global exercise counter
 #let exo-counter = counter("exo-counter")
 
@@ -31,7 +62,7 @@
   "show-competencies": false,    // Show competency tags below exercise
   "display-mode": "exercise",    // "exercise" (default exo-box) or "exam" (g-exam question)
   // Visual styling
-  "badge-style": "box",          // "box", "circled", "filled-circle", "pill", "tag", "border-accent", "underline", "rounded-box", "header-card"
+  "badge-style": "box",          // "box", "circled", "filled-circle", "pill", "tag", "margin", "border-accent", "underline", "rounded-box", "header-card"
   "badge-color": black,          // Color for exercise badges
   "solution-color": rgb("#4a7c59"),    // Color for solution badges (green)
   "correction-color": rgb("#4a7c59"),  // Color for correction badges (green)
@@ -51,6 +82,8 @@
   "correction-above": 0.8em,  // Space above correction boxes
   "correction-below": 0.8em,  // Space below correction boxes
   "advanced-symbol": "*",     // Symbol shown before label for advanced exercises (none to disable)
+  "optional-symbol": optional-star-icon(), // Symbol shown before label for optional exercises (none to disable)
+  "corr-given-symbol": corr-given-icon(),  // Symbol shown before label when the correction will be handed out (none to disable)
 ))
 
 // Registry of all exercises (for filtering)
@@ -117,7 +150,7 @@
   show-competencies: none,
   display-mode: none,  // "exercise" or "exam"
   // Visual styling
-  badge-style: none,   // "box", "circled", "filled-circle", "pill", "tag"
+  badge-style: none,   // "box", "circled", "filled-circle", "pill", "tag", "margin", "border-accent", "underline", "rounded-box", "header-card"
   badge-color: none,   // Color for exercise badges
   solution-color: none,   // Color for solution badges
   correction-color: none, // Color for correction badges
@@ -137,6 +170,8 @@
   correction-above: none,
   correction-below: none,
   advanced-symbol: none,  // Symbol for advanced exercises (use "*", "†", emoji, etc.)
+  optional-symbol: none,  // Symbol for optional exercises (use [★], [⛰], etc.)
+  corr-given-symbol: none,  // Symbol for exercises whose correction is handed out
 ) = {
   exo-config.update(cfg => {
     let new = cfg
@@ -170,6 +205,8 @@
     if correction-above != none { new.correction-above = correction-above }
     if correction-below != none { new.correction-below = correction-below }
     if advanced-symbol != none { new.advanced-symbol = advanced-symbol }
+    if optional-symbol != none { new.optional-symbol = optional-symbol }
+    if corr-given-symbol != none { new.corr-given-symbol = corr-given-symbol }
     new
   })
 }
@@ -218,6 +255,17 @@
   } else {
     label
   }
+}
+
+#let get-exercise-marker(cfg, metadata) = {
+  let markers = ()
+  if cfg.optional-symbol != none and metadata.at("optional", default: false) {
+    markers.push(cfg.optional-symbol)
+  }
+  if cfg.at("corr-given-symbol", default: none) != none and metadata.at("corr-given", default: false) {
+    markers.push(cfg.at("corr-given-symbol"))
+  }
+  if markers.len() > 0 { markers.join(h(2.5pt)) }
 }
 
 // =============================================================================
@@ -282,13 +330,29 @@
 // =============================================================================
 
 // Style: box (default) - Rectangle with stroke
-#let badge-box(label, number, font-size, color, is-solution) = {
+#let badge-box(label, number, font-size, color, is-solution, label-marker: none) = {
   let fill-color = if is-solution { color.lighten(85%) } else { white }
+  let label-text = text(weight: "bold", size: font-size, fill: color)[#label~#number]
+  let label-content = if label-marker == none {
+    label-text
+  } else {
+    grid(
+      // auto width: the marker cell may hold several icons (e.g. ★ + ⊙)
+      columns: (auto, auto),
+      column-gutter: 3pt,
+      align: (center + horizon, left + horizon),
+      box(height: 0.75em, align(center + horizon, label-marker)),
+      label-text,
+    )
+  }
   box(
+    height: font-size + 8pt,
     stroke: 0.8pt + color,
     fill: fill-color,
-    inset: (x: 4pt, y: 3pt),
-  )[#text(weight: "bold", size: font-size, fill: color)[#label~#number]]
+    inset: (x: 4pt, y: 0pt),
+  )[
+    #align(horizon)[#label-content]
+  ]
 }
 
 // Style: circled - Number in a circle (no label)
@@ -362,7 +426,7 @@
 }
 
 // Get badge based on style name (for badge-based styles only)
-#let get-badge(style, label, number, font-size, color, is-solution) = {
+#let get-badge(style, label, number, font-size, color, is-solution, label-marker: none) = {
   if style == "circled" {
     badge-circled(label, number, font-size, color, is-solution)
   } else if style == "filled-circle" {
@@ -373,18 +437,53 @@
     badge-tag(label, number, font-size, color, is-solution)
   } else {
     // Default: box
-    badge-box(label, number, font-size, color, is-solution)
+    badge-box(label, number, font-size, color, is-solution, label-marker: label-marker)
   }
 }
 
 // Check if style is a "full-width" style (wraps content instead of badge+content grid)
 #let is-fullwidth-style(style) = {
-  style in ("border-accent", "underline", "rounded-box", "header-card")
+  style in ("margin", "border-accent", "underline", "rounded-box", "header-card")
 }
 
 // =============================================================================
 // Full-Width Styles (wrap entire content)
 // =============================================================================
+
+// Style: margin - Side label with rule in the margin.
+#let style-margin(label, number, body, font-size, color, is-solution) = {
+  if is-solution {
+    block(
+      width: 100%,
+      inset: (x: 8pt, y: 6pt),
+      stroke: 0.55pt + color,
+      radius: 2pt,
+      breakable: true,
+    )[
+      #text(size: font-size, weight: "bold", fill: color)[#label~#number]
+      #v(0.4em)
+      #text(size: 9pt)[#body]
+    ]
+  } else {
+    grid(
+      columns: (3.35cm, 1fr),
+      column-gutter: 0.55cm,
+      align: top,
+      [
+        #line(length: 100%, stroke: 0.45pt + color)
+        #v(-0.2em)
+        #align(right)[
+          #text(size: font-size, weight: "bold", fill: color)[#label~#number:]
+        ]
+      ],
+      [
+        #line(length: 0pt, stroke: 0.45pt + white)
+        #v(-0.2em)
+        #body
+      ],
+    )
+  }
+}
 
 // Style: border-accent - Left vertical bar with inline header
 #let style-border-accent(label, number, body, font-size, color, is-solution) = {
@@ -452,7 +551,9 @@
 
 // Get full-width style block
 #let get-fullwidth-style(style, label, number, body, font-size, color, is-solution) = {
-  if style == "border-accent" {
+  if style == "margin" {
+    style-margin(label, number, body, font-size, color, is-solution)
+  } else if style == "border-accent" {
     style-border-accent(label, number, body, font-size, color, is-solution)
   } else if style == "underline" {
     style-underline(label, number, body, font-size, color, is-solution)
@@ -509,6 +610,7 @@
   show-competencies: false, // Whether to show competencies
   points: none,            // Points for exam mode
   points-label: "pts",     // Label for points (e.g., "pts", "points")
+  label-marker: none,      // Optional marker displayed before the badge label
   margin-content: none,    // Optional content below the badge (e.g., QR code, remarks)
 ) = context {
   let cfg = exo-config.get()
@@ -587,6 +689,7 @@
       cfg.label-font-size,
       actual-color,
       is-solution,
+      label-marker: label-marker,
     )
 
     // Badge with optional points displayed inline after the box
@@ -761,6 +864,8 @@
   // Exercise-level display flags
   sol-in-corr: false,      // If true, correction already contains solution (use solution in "correction" mode)
   show-corr: false,       // If true, show correction in "mixed" mode
+  optional: false,         // If true, show the optional marker before the exercise label
+  corr-given: false,       // If true, show the corr-given marker (correction handed out)
   // Metadata fields
   topic: none,
   level: none,
@@ -788,6 +893,8 @@
     topic: topic,
     level: level,
     authors: authors,
+    optional: optional,
+    corr-given: corr-given,
   )
   // Add extra metadata
   for (key, value) in extra-metadata.named() {
@@ -838,6 +945,7 @@
       exercise,
       exercise-id: exercise-id,
       show-id: cfg.show-id,
+      label-marker: get-exercise-marker(cfg, metadata),
       margin-content: margin-content,
     )
   } else {
@@ -850,6 +958,7 @@
       exercise,
       exercise-id: exercise-id,
       show-id: cfg.show-id,
+      label-marker: get-exercise-marker(cfg, metadata),
       margin-content: margin-content,
     )
 
@@ -989,6 +1098,7 @@
           exercise.exercise,
           exercise-id: exercise.id,
           show-id: cfg.show-id,
+          label-marker: get-exercise-marker(cfg, meta),
         )
       }
 
@@ -1035,6 +1145,8 @@
   // Exercise-level display flags
   sol-in-corr: false,      // If true, correction already contains solution
   show-corr: false,       // If true, show correction in "mixed" mode
+  optional: false,         // If true, show the optional marker before the exercise label
+  corr-given: false,       // If true, show the corr-given marker (correction handed out)
   // Metadata fields
   topic: none,
   level: none,
@@ -1059,6 +1171,8 @@
       topic: topic,
       level: level,
       authors: authors,
+      optional: optional,
+      corr-given: corr-given,
     )
     // Add extra metadata
     for (key, value) in extra-metadata.named() {
@@ -1091,6 +1205,10 @@
 #let exo-show(
   id,
   show-solution: auto,  // auto = use current config
+  optional: auto,        // auto = use bank metadata; bool = override for this display
+  optional-symbol: auto, // auto = use current config; content/none = override for this display
+  corr-given: auto,        // auto = use bank metadata; bool = override for this display
+  corr-given-symbol: auto, // auto = use current config; content/none = override for this display
 ) = {
   exo-counter.step()
 
@@ -1124,6 +1242,20 @@
       // Get competencies and points (with defaults for backward compatibility)
       let comps = found.at("competencies", default: ())
       let pts = found.at("points", default: none)
+      let display-metadata = found.metadata
+      if optional != auto {
+        display-metadata.insert("optional", optional)
+      }
+      if corr-given != auto {
+        display-metadata.insert("corr-given", corr-given)
+      }
+      let display-cfg = cfg
+      if optional-symbol != auto {
+        display-cfg.optional-symbol = optional-symbol
+      }
+      if corr-given-symbol != auto {
+        display-cfg.insert("corr-given-symbol", corr-given-symbol)
+      }
 
       // Get solution and correction
       let sol = found.at("solution", default: none)
@@ -1142,7 +1274,7 @@
 
         // Display exercise with points in the badge
         exo-box(
-          label: get-exercise-label(cfg, found.metadata),
+          label: get-exercise-label(display-cfg, display-metadata),
           number: num,
           found.exercise,
           exercise-id: found.id,
@@ -1150,6 +1282,7 @@
           competencies: comps,
           show-competencies: cfg.show-competencies,
           points: pts,
+          label-marker: get-exercise-marker(display-cfg, display-metadata),
         )
 
         // Show solution if configured
@@ -1164,13 +1297,14 @@
         // Display exercise based on show mode
         if cfg.display != "sol" {
           exo-box(
-            label: get-exercise-label(cfg, found.metadata),
+            label: get-exercise-label(display-cfg, display-metadata),
             number: num,
             found.exercise,
             exercise-id: found.id,
             show-id: cfg.show-id,
             competencies: comps,
             show-competencies: cfg.show-competencies,
+            label-marker: get-exercise-marker(display-cfg, display-metadata),
           )
         }
 
@@ -1350,6 +1484,7 @@
         competencies: ex-comps,
         show-competencies: cfg.show-competencies,
         points: pts,
+        label-marker: get-exercise-marker(cfg, exercise.metadata),
       )
 
       // Show solution if configured
@@ -1370,6 +1505,7 @@
           show-id: cfg.show-id,
           competencies: ex-comps,
           show-competencies: cfg.show-competencies,
+          label-marker: get-exercise-marker(cfg, exercise.metadata),
         )
       }
 

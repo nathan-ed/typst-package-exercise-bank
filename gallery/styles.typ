@@ -1,7 +1,7 @@
 // Visual Styles Gallery - exercise-bank
-// All 9 badge styles with attractive colors
+// All 10 badge styles with attractive colors
 
-#import "@preview/exercise-bank:0.5.1": *
+#import "@preview/exercise-bank:0.5.2": *
 
 #set page(margin: 1.5cm)
 #set text(font: "New Computer Modern", size: 11pt)
@@ -22,6 +22,9 @@
 
 #exo-setup(badge-style: "tag", badge-color: rgb("#7c3aed"))
 #exo(exercise: [*Tag* - Callout style])
+
+#exo-setup(badge-style: "margin", badge-color: rgb("#374151"))
+#exo(exercise: [*Margin* - Side label with rule, content flows to the right])
 
 #exo-setup(badge-style: "border-accent", badge-color: rgb("#d97706"))
 #exo(exercise: [*Border Accent* - Document sections])

@@ -10,19 +10,19 @@ Click on an image to see the source code.
 
 | | | |
 |:---:|:---:|:---:|
-| [![Basic Exercises](gallery/basic.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/67a17e6a3ae0659e35016bd680c5a4357cd752e5/gallery/basic.typ) | [![With Solutions](gallery/solutions.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/67a17e6a3ae0659e35016bd680c5a4357cd752e5/gallery/solutions.typ) | [![Exercise Bank](gallery/bank.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/67a17e6a3ae0659e35016bd680c5a4357cd752e5/gallery/bank.typ) |
+| [![Basic exercises with automatic numbering](gallery/basic.svg)](gallery/basic.typ) | [![Exercises displayed with inline solutions](gallery/solutions.svg)](gallery/solutions.typ) | [![Exercise bank: define once, display anywhere](gallery/bank.svg)](gallery/bank.typ) |
 | Basic Exercises | With Solutions | Exercise Bank |
-| [![Filtering exercises by topic](gallery/filtering.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/67a17e6a3ae0659e35016bd680c5a4357cd752e5/gallery/filtering.typ) | [![Exercises with competency tags](gallery/competencies.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/67a17e6a3ae0659e35016bd680c5a4357cd752e5/gallery/competencies.typ) | [![End of Section](gallery/end-section.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/67a17e6a3ae0659e35016bd680c5a4357cd752e5/gallery/end-section.typ) |
+| [![Filtering exercises by topic and metadata](gallery/filtering.svg)](gallery/filtering.typ) | [![Exercises tagged with competency indicators](gallery/competencies.svg)](gallery/competencies.typ) | [![Solutions collected and printed at end of section](gallery/end-section.svg)](gallery/end-section.typ) |
 | Filtering by Topic | Competency Tags | Solutions at End |
-| [![Teacher corrections for exercises](gallery/corrections.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/67a17e6a3ae0659e35016bd680c5a4357cd752e5/gallery/corrections.typ) | [![Mixed Display](gallery/mixed-display.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/67a17e6a3ae0659e35016bd680c5a4357cd752e5/gallery/mixed-display.typ) | [![Draft Mode](gallery/draft-mode-1.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/67a17e6a3ae0659e35016bd680c5a4357cd752e5/gallery/draft-mode.typ) |
+| [![Teacher corrections with pedagogical notes](gallery/corrections.svg)](gallery/corrections.typ) | [![Mixed display mode combining solutions and corrections](gallery/mixed-display.svg)](gallery/mixed-display.typ) | [![Draft mode with placeholders for empty solutions](gallery/draft-mode-1.svg)](gallery/draft-mode.typ) |
 | Teacher Corrections | Mixed Display Mode | Draft Mode |
-| [![Visual Styles](gallery/styles-1.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/67a17e6a3ae0659e35016bd680c5a4357cd752e5/gallery/styles.typ) | [![Solutions displayed after a page break](gallery/pagebreak.png)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/67a17e6a3ae0659e35016bd680c5a4357cd752e5/gallery/pagebreak.typ) | |
-| Visual Styles | Solutions with Page Break | |
+| [![All 10 visual badge styles](gallery/styles.svg)](gallery/styles.typ) | [![Solutions displayed after a page break](gallery/pagebreak-1.svg)](gallery/pagebreak.typ) | [![Optional and correction-given exercise markers](gallery/markers.svg)](gallery/markers.typ) |
+| Visual Styles | Solutions with Page Break | Exercise Markers |
 
 ## Features
 
 - **Exercises with solutions** - Create exercises with inline or deferred solutions
-- **9 visual styles** - Box, circled, filled-circle, pill, tag, border-accent, underline, rounded-box, header-card
+- **10 visual styles** - Box, circled, filled-circle, pill, tag, margin, border-accent, underline, rounded-box, header-card
 - **Customizable colors** - Set badge colors for any style
 - **Teacher corrections** - Add detailed corrections for teachers
 - **Flexible display modes** - Control what to show (exercises, solutions, or both)
@@ -36,12 +36,13 @@ Click on an image to see the source code.
 - **Customizable labels** - Change "Exercise" and "Solution" labels (localization support)
 - **Exercise IDs** - Unique identifiers for referencing and bank management
 - **Advanced exercise markers** - Visual cue (customizable symbol) for advanced/challenging exercises
+- **Optional exercise markers** - Star icon for optional exercises, dumbbell icon for correction-given exercises
 - **Exam display mode** - Show points in the exercise badge (`display-mode: "exam"`) without any external dependency
 
 ## Quick Start
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo
+#import "@preview/exercise-bank:0.5.2": exo
 
 #exo(
   exercise: [
@@ -55,7 +56,7 @@ Click on an image to see the source code.
 ### Simple Exercise
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo
+#import "@preview/exercise-bank:0.5.2": exo
 
 #exo(
   exercise: [
@@ -67,7 +68,7 @@ Click on an image to see the source code.
 ### Exercise with Solution
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo
+#import "@preview/exercise-bank:0.5.2": exo
 
 #exo(
   exercise: [
@@ -82,7 +83,7 @@ Click on an image to see the source code.
 ### Multiple Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo
+#import "@preview/exercise-bank:0.5.2": exo
 
 #exo(exercise: [Simplify $x^2 + 2x + 1$.])
 #exo(exercise: [Factor $x^2 - 4$.])
@@ -102,7 +103,7 @@ Controls what content is displayed:
 - `"sol"` - Show only solutions/corrections (hide exercises)
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo, exo-setup
+#import "@preview/exercise-bank:0.5.2": exo, exo-setup
 
 // Student worksheet - exercises only
 #exo-setup(display: "ex")
@@ -123,7 +124,7 @@ Controls whether to show solutions or corrections:
 - `"mixed"` - Default to solution, but show correction for exercises with `show-corr: true`
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo, exo-setup
+#import "@preview/exercise-bank:0.5.2": exo, exo-setup
 
 // Student version - show solutions
 #exo-setup(corr-display: "solution")
@@ -152,7 +153,7 @@ Controls where solutions/corrections appear:
 - `"end-chapter"` - Collect and show at chapter end
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo, exo-setup, exo-print-solutions
+#import "@preview/exercise-bank:0.5.2": exo, exo-setup, exo-print-solutions
 
 // Solutions at end of section
 #exo-setup(corr-loc: "end-section")
@@ -171,7 +172,7 @@ Corrections are detailed solutions for teachers, including pedagogical notes and
 ### Exercise with Correction
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo, exo-setup
+#import "@preview/exercise-bank:0.5.2": exo, exo-setup
 
 #exo-setup(corr-display: "correction")
 
@@ -191,7 +192,7 @@ Corrections are detailed solutions for teachers, including pedagogical notes and
 Create teacher answer keys showing only corrections:
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo, exo-setup
+#import "@preview/exercise-bank:0.5.2": exo, exo-setup
 
 #exo-setup(
   display: "sol",              // Only show solutions/corrections
@@ -209,7 +210,7 @@ Create teacher answer keys showing only corrections:
 Use `corr-display: "mixed"` to default to solutions while showing corrections for specific exercises:
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo, exo-setup
+#import "@preview/exercise-bank:0.5.2": exo, exo-setup
 
 #exo-setup(corr-display: "mixed")
 
@@ -242,7 +243,7 @@ When creating exercise documents, you may have incomplete corrections or solutio
 - Hide placeholders in student versions
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo, exo-setup
+#import "@preview/exercise-bank:0.5.2": exo, exo-setup
 
 // Teacher draft version - shows placeholders
 #exo-setup(
@@ -272,7 +273,7 @@ When creating exercise documents, you may have incomplete corrections or solutio
 Tag exercises with metadata for organization and filtering:
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo
+#import "@preview/exercise-bank:0.5.2": exo
 
 #exo(
   exercise: [Solve $x + 1 = 5$.],
@@ -287,7 +288,7 @@ Tag exercises with metadata for organization and filtering:
 Display only exercises matching certain criteria:
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo, exo-filter
+#import "@preview/exercise-bank:0.5.2": exo, exo-filter
 
 // First, define exercises (they display normally)
 #exo(exercise: [Exercise 1], topic: "algebra")
@@ -305,7 +306,7 @@ Define exercises once, use them anywhere. Perfect for creating exercise collecti
 ### Defining Bank Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo-define
+#import "@preview/exercise-bank:0.5.2": exo-define
 
 // These don't display - just registered
 #exo-define(
@@ -328,7 +329,7 @@ Define exercises once, use them anywhere. Perfect for creating exercise collecti
 ### Displaying Bank Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo-show, exo-show-many
+#import "@preview/exercise-bank:0.5.2": exo-show, exo-show-many
 
 // Show a single exercise by ID
 #exo-show("quad-1")
@@ -342,7 +343,7 @@ Define exercises once, use them anywhere. Perfect for creating exercise collecti
 Use powerful filtering to select exercises:
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo-select
+#import "@preview/exercise-bank:0.5.2": exo-select
 
 // All quadratics exercises
 #exo-select(topic: "quadratics")
@@ -365,7 +366,7 @@ Use powerful filtering to select exercises:
 Tag exercises with competencies and display them visually:
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo-define, exo-show, exo-setup
+#import "@preview/exercise-bank:0.5.2": exo-define, exo-show, exo-setup
 
 #exo-setup(show-competencies: true)
 
@@ -382,7 +383,7 @@ Tag exercises with competencies and display them visually:
 ### Filter by Competency
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo-select
+#import "@preview/exercise-bank:0.5.2": exo-select
 
 // Exercises with specific competency
 #exo-select(competency: "C1.1")
@@ -396,7 +397,7 @@ Tag exercises with competencies and display them visually:
 ### Global Setup
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo-setup
+#import "@preview/exercise-bank:0.5.2": exo-setup
 
 #exo-setup(
   // Display control
@@ -434,7 +435,7 @@ Tag exercises with competencies and display them visually:
 Change labels for different languages:
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo-setup
+#import "@preview/exercise-bank:0.5.2": exo-setup
 
 // French
 #exo-setup(
@@ -455,7 +456,7 @@ Change labels for different languages:
 Choose from 9 different badge styles:
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo, exo-setup
+#import "@preview/exercise-bank:0.5.2": exo, exo-setup
 
 // Circled number style
 #exo-setup(badge-style: "circled")
@@ -475,14 +476,14 @@ Choose from 9 different badge styles:
 #exo(exercise: [Solve $x + 3 = 7$])
 ```
 
-Available styles: `"box"` (default), `"circled"`, `"filled-circle"`, `"pill"`, `"tag"`, `"border-accent"`, `"underline"`, `"rounded-box"`, `"header-card"`
+Available styles: `"box"` (default), `"circled"`, `"filled-circle"`, `"pill"`, `"tag"`, `"margin"`, `"border-accent"`, `"underline"`, `"rounded-box"`, `"header-card"`
 
 ### Counter Reset Options
 
 Control when exercise numbering resets:
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo-setup, exo-section-start, exo-chapter-start
+#import "@preview/exercise-bank:0.5.2": exo-setup, exo-section-start, exo-chapter-start
 
 // Reset at each section
 #exo-setup(counter-reset: "section")
@@ -503,7 +504,7 @@ Control when exercise numbering resets:
 Display exercise IDs for reference:
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo-setup, exo
+#import "@preview/exercise-bank:0.5.2": exo-setup, exo
 
 #exo-setup(show-id: true)
 
@@ -520,7 +521,7 @@ Display exercise IDs for reference:
 Mark exercises as advanced to display a visual cue before the label:
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo, exo-setup
+#import "@preview/exercise-bank:0.5.2": exo, exo-setup
 
 // Default symbol is "*"
 #exo(
@@ -536,12 +537,39 @@ Mark exercises as advanced to display a visual cue before the label:
 #exo-setup(advanced-symbol: none)
 ```
 
+### Optional Exercises
+
+Mark exercises as optional — a star icon appears before the label:
+
+```typ
+#exo(
+  exercise: [Skip this if you're short on time. Solve $x^2 - x - 6 = 0$.],
+  optional: true,
+)
+```
+
+Customize or disable the symbol: `exo-setup(optional-symbol: [⭐])` / `exo-setup(optional-symbol: none)`.
+
+### Correction-Given Exercises
+
+A dumbbell icon signals that the printed correction will be distributed:
+
+```typ
+#exo(
+  exercise: [Factor $x^2 - 9$.],
+  solution: [$(x-3)(x+3)$],
+  corr-given: true,
+)
+```
+
+Customize via `exo-setup(corr-given-symbol: ...)` or disable with `none`.
+
 ## Utility Functions
 
 ### Reset Counter
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo-reset-counter
+#import "@preview/exercise-bank:0.5.2": exo-reset-counter
 
 #exo-reset-counter()  // Reset exercise numbering to 0
 ```
@@ -549,7 +577,7 @@ Mark exercises as advanced to display a visual cue before the label:
 ### Clear Registry
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo-clear-registry
+#import "@preview/exercise-bank:0.5.2": exo-clear-registry
 
 #exo-clear-registry()  // Clear all registered exercises
 ```
@@ -557,7 +585,7 @@ Mark exercises as advanced to display a visual cue before the label:
 ### Count Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo-count
+#import "@preview/exercise-bank:0.5.2": exo-count
 
 Total algebra exercises: #exo-count(topic: "algebra")
 Level 1M exercises: #exo-count(level: "1M")
@@ -575,6 +603,8 @@ Level 1M exercises: #exo-count(level: "1M")
 | `id` | string/auto | auto | Unique exercise ID |
 | `sol-in-corr` | bool | false | If true, solution is in correction (show only correction, not both) |
 | `show-corr` | bool | false | If true, show correction in "mixed" mode |
+| `optional` | bool | false | Show optional marker before the label |
+| `corr-given` | bool | false | Show correction-given marker (dumbbell icon) |
 | `topic` | string | none | Topic metadata |
 | `level` | string | none | Difficulty level |
 | `authors` | array | () | Array of author names |
@@ -591,6 +621,8 @@ Level 1M exercises: #exo-count(level: "1M")
 | `competencies` | array | () | List of competency tags |
 | `sol-in-corr` | bool | false | If true, solution is in correction (show only correction) |
 | `show-corr` | bool | false | If true, show correction in "mixed" mode |
+| `optional` | bool | false | Show optional marker before the label |
+| `corr-given` | bool | false | Show correction-given marker (dumbbell icon) |
 | `topic` | string | none | Topic metadata |
 | `level` | string | none | Difficulty level |
 | `authors` | array | () | Array of author names |
@@ -640,11 +672,13 @@ Level 1M exercises: #exo-count(level: "1M")
 | `correction-above` | length | 0.8em | Space above correction boxes |
 | `correction-below` | length | 0.8em | Space below correction boxes |
 | `advanced-symbol` | content/none | "*" | Symbol for advanced exercises |
+| `optional-symbol` | content/none | star icon | Symbol for optional exercises |
+| `corr-given-symbol` | content/none | dumbbell icon | Symbol when correction is handed out |
 
 ## Complete Example
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": *
+#import "@preview/exercise-bank:0.5.2": *
 
 // Setup
 #exo-setup(
@@ -695,6 +729,14 @@ Level 1M exercises: #exo-count(level: "1M")
 MIT License - see LICENSE file for details.
 
 ## Changelog
+
+### [0.5.2] - 2026-07-02
+
+#### Added
+- **Optional exercise marker** — `optional: true` on `exo`/`exo-define`/`exo-show` shows a built-in star icon before the label; customize with `exo-setup(optional-symbol: ...)` or set to `none` to disable
+- **Correction-given marker** — `corr-given: true` shows a dumbbell icon indicating the printed correction will be distributed to students; customize with `exo-setup(corr-given-symbol: ...)`
+- **`margin` badge style** — side-label layout with a fixed-width left column and a horizontal rule; the 10th badge style
+- **Per-display overrides in `exo-show`** — `optional`, `optional-symbol`, `corr-given`, `corr-given-symbol` can override bank metadata for a specific display call
 
 ### [0.5.1] - 2026-06-19
 

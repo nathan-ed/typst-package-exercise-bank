@@ -1,4 +1,4 @@
-#import "@preview/exercise-bank:0.5.1": *
+#import "@preview/exercise-bank:0.5.2": *
 
 // =============================================================================
 // DOCUMENT SETUP
@@ -95,7 +95,7 @@
   #v(1cm)
   #text(size: 11pt)[
     A comprehensive solution for creating, organizing, and filtering exercises\
-    Version 0.5.0\
+    Version 0.5.2\
     Nathan Scheinmann
   ]
 ]
@@ -135,7 +135,7 @@
 Import the package in your Typst document:
 
 ```typst
-#import "@preview/exercise-bank:0.5.1": exo, exo-setup
+#import "@preview/exercise-bank:0.5.2": exo, exo-setup
 ```
 
 == Quick Start
@@ -720,7 +720,7 @@ Change the visual style of exercise badges:
 #exo-setup(badge-style: "tag", badge-color: rgb("#1e40af"))
 ```
 
-Available styles: `"box"` (default), `"circled"`, `"filled-circle"`, `"pill"`, `"tag"`, `"border-accent"`, `"underline"`, `"rounded-box"`, `"header-card"`
+Available styles: `"box"` (default), `"circled"`, `"filled-circle"`, `"pill"`, `"tag"`, `"margin"`, `"border-accent"`, `"underline"`, `"rounded-box"`, `"header-card"`
 
 == Localization
 
@@ -799,6 +799,52 @@ Customize the symbol:
 )
 
 Disable with `advanced-symbol: none`.
+
+== Optional Exercises
+
+Mark exercises as optional to display the optional-star icon before the label. Students know they can skip these.
+
+#example(
+  [```typst
+#exo(
+  exercise: [A bonus problem.],
+  optional: true,
+)
+  ```],
+  [
+    #exo-reset-counter()
+    #exo-setup(optional-symbol: optional-star-icon())
+    #exo(exercise: [A bonus problem.], optional: true)
+  ]
+)
+
+Customize or disable the symbol via `exo-setup`:
+
+```typst
+#exo-setup(optional-symbol: [⭐])   // custom
+#exo-setup(optional-symbol: none)    // disable
+```
+
+== Correction-Given Exercises
+
+The dumbbell icon (`corr-given: true`) signals that the printed correction will be handed out to students, so they can work independently with the answer key.
+
+#example(
+  [```typst
+#exo(
+  exercise: [Factor $x^2 - 9$.],
+  solution: [$(x-3)(x+3)$],
+  corr-given: true,
+)
+  ```],
+  [
+    #exo-reset-counter()
+    #exo-setup(corr-given-symbol: corr-given-icon())
+    #exo(exercise: [Factor $x^2 - 9$.], solution: [$(x-3)(x+3)$], corr-given: true)
+  ]
+)
+
+Customize via `exo-setup(corr-given-symbol: ...)` or disable with `none`.
 
 // =============================================================================
 // VISUAL STYLES
@@ -943,6 +989,25 @@ Set the badge style with `exo-setup(badge-style: "...")`.
   ]
 )
 
+== Margin
+
+The label appears flush-right in a fixed-width left column; content flows in the right column. Solutions are shown in a compact bordered block.
+
+#example-full(
+  [```typst
+#exo-setup(badge-style: "margin")
+#exo(
+  exercise: [Solve $x + 3 = 7$],
+  solution: [$x = 4$],
+)
+  ```],
+  [
+    #exo-reset-counter()
+    #exo-setup(badge-style: "margin", display: "both")
+    #exo(exercise: [Solve $x + 3 = 7$], solution: [$x = 4$])
+  ]
+)
+
 #pagebreak()
 
 // =============================================================================
@@ -964,6 +1029,8 @@ Set the badge style with `exo-setup(badge-style: "...")`.
   [`id`], [string], [auto], [Unique exercise ID],
   [`sol-in-corr`], [bool], [false], [If true, solution is already in correction (don't show both)],
   [`show-corr`], [bool], [false], [If true, show correction in "mixed" mode],
+  [`optional`], [bool], [false], [Show the optional marker before the label],
+  [`corr-given`], [bool], [false], [Show the correction-given marker (dumbbell icon)],
   [`topic`], [string], [none], [Topic metadata],
   [`level`], [string], [none], [Difficulty level],
   [`authors`], [array], [()], [Author names],
@@ -978,6 +1045,8 @@ Same as `exo`, plus:
   stroke: (x: none, y: 0.3pt + luma(85%)),
   inset: 6pt,
   [*Parameter*], [*Type*], [*Default*], [*Description*],
+  [`optional`], [bool], [false], [Show the optional marker before the label],
+  [`corr-given`], [bool], [false], [Show the correction-given marker (dumbbell icon)],
   [`competencies`], [array], [()], [Competency tags],
   [`points`], [number], [none], [Points (for exam mode)],
 )
@@ -1032,7 +1101,7 @@ Same as `exo`, plus:
   stroke: (x: none, y: 0.3pt + luma(85%)),
   inset: 6pt,
   [*Parameter*], [*Type*], [*Default*], [*Description*],
-  [`badge-style`], [string], ["box"], [Style: "box", "circled", "filled-circle", "pill", "tag", "border-accent", "underline", "rounded-box", "header-card"],
+  [`badge-style`], [string], ["box"], [Style: "box", "circled", "filled-circle", "pill", "tag", "margin", "border-accent", "underline", "rounded-box", "header-card"],
   [`badge-color`], [color], [black], [Color for exercise badges],
   [`solution-color`], [color], [green], [Color for solution badges],
   [`correction-color`], [color], [green], [Color for correction badges],
@@ -1056,6 +1125,8 @@ Same as `exo`, plus:
   [`correction-above`], [length], [0.8em], [Space above correction boxes],
   [`correction-below`], [length], [0.8em], [Space below correction boxes],
   [`advanced-symbol`], [content/none], [`"*"`], [Symbol before label for advanced exercises],
+  [`optional-symbol`], [content/none], [star icon], [Symbol before label for optional exercises],
+  [`corr-given-symbol`], [content/none], [dumbbell icon], [Symbol before label when correction is handed out],
 )
 
 #pagebreak()
