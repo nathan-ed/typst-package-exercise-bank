@@ -6,6 +6,9 @@
 // External Package Imports
 // =============================================================================
 
+#import "@preview/tiaoma:0.3.0": qrcode as _tiaoma-qrcode
+#import "@preview/wrap-it:0.1.1": wrap-content as _wrap-content
+
 // =============================================================================
 // State and Counters
 // =============================================================================
@@ -84,6 +87,15 @@
   "advanced-symbol": "*",     // Symbol shown before label for advanced exercises (none to disable)
   "optional-symbol": optional-star-icon(), // Symbol shown before label for optional exercises (none to disable)
   "corr-given-symbol": corr-given-icon(),  // Symbol shown before label when the correction will be handed out (none to disable)
+  // QR codes
+  "show-qr": true,            // Master toggle for per-exercise QR codes
+  "qr-size": 1.5cm,           // Target QR code size (shrinks to fit the label margin if needed)
+  "qr-min-size": 1cm,         // Never shrink below this (a smaller QR is hard to scan);
+                              // if the label margin is narrower, the QR extends into the page margin
+  "qr-color": black,          // QR module color
+  "qr-caption": none,         // Optional small caption below every QR code (e.g. [Corrigé])
+  "qr-position": "auto",      // "auto" (per badge style: label margin or wrapped) or
+                              // "wrap" (always wrap the exercise content around the QR)
 ))
 
 // Registry of all exercises (for filtering)
@@ -172,6 +184,13 @@
   advanced-symbol: none,  // Symbol for advanced exercises (use "*", "†", emoji, etc.)
   optional-symbol: none,  // Symbol for optional exercises (use [★], [⛰], etc.)
   corr-given-symbol: none,  // Symbol for exercises whose correction is handed out
+  // QR codes
+  show-qr: none,          // Master toggle for per-exercise QR codes
+  qr-size: none,          // Target QR code size
+  qr-min-size: none,      // Minimum QR code size (may overflow narrow label margins)
+  qr-color: none,         // QR module color
+  qr-caption: auto,       // Small caption below every QR code (none to remove)
+  qr-position: none,      // "auto" (per badge style) or "wrap" (always wrap content)
 ) = {
   exo-config.update(cfg => {
     let new = cfg
@@ -207,6 +226,12 @@
     if advanced-symbol != none { new.advanced-symbol = advanced-symbol }
     if optional-symbol != none { new.optional-symbol = optional-symbol }
     if corr-given-symbol != none { new.corr-given-symbol = corr-given-symbol }
+    if show-qr != none { new.show-qr = show-qr }
+    if qr-size != none { new.qr-size = qr-size }
+    if qr-min-size != none { new.qr-min-size = qr-min-size }
+    if qr-color != none { new.qr-color = qr-color }
+    if qr-caption != auto { new.qr-caption = qr-caption }
+    if qr-position != none { new.qr-position = qr-position }
     new
   })
 }
@@ -283,9 +308,14 @@
 }
 
 // Compute default margin based on badge style and longest label with 3-digit number
-// "Correction" is the longest among Exercise/Solution/Correction
-#let calc-default-margin(font-size: 12pt, style: "box") = {
-  let labels = ("Exercise", "Solution", "Correction", "Exercice", "Corrigé")
+// Measures the configured labels so exercise/solution/correction boxes align;
+// falls back to the default English/French labels
+#let calc-default-margin(font-size: 12pt, style: "box", labels: auto) = {
+  let labels = if labels == auto {
+    ("Exercise", "Solution", "Correction", "Exercice", "Corrigé")
+  } else {
+    labels
+  }
 
   if style == "circled" or style == "filled-circle" {
     // Circle styles only show number, size is font-size * 2
@@ -323,6 +353,39 @@
     }
     max-width + 16pt
   }
+}
+
+// =============================================================================
+// QR Codes
+// =============================================================================
+
+// Build the QR code shown next to an exercise.
+// `qr` is a URL string (rendered with tiaoma) or arbitrary content (used as-is).
+// `max-width` caps the width so the QR shrinks to fit narrow label margins
+// instead of overflowing them.
+#let make-exo-qr(qr, cfg, max-width: none) = {
+  if qr == none or not cfg.at("show-qr", default: true) { return none }
+  let size = cfg.at("qr-size", default: 1.5cm)
+  let min-size = cfg.at("qr-min-size", default: 1cm)
+  if max-width != none and size > max-width {
+    // Shrink to fit the label margin, but never below min-size: a smaller QR
+    // is hard to scan, so past that point it extends into the page margin
+    size = calc.max(max-width, calc.min(min-size, size))
+  }
+  if size <= 0pt { return none }
+  let code = if type(qr) == str {
+    _tiaoma-qrcode(qr, width: size, options: (fg-color: cfg.at("qr-color", default: black)))
+  } else {
+    box(width: size, qr)
+  }
+  let caption = cfg.at("qr-caption", default: none)
+  box({
+    code
+    if caption != none {
+      v(2pt, weak: true)
+      align(center, box(width: size, text(size: 6.5pt, fill: luma(100), hyphenate: false, caption)))
+    }
+  })
 }
 
 // =============================================================================
@@ -451,7 +514,8 @@
 // =============================================================================
 
 // Style: margin - Side label with rule in the margin.
-#let style-margin(label, number, body, font-size, color, is-solution) = {
+// For the solution variant the QR (if any) is already wrapped into the body.
+#let style-margin(label, number, body, font-size, color, is-solution, qr: none) = {
   if is-solution {
     block(
       width: 100%,
@@ -475,6 +539,10 @@
         #align(right)[
           #text(size: font-size, weight: "bold", fill: color)[#label~#number:]
         ]
+        #if qr != none {
+          v(0.45em)
+          align(right, qr)
+        }
       ],
       [
         #line(length: 0pt, stroke: 0.45pt + white)
@@ -518,10 +586,10 @@
     width: 100%,
     stroke: 1.2pt + border-color,
     radius: 10pt,
-    inset: 14pt,
+    inset: 12pt,
   )[
     #text(weight: "bold", size: font-size, fill: border-color)[#label~#number]
-    #v(8pt)
+    #v(2pt)
     #body
   ]
 }
@@ -544,15 +612,30 @@
     ]
     #block(
       width: 100%,
-      inset: 12pt,
+      inset: (x: 12pt, top: 8pt, bottom: 12pt),
+      above: 0pt,
     )[#body]
   ]
 }
 
+// Wrap exercise content around a QR code at the top right.
+// columns (1fr, auto) keep the QR flush right even when the content is short.
+#let qr-wrap-body(qr, body) = _wrap-content(
+  box(inset: (left: 10pt, bottom: 6pt), qr),
+  body,
+  align: top + right,
+  column-gutter: 0pt,
+  columns: (1fr, auto),
+)
+
 // Get full-width style block
-#let get-fullwidth-style(style, label, number, body, font-size, color, is-solution) = {
+// For the "margin" style the QR code goes below the side label; for the other
+// full-width styles the exercise content wraps around the QR at the top right.
+#let get-fullwidth-style(style, label, number, body, font-size, color, is-solution, qr: none) = {
   if style == "margin" {
-    style-margin(label, number, body, font-size, color, is-solution)
+    style-margin(label, number, body, font-size, color, is-solution, qr: qr)
+  } else if qr != none {
+    get-fullwidth-style(style, label, number, qr-wrap-body(qr, body), font-size, color, is-solution)
   } else if style == "border-accent" {
     style-border-accent(label, number, body, font-size, color, is-solution)
   } else if style == "underline" {
@@ -612,6 +695,7 @@
   points-label: "pts",     // Label for points (e.g., "pts", "points")
   label-marker: none,      // Optional marker displayed before the badge label
   margin-content: none,    // Optional content below the badge (e.g., QR code, remarks)
+  qr: none,                // QR code: URL string (rendered with tiaoma) or content
 ) = context {
   let cfg = exo-config.get()
 
@@ -661,9 +745,23 @@
     }
   }
 
+  let qr-pos = cfg.at("qr-position", default: "auto")
+
   // Check if this is a full-width style
   if is-fullwidth-style(cfg.badge-style) {
     // Use full-width layout (style wraps the content)
+    // "margin" places the QR in its 3.35cm label column (unless qr-position
+    // is "wrap", or for its label-less solution variant); the others get it
+    // at full qr-size since the content area is wide
+    let qr-block = none
+    if cfg.badge-style == "margin" and qr-pos != "wrap" and not is-solution {
+      qr-block = make-exo-qr(qr, cfg, max-width: 3.35cm)
+    } else {
+      let wrap-qr = make-exo-qr(qr, cfg)
+      if wrap-qr != none {
+        full-body = qr-wrap-body(wrap-qr, full-body)
+      }
+    }
     block(
       above: space-above,
       below: space-below,
@@ -678,6 +776,7 @@
         cfg.label-font-size,
         actual-color,
         is-solution,
+        qr: qr-block,
       )
     ]
   } else {
@@ -705,28 +804,61 @@
       text(size: 7pt, fill: rgb("#666666"), style: "italic")[#exercise-id]
     }
 
+    // Margin position and label space (like environments)
+    // If margin-position is auto, compute based on badge style and label size
+    let margin-pos = if cfg.margin-position == auto {
+      // Let the widest badge use the label-extra space in the page margin
+      // instead of indenting all content by its full width
+      let needed = calc-default-margin(
+        font-size: cfg.label-font-size,
+        style: cfg.badge-style,
+        labels: (cfg.exercise-label, cfg.solution-label, cfg.correction-label),
+      )
+      calc.max(needed - cfg.label-extra, 0pt)
+    } else {
+      cfg.margin-position
+    }
+    let label-extra = cfg.label-extra
+    let gap = 6pt
+
+    // QR code below the badge, capped to the label column width so it adapts
+    // when the user reduces margin-position; with qr-position: "wrap" it goes
+    // into the content column instead, wrapped by the exercise text
+    let qr-block = none
+    let content-body = body
+    if qr-pos == "wrap" {
+      let wrap-qr = make-exo-qr(qr, cfg)
+      if wrap-qr != none {
+        content-body = qr-wrap-body(wrap-qr, body)
+      }
+    } else {
+      qr-block = make-exo-qr(qr, cfg, max-width: margin-pos + label-extra)
+    }
+
+    // Never let the label column content overflow: if the badge (or QR) is
+    // wider than the configured margin, widen the column instead
+    let label-col-width = calc.max(
+      margin-pos + label-extra,
+      measure(badge-with-points).width,
+      if qr-block != none { measure(qr-block).width } else { 0pt },
+    )
+
     // Build the label column content
     let label-column = {
       set text(hyphenate: false)
       align(right)[
         #box[#badge-with-points]
         #if show-id and exercise-id != none { id-block }
+        #if qr-block != none {
+          // Block keeps the QR on its own line, close below the badge
+          block(above: 4pt, qr-block)
+        }
         #if margin-content != none {
           v(4pt)
           margin-content
         }
       ]
     }
-
-    // Margin position and label space (like environments)
-    // If margin-position is auto, compute based on badge style and label size
-    let margin-pos = if cfg.margin-position == auto {
-      calc-default-margin(font-size: cfg.label-font-size, style: cfg.badge-style)
-    } else {
-      cfg.margin-position
-    }
-    let label-extra = cfg.label-extra
-    let gap = 6pt
 
     // Use grid - shifted left so labels can extend into page margin
     block(
@@ -737,7 +869,7 @@
       inset: (left: -label-extra, right: label-extra),  // Add right margin to compensate
     )[
       #grid(
-        columns: (margin-pos + label-extra, 1fr),
+        columns: (label-col-width, 1fr),
         column-gutter: gap,
         align: (right + top, left + top),
         // Label column - has space for label, right-aligned
@@ -750,7 +882,7 @@
         )[
           #set par(first-line-indent: 0cm)
           #v(3pt)  // Align with badge text
-          #body
+          #content-body
           #if show-competencies and competencies.len() > 0 { comp-block }
         ],
       )
@@ -758,7 +890,7 @@
   }
 }
 
-#let exo-solution-box(number: 1, body, exercise-id: none, show-id: false) = context {
+#let exo-solution-box(number: 1, body, exercise-id: none, show-id: false, qr: none) = context {
   let cfg = exo-config.get()
   exo-box(
     label: cfg.solution-label,
@@ -767,10 +899,11 @@
     box-type: "solution",
     exercise-id: exercise-id,
     show-id: show-id,
+    qr: qr,
   )
 }
 
-#let exo-correction-box(number: 1, body, exercise-id: none, show-id: false) = context {
+#let exo-correction-box(number: 1, body, exercise-id: none, show-id: false, qr: none) = context {
   let cfg = exo-config.get()
   exo-box(
     label: cfg.correction-label,
@@ -779,6 +912,7 @@
     box-type: "correction",
     exercise-id: exercise-id,
     show-id: show-id,
+    qr: qr,
   )
 }
 
@@ -805,8 +939,9 @@
 }
 
 // Determine what content to show based on corrDisplay mode and exercise flags
-// Returns: array of (type: "solution" or "correction", content: content) - may contain 0, 1, or 2 items
-#let determine-content-to-show(solution, correction, cfg, exercise-flags) = {
+// Returns: array of (type: "solution" or "correction", content: content, qr: ...)
+// - may contain 0, 1, or 2 items
+#let determine-content-to-show(solution, correction, cfg, exercise-flags, qr-sol: none, qr-corr: none) = {
   let solInCorr = exercise-flags.at("solInCorr", default: false)
   let showCorr = exercise-flags.at("showCorr", default: false)
   let items = ()
@@ -848,7 +983,34 @@
     }
   }
 
-  items
+  // Attach the matching QR code to each item
+  items.map(item => {
+    item.insert("qr", if item.type == "solution" { qr-sol } else { qr-corr })
+    item
+  })
+}
+
+// Render solution/correction items returned by determine-content-to-show
+#let show-content-items(items, number, exercise-id, cfg) = {
+  for item in items {
+    if item.type == "solution" {
+      exo-solution-box(
+        number: number,
+        item.content,
+        exercise-id: exercise-id,
+        show-id: cfg.show-id,
+        qr: item.at("qr", default: none),
+      )
+    } else {
+      exo-correction-box(
+        number: number,
+        item.content,
+        exercise-id: exercise-id,
+        show-id: cfg.show-id,
+        qr: item.at("qr", default: none),
+      )
+    }
+  }
 }
 
 // =============================================================================
@@ -861,6 +1023,9 @@
   correction: none,
   id: auto,
   margin-content: none,  // Optional content below the badge (e.g., QR code, remarks)
+  qr: none,              // QR code: URL string or content, placed per badge style
+  qr-sol: none,          // QR code shown on the solution box
+  qr-corr: none,         // QR code shown on the correction box
   // Exercise-level display flags
   sol-in-corr: false,      // If true, correction already contains solution (use solution in "correction" mode)
   show-corr: false,       // If true, show correction in "mixed" mode
@@ -916,6 +1081,9 @@
     solution: solution,
     correction: correction,
     margin-content: margin-content,
+    qr: qr,
+    qr-sol: qr-sol,
+    qr-corr: qr-corr,
     solInCorr: sol-in-corr,
     showCorr: show-corr,
   )
@@ -929,14 +1097,8 @@
   // Display based on show mode
   if cfg.display == "sol" {
     // Only show solution/correction
-    let items-to-show = determine-content-to-show(solution, correction, cfg, exercise-flags)
-    for item in items-to-show {
-      if item.type == "solution" {
-        exo-solution-box(number: num, item.content, exercise-id: exercise-id, show-id: cfg.show-id)
-      } else {
-        exo-correction-box(number: num, item.content, exercise-id: exercise-id, show-id: cfg.show-id)
-      }
-    }
+    let items-to-show = determine-content-to-show(solution, correction, cfg, exercise-flags, qr-sol: qr-sol, qr-corr: qr-corr)
+    show-content-items(items-to-show, num, exercise-id, cfg)
   } else if cfg.display == "ex" {
     // Only show exercise
     exo-box(
@@ -947,6 +1109,7 @@
       show-id: cfg.show-id,
       label-marker: get-exercise-marker(cfg, metadata),
       margin-content: margin-content,
+      qr: qr,
     )
   } else {
     // "both" mode - show exercise and solution/correction
@@ -960,34 +1123,23 @@
       show-id: cfg.show-id,
       label-marker: get-exercise-marker(cfg, metadata),
       margin-content: margin-content,
+      qr: qr,
     )
 
     // Handle solution/correction display
-    let items-to-show = determine-content-to-show(solution, correction, cfg, exercise-flags)
+    let items-to-show = determine-content-to-show(solution, correction, cfg, exercise-flags, qr-sol: qr-sol, qr-corr: qr-corr)
 
     if items-to-show.len() > 0 {
       if cfg.corrLoc == "after" {
-        for item in items-to-show {
-          if item.type == "solution" {
-            exo-solution-box(number: num, item.content, exercise-id: exercise-id, show-id: cfg.show-id)
-          } else {
-            exo-correction-box(number: num, item.content, exercise-id: exercise-id, show-id: cfg.show-id)
-          }
-        }
+        show-content-items(items-to-show, num, exercise-id, cfg)
       } else if cfg.corrLoc == "pagebreak" {
         pagebreak(weak: true)
-        for item in items-to-show {
-          if item.type == "solution" {
-            exo-solution-box(number: num, item.content, exercise-id: exercise-id, show-id: cfg.show-id)
-          } else {
-            exo-correction-box(number: num, item.content, exercise-id: exercise-id, show-id: cfg.show-id)
-          }
-        }
+        show-content-items(items-to-show, num, exercise-id, cfg)
       } else if cfg.corrLoc == "end-section" or cfg.corrLoc == "end-chapter" {
         // Store for later display
         for item in items-to-show {
           exo-pending-solutions.update(pending => {
-            pending.push((number: num, content: item.content, type: item.type, id: exercise-id))
+            pending.push((number: num, content: item.content, type: item.type, id: exercise-id, qr: item.at("qr", default: none)))
             pending
           })
         }
@@ -1019,6 +1171,7 @@
     for item in pending {
       let content = item.at("content", default: none)
       let item-type = item.at("type", default: "solution")
+      let item-qr = item.at("qr", default: none)
 
       if item-type == "solution" {
         exo-solution-box(
@@ -1026,6 +1179,7 @@
           content,
           exercise-id: item.at("id", default: none),
           show-id: cfg.show-id,
+          qr: item-qr,
         )
       } else {
         exo-correction-box(
@@ -1033,6 +1187,7 @@
           content,
           exercise-id: item.at("id", default: none),
           show-id: cfg.show-id,
+          qr: item-qr,
         )
       }
     }
@@ -1099,6 +1254,7 @@
           exercise-id: exercise.id,
           show-id: cfg.show-id,
           label-marker: get-exercise-marker(cfg, meta),
+          qr: exercise.at("qr", default: none),
         )
       }
 
@@ -1106,25 +1262,12 @@
       if show-solutions and cfg.display != "ex" {
         let sol = exercise.at("solution", default: none)
         let corr = exercise.at("correction", default: none)
-        let items-to-show = determine-content-to-show(sol, corr, cfg, exercise-flags)
-
-        for item in items-to-show {
-          if item.type == "solution" {
-            exo-solution-box(
-              number: exercise.number,
-              item.content,
-              exercise-id: exercise.id,
-              show-id: cfg.show-id,
-            )
-          } else {
-            exo-correction-box(
-              number: exercise.number,
-              item.content,
-              exercise-id: exercise.id,
-              show-id: cfg.show-id,
-            )
-          }
-        }
+        let items-to-show = determine-content-to-show(
+          sol, corr, cfg, exercise-flags,
+          qr-sol: exercise.at("qr-sol", default: none),
+          qr-corr: exercise.at("qr-corr", default: none),
+        )
+        show-content-items(items-to-show, exercise.number, exercise.id, cfg)
       }
     }
   }
@@ -1142,6 +1285,9 @@
   id: auto,
   competencies: (),  // List of competency tags
   points: none,      // Points for exam mode
+  qr: none,          // QR code: URL string or content, placed per badge style
+  qr-sol: none,      // QR code shown on the solution box
+  qr-corr: none,     // QR code shown on the correction box
   // Exercise-level display flags
   sol-in-corr: false,      // If true, correction already contains solution
   show-corr: false,       // If true, show correction in "mixed" mode
@@ -1189,6 +1335,9 @@
       correction: correction,
       competencies: competencies,
       points: points,
+      qr: qr,
+      qr-sol: qr-sol,
+      qr-corr: qr-corr,
       solInCorr: sol-in-corr,
       showCorr: show-corr,
     )
@@ -1242,6 +1391,9 @@
       // Get competencies and points (with defaults for backward compatibility)
       let comps = found.at("competencies", default: ())
       let pts = found.at("points", default: none)
+      let ex-qr = found.at("qr", default: none)
+      let ex-qr-sol = found.at("qr-sol", default: none)
+      let ex-qr-corr = found.at("qr-corr", default: none)
       let display-metadata = found.metadata
       if optional != auto {
         display-metadata.insert("optional", optional)
@@ -1283,6 +1435,7 @@
           show-competencies: cfg.show-competencies,
           points: pts,
           label-marker: get-exercise-marker(display-cfg, display-metadata),
+          qr: ex-qr,
         )
 
         // Show solution if configured
@@ -1305,35 +1458,24 @@
             competencies: comps,
             show-competencies: cfg.show-competencies,
             label-marker: get-exercise-marker(display-cfg, display-metadata),
+            qr: ex-qr,
           )
         }
 
         // Determine what content to show
-        let items-to-show = determine-content-to-show(sol, corr, cfg, exercise-flags)
+        let items-to-show = determine-content-to-show(sol, corr, cfg, exercise-flags, qr-sol: ex-qr-sol, qr-corr: ex-qr-corr)
 
         // Handle solution/correction display
         if items-to-show.len() > 0 and (cfg.display == "sol" or (cfg.display == "both" and do-show-solution)) {
           if cfg.corrLoc == "after" or cfg.display == "sol" {
-            for item in items-to-show {
-              if item.type == "solution" {
-                exo-solution-box(number: num, item.content, exercise-id: found.id, show-id: cfg.show-id)
-              } else {
-                exo-correction-box(number: num, item.content, exercise-id: found.id, show-id: cfg.show-id)
-              }
-            }
+            show-content-items(items-to-show, num, found.id, cfg)
           } else if cfg.corrLoc == "pagebreak" {
             pagebreak(weak: true)
-            for item in items-to-show {
-              if item.type == "solution" {
-                exo-solution-box(number: num, item.content, exercise-id: found.id, show-id: cfg.show-id)
-              } else {
-                exo-correction-box(number: num, item.content, exercise-id: found.id, show-id: cfg.show-id)
-              }
-            }
+            show-content-items(items-to-show, num, found.id, cfg)
           } else if cfg.corrLoc == "end-section" or cfg.corrLoc == "end-chapter" {
             for item in items-to-show {
               exo-pending-solutions.update(pending => {
-                pending.push((number: num, content: item.content, type: item.type, id: found.id))
+                pending.push((number: num, content: item.content, type: item.type, id: found.id, qr: item.at("qr", default: none)))
                 pending
               })
             }
@@ -1455,6 +1597,7 @@
     let num = if renumber { display-num } else { exercise.number }
     let ex-comps = exercise.at("competencies", default: ())
     let pts = exercise.at("points", default: none)
+    let ex-qr = exercise.at("qr", default: none)
     let sol = exercise.at("solution", default: none)
     let corr = exercise.at("correction", default: none)
 
@@ -1485,6 +1628,7 @@
         show-competencies: cfg.show-competencies,
         points: pts,
         label-marker: get-exercise-marker(cfg, exercise.metadata),
+        qr: ex-qr,
       )
 
       // Show solution if configured
@@ -1506,44 +1650,27 @@
           competencies: ex-comps,
           show-competencies: cfg.show-competencies,
           label-marker: get-exercise-marker(cfg, exercise.metadata),
+          qr: ex-qr,
         )
       }
 
       // Determine what content to show
-      let items-to-show = determine-content-to-show(sol, corr, cfg, exercise-flags)
+      let items-to-show = determine-content-to-show(
+        sol, corr, cfg, exercise-flags,
+        qr-sol: exercise.at("qr-sol", default: none),
+        qr-corr: exercise.at("qr-corr", default: none),
+      )
 
       if items-to-show.len() > 0 and (cfg.display == "sol" or do-show-solutions) {
         if cfg.corrLoc == "after" or cfg.display == "sol" {
-          for item in items-to-show {
-            if item.type == "solution" {
-              exo-solution-box(
-                number: num,
-                item.content,
-                exercise-id: exercise.id,
-                show-id: cfg.show-id,
-              )
-            } else {
-              exo-correction-box(
-                number: num,
-                item.content,
-                exercise-id: exercise.id,
-                show-id: cfg.show-id,
-              )
-            }
-          }
+          show-content-items(items-to-show, num, exercise.id, cfg)
         } else if cfg.corrLoc == "pagebreak" {
           pagebreak(weak: true)
-          for item in items-to-show {
-            if item.type == "solution" {
-              exo-solution-box(number: num, item.content, exercise-id: exercise.id, show-id: cfg.show-id)
-            } else {
-              exo-correction-box(number: num, item.content, exercise-id: exercise.id, show-id: cfg.show-id)
-            }
-          }
+          show-content-items(items-to-show, num, exercise.id, cfg)
         } else if cfg.corrLoc == "end-section" or cfg.corrLoc == "end-chapter" {
           for item in items-to-show {
             exo-pending-solutions.update(pending => {
-              pending.push((number: num, content: item.content, type: item.type, id: exercise.id))
+              pending.push((number: num, content: item.content, type: item.type, id: exercise.id, qr: item.at("qr", default: none)))
               pending
             })
           }

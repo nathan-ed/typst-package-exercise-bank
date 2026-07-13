@@ -1,7 +1,7 @@
 // Visual Styles Gallery - exercise-bank
 // All 10 badge styles with attractive colors
 
-#import "@preview/exercise-bank:0.5.2": *
+#import "@preview/exercise-bank:0.5.3": *
 
 #set page(margin: 1.5cm)
 #set text(font: "New Computer Modern", size: 11pt)

@@ -1,4 +1,4 @@
-#import "@preview/exercise-bank:0.5.2": *
+#import "@preview/exercise-bank:0.5.3": *
 
 // =============================================================================
 // DOCUMENT SETUP
@@ -95,7 +95,7 @@
   #v(1cm)
   #text(size: 11pt)[
     A comprehensive solution for creating, organizing, and filtering exercises\
-    Version 0.5.2\
+    Version 0.5.3\
     Nathan Scheinmann
   ]
 ]
@@ -135,7 +135,7 @@
 Import the package in your Typst document:
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo, exo-setup
+#import "@preview/exercise-bank:0.5.3": exo, exo-setup
 ```
 
 == Quick Start
@@ -847,6 +847,54 @@ The dumbbell icon (`corr-given: true`) signals that the printed correction will 
 Customize via `exo-setup(corr-given-symbol: ...)` or disable with `none`.
 
 // =============================================================================
+// QR CODES
+// =============================================================================
+
+= QR Codes
+
+Attach a QR code to any exercise (e.g. linking to a video correction or an online resource). Pass a URL string — the code is generated with #link("https://typst.app/universe/package/tiaoma/")[tiaoma] — or ready-made content via the `qr` parameter.
+
+#example(
+  [```typst
+#exo(
+  exercise: [Factorise $x^2 - 9$.],
+  solution: [$(x-3)(x+3)$],
+  qr: "https://example.com/eq1",
+)
+  ```],
+  [
+    #exo-reset-counter()
+    #exo-setup(badge-style: "box")
+    #exo(exercise: [Factorise $x^2 - 9$.], solution: [$(x-3)(x+3)$])
+  ]
+)
+
+The QR code is placed automatically based on the active badge style:
+
+- *Badge styles* (`box`, `circled`, `filled-circle`, `pill`, `tag`, `margin`): the QR sits below the badge in the label margin.
+- *Full-width styles* (`border-accent`, `underline`, `rounded-box`, `header-card`): the exercise content wraps around the QR at the top right.
+
+Solution and correction boxes can carry their own separate QR codes via `qr-sol` and `qr-corr`.
+
+== Global QR Settings
+
+Control QR appearance globally via `exo-setup`:
+
+#example(
+  [```typst
+#exo-setup(
+  qr-size: 1.5cm,
+  qr-color: rgb("#1e3a8a"),
+  qr-caption: [Correction],
+  show-qr: true,
+)
+  ```],
+  []
+)
+
+Use `show-qr: false` to suppress all QR codes (e.g. for a print version) without removing the URLs from bank definitions.
+
+// =============================================================================
 // VISUAL STYLES
 // =============================================================================
 
@@ -1027,6 +1075,10 @@ The label appears flush-right in a fixed-width left column; content flows in the
   [`solution`], [content], [none], [Solution content],
   [`correction`], [content], [none], [Correction for teachers],
   [`id`], [string], [auto], [Unique exercise ID],
+  [`margin-content`], [content], [none], [Content placed below the badge (e.g. remarks)],
+  [`qr`], [string/content], [none], [QR code for the exercise box (URL string or content)],
+  [`qr-sol`], [string/content], [none], [QR code for the solution box],
+  [`qr-corr`], [string/content], [none], [QR code for the correction box],
   [`sol-in-corr`], [bool], [false], [If true, solution is already in correction (don't show both)],
   [`show-corr`], [bool], [false], [If true, show correction in "mixed" mode],
   [`optional`], [bool], [false], [Show the optional marker before the label],
@@ -1127,6 +1179,22 @@ Same as `exo`, plus:
   [`advanced-symbol`], [content/none], [`"*"`], [Symbol before label for advanced exercises],
   [`optional-symbol`], [content/none], [star icon], [Symbol before label for optional exercises],
   [`corr-given-symbol`], [content/none], [dumbbell icon], [Symbol before label when correction is handed out],
+)
+
+#v(0.5em)
+*QR Code Settings:*
+
+#table(
+  columns: (1.6fr, 0.8fr, 1fr, 2fr),
+  stroke: (x: none, y: 0.3pt + luma(85%)),
+  inset: 6pt,
+  [*Parameter*], [*Type*], [*Default*], [*Description*],
+  [`show-qr`], [bool], [true], [Master toggle for per-exercise QR codes],
+  [`qr-size`], [length], [1.5cm], [Target QR code size (shrinks to fit margin if needed)],
+  [`qr-min-size`], [length], [1cm], [Minimum size; below this the QR extends into page margin],
+  [`qr-color`], [color], [black], [QR module color],
+  [`qr-caption`], [content/none], [none], [Small caption below every QR code],
+  [`qr-position`], [string], ["auto"], ["auto" (per badge style) or "wrap" (always wrap content)],
 )
 
 #pagebreak()

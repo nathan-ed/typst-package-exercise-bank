@@ -1,8 +1,10 @@
 # exercise-bank
 
-A comprehensive Typst package for creating and managing exercises with solutions, metadata, filtering, and exercise banks. Perfect for teachers, textbook authors, and educational content creators.
+[![exercise-bank on Typst Universe](https://img.shields.io/badge/Typst_Universe-v._0.5.3-239dad?labelColor=eee)](https://typst.app/universe/package/exercise-bank)
+[![Full package manual as PDF](https://img.shields.io/badge/Manual-pdf-333333?labelColor=eee)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/COMMIT_SHA/docs/manual.pdf)
+[![Distributed under the MIT license](https://img.shields.io/badge/License-MIT-333333?labelColor=eee)](LICENSE)
 
-**[Documentation (PDF)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/ebe3346cbdfcaa7bb907e31ceb8b63de56b0df43/docs/manual.pdf)**
+A comprehensive Typst package for creating and managing exercises with solutions, metadata, filtering, and exercise banks. Perfect for teachers, textbook authors, and educational content creators.
 
 ## Gallery
 
@@ -18,6 +20,8 @@ Click on an image to see the source code.
 | Teacher Corrections | Mixed Display Mode | Draft Mode |
 | [![All 10 visual badge styles](gallery/styles.svg)](gallery/styles.typ) | [![Solutions displayed after a page break](gallery/pagebreak-1.svg)](gallery/pagebreak.typ) | [![Optional and correction-given exercise markers](gallery/markers.svg)](gallery/markers.typ) |
 | Visual Styles | Solutions with Page Break | Exercise Markers |
+| [![Per-exercise QR codes placed per badge style](gallery/qr-codes.svg)](gallery/qr-codes.typ) | | |
+| QR Codes | | |
 
 ## Features
 
@@ -38,11 +42,12 @@ Click on an image to see the source code.
 - **Advanced exercise markers** - Visual cue (customizable symbol) for advanced/challenging exercises
 - **Optional exercise markers** - Star icon for optional exercises, dumbbell icon for correction-given exercises
 - **Exam display mode** - Show points in the exercise badge (`display-mode: "exam"`) without any external dependency
+- **QR codes** - Attach a QR code per exercise (e.g. link to a video correction), placed automatically per badge style
 
 ## Quick Start
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo
+#import "@preview/exercise-bank:0.5.3": exo
 
 #exo(
   exercise: [
@@ -56,7 +61,7 @@ Click on an image to see the source code.
 ### Simple Exercise
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo
+#import "@preview/exercise-bank:0.5.3": exo
 
 #exo(
   exercise: [
@@ -68,7 +73,7 @@ Click on an image to see the source code.
 ### Exercise with Solution
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo
+#import "@preview/exercise-bank:0.5.3": exo
 
 #exo(
   exercise: [
@@ -83,7 +88,7 @@ Click on an image to see the source code.
 ### Multiple Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo
+#import "@preview/exercise-bank:0.5.3": exo
 
 #exo(exercise: [Simplify $x^2 + 2x + 1$.])
 #exo(exercise: [Factor $x^2 - 4$.])
@@ -103,7 +108,7 @@ Controls what content is displayed:
 - `"sol"` - Show only solutions/corrections (hide exercises)
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo, exo-setup
+#import "@preview/exercise-bank:0.5.3": exo, exo-setup
 
 // Student worksheet - exercises only
 #exo-setup(display: "ex")
@@ -124,7 +129,7 @@ Controls whether to show solutions or corrections:
 - `"mixed"` - Default to solution, but show correction for exercises with `show-corr: true`
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo, exo-setup
+#import "@preview/exercise-bank:0.5.3": exo, exo-setup
 
 // Student version - show solutions
 #exo-setup(corr-display: "solution")
@@ -153,7 +158,7 @@ Controls where solutions/corrections appear:
 - `"end-chapter"` - Collect and show at chapter end
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo, exo-setup, exo-print-solutions
+#import "@preview/exercise-bank:0.5.3": exo, exo-setup, exo-print-solutions
 
 // Solutions at end of section
 #exo-setup(corr-loc: "end-section")
@@ -172,7 +177,7 @@ Corrections are detailed solutions for teachers, including pedagogical notes and
 ### Exercise with Correction
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo, exo-setup
+#import "@preview/exercise-bank:0.5.3": exo, exo-setup
 
 #exo-setup(corr-display: "correction")
 
@@ -192,7 +197,7 @@ Corrections are detailed solutions for teachers, including pedagogical notes and
 Create teacher answer keys showing only corrections:
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo, exo-setup
+#import "@preview/exercise-bank:0.5.3": exo, exo-setup
 
 #exo-setup(
   display: "sol",              // Only show solutions/corrections
@@ -210,7 +215,7 @@ Create teacher answer keys showing only corrections:
 Use `corr-display: "mixed"` to default to solutions while showing corrections for specific exercises:
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo, exo-setup
+#import "@preview/exercise-bank:0.5.3": exo, exo-setup
 
 #exo-setup(corr-display: "mixed")
 
@@ -243,7 +248,7 @@ When creating exercise documents, you may have incomplete corrections or solutio
 - Hide placeholders in student versions
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo, exo-setup
+#import "@preview/exercise-bank:0.5.3": exo, exo-setup
 
 // Teacher draft version - shows placeholders
 #exo-setup(
@@ -273,7 +278,7 @@ When creating exercise documents, you may have incomplete corrections or solutio
 Tag exercises with metadata for organization and filtering:
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo
+#import "@preview/exercise-bank:0.5.3": exo
 
 #exo(
   exercise: [Solve $x + 1 = 5$.],
@@ -288,7 +293,7 @@ Tag exercises with metadata for organization and filtering:
 Display only exercises matching certain criteria:
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo, exo-filter
+#import "@preview/exercise-bank:0.5.3": exo, exo-filter
 
 // First, define exercises (they display normally)
 #exo(exercise: [Exercise 1], topic: "algebra")
@@ -306,7 +311,7 @@ Define exercises once, use them anywhere. Perfect for creating exercise collecti
 ### Defining Bank Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo-define
+#import "@preview/exercise-bank:0.5.3": exo-define
 
 // These don't display - just registered
 #exo-define(
@@ -329,7 +334,7 @@ Define exercises once, use them anywhere. Perfect for creating exercise collecti
 ### Displaying Bank Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo-show, exo-show-many
+#import "@preview/exercise-bank:0.5.3": exo-show, exo-show-many
 
 // Show a single exercise by ID
 #exo-show("quad-1")
@@ -343,7 +348,7 @@ Define exercises once, use them anywhere. Perfect for creating exercise collecti
 Use powerful filtering to select exercises:
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo-select
+#import "@preview/exercise-bank:0.5.3": exo-select
 
 // All quadratics exercises
 #exo-select(topic: "quadratics")
@@ -366,7 +371,7 @@ Use powerful filtering to select exercises:
 Tag exercises with competencies and display them visually:
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo-define, exo-show, exo-setup
+#import "@preview/exercise-bank:0.5.3": exo-define, exo-show, exo-setup
 
 #exo-setup(show-competencies: true)
 
@@ -383,7 +388,7 @@ Tag exercises with competencies and display them visually:
 ### Filter by Competency
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo-select
+#import "@preview/exercise-bank:0.5.3": exo-select
 
 // Exercises with specific competency
 #exo-select(competency: "C1.1")
@@ -397,7 +402,7 @@ Tag exercises with competencies and display them visually:
 ### Global Setup
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo-setup
+#import "@preview/exercise-bank:0.5.3": exo-setup
 
 #exo-setup(
   // Display control
@@ -435,7 +440,7 @@ Tag exercises with competencies and display them visually:
 Change labels for different languages:
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo-setup
+#import "@preview/exercise-bank:0.5.3": exo-setup
 
 // French
 #exo-setup(
@@ -456,7 +461,7 @@ Change labels for different languages:
 Choose from 9 different badge styles:
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo, exo-setup
+#import "@preview/exercise-bank:0.5.3": exo, exo-setup
 
 // Circled number style
 #exo-setup(badge-style: "circled")
@@ -478,12 +483,23 @@ Choose from 9 different badge styles:
 
 Available styles: `"box"` (default), `"circled"`, `"filled-circle"`, `"pill"`, `"tag"`, `"margin"`, `"border-accent"`, `"underline"`, `"rounded-box"`, `"header-card"`
 
+#### Label margin width
+
+For badge styles, the content is indented by `margin-position` so that exercise, solution, and correction boxes all align. By default (`auto`) it is computed from your configured labels with a 3-digit number (e.g. "Correction 100"). Reduce it for a tighter layout:
+
+```typst
+#exo-setup(margin-position: 1.6cm)  // narrower label column
+#exo-setup(label-extra: 0pt)        // don't extend labels into the page margin
+```
+
+If a badge (or QR code) is wider than the configured margin, the label column widens for that box instead of overflowing.
+
 ### Counter Reset Options
 
 Control when exercise numbering resets:
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo-setup, exo-section-start, exo-chapter-start
+#import "@preview/exercise-bank:0.5.3": exo-setup, exo-section-start, exo-chapter-start
 
 // Reset at each section
 #exo-setup(counter-reset: "section")
@@ -504,7 +520,7 @@ Control when exercise numbering resets:
 Display exercise IDs for reference:
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo-setup, exo
+#import "@preview/exercise-bank:0.5.3": exo-setup, exo
 
 #exo-setup(show-id: true)
 
@@ -521,7 +537,7 @@ Display exercise IDs for reference:
 Mark exercises as advanced to display a visual cue before the label:
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo, exo-setup
+#import "@preview/exercise-bank:0.5.3": exo, exo-setup
 
 // Default symbol is "*"
 #exo(
@@ -564,12 +580,57 @@ A dumbbell icon signals that the printed correction will be distributed:
 
 Customize via `exo-setup(corr-given-symbol: ...)` or disable with `none`.
 
+### QR Codes
+
+Attach a QR code to any exercise (e.g. linking to a video correction or an online version). Pass a URL string — the code is generated with [tiaoma](https://typst.app/universe/package/tiaoma/) — or ready-made content:
+
+```typst
+#exo(
+  exercise: [Solve $2x + 5 = 13$.],
+  qr: "https://example.com/corrections/exo-1",
+)
+
+// Works in banks too: the QR is stored and shown by exo-show / exo-select
+#exo-define(id: "eq1", exercise: [...], qr: "https://example.com/eq1")
+#exo-show("eq1")
+
+// Solutions and corrections can carry their own QR code (e.g. a video walkthrough)
+#exo(
+  exercise: [...],
+  solution: [...],
+  qr-sol: "https://example.com/videos/sol-1",   // QR on the solution box
+  correction: [...],
+  qr-corr: "https://example.com/videos/corr-1", // QR on the correction box
+)
+```
+
+The placement adapts to the badge style:
+
+- **Badge styles** (`box`, `circled`, `filled-circle`, `pill`, `tag`): the QR sits below the badge in the label margin, and shrinks automatically if you reduce `margin-position`.
+- **`margin` style**: the QR sits below the side label in the margin column.
+- **Full-width styles** (`border-accent`, `underline`, `rounded-box`, `header-card`): the exercise content wraps around the QR at the top right (via [wrap-it](https://typst.app/universe/package/wrap-it/)).
+
+Global options:
+
+```typst
+#exo-setup(
+  qr-size: 1.5cm,          // Target size (default 1.5cm)
+  qr-min-size: 1cm,        // Never shrink below this — a smaller QR is hard to
+                           // scan; past that it extends into the page margin
+  qr-color: rgb("#1e3a8a"), // Module color (default black)
+  qr-caption: [Corrigé],   // Small caption below every QR (default none)
+  qr-position: "wrap",     // "auto" (default, placed per badge style) or "wrap"
+                           // (always wrap the exercise content around the QR)
+  show-qr: false,          // Master toggle, e.g. for a print version
+)
+```
+
 ## Utility Functions
 
 ### Reset Counter
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo-reset-counter
+#import "@preview/exercise-bank:0.5.3": exo-reset-counter
 
 #exo-reset-counter()  // Reset exercise numbering to 0
 ```
@@ -577,7 +638,7 @@ Customize via `exo-setup(corr-given-symbol: ...)` or disable with `none`.
 ### Clear Registry
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo-clear-registry
+#import "@preview/exercise-bank:0.5.3": exo-clear-registry
 
 #exo-clear-registry()  // Clear all registered exercises
 ```
@@ -585,7 +646,7 @@ Customize via `exo-setup(corr-given-symbol: ...)` or disable with `none`.
 ### Count Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": exo-count
+#import "@preview/exercise-bank:0.5.3": exo-count
 
 Total algebra exercises: #exo-count(topic: "algebra")
 Level 1M exercises: #exo-count(level: "1M")
@@ -678,7 +739,7 @@ Level 1M exercises: #exo-count(level: "1M")
 ## Complete Example
 
 ```typst
-#import "@preview/exercise-bank:0.5.2": *
+#import "@preview/exercise-bank:0.5.3": *
 
 // Setup
 #exo-setup(
@@ -729,6 +790,13 @@ Level 1M exercises: #exo-count(level: "1M")
 MIT License - see LICENSE file for details.
 
 ## Changelog
+
+### [0.5.3] - 2026-07-13
+
+#### Added
+- **QR codes** — attach a QR code to any exercise, solution, or correction box via `qr`, `qr-sol`, and `qr-corr` parameters (accepts a URL string or arbitrary content). Generated with [tiaoma](https://typst.app/universe/package/tiaoma/).
+- **QR placement per badge style** — in margin/badge styles the code sits below the badge in the label column; in full-width styles the exercise content wraps around the code (via [wrap-it](https://typst.app/universe/package/wrap-it/)).
+- **Global QR configuration in `exo-setup`** — `show-qr`, `qr-size`, `qr-min-size`, `qr-color`, `qr-caption`, and `qr-position` to control size, color, caption, placement mode, and a master on/off toggle for print versions.
 
 ### [0.5.2] - 2026-07-02
 
