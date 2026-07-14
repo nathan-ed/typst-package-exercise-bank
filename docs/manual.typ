@@ -1,4 +1,4 @@
-#import "@preview/exercise-bank:0.5.3": *
+#import "@preview/exercise-bank:0.6.0": *
 
 // =============================================================================
 // DOCUMENT SETUP
@@ -95,7 +95,7 @@
   #v(1cm)
   #text(size: 11pt)[
     A comprehensive solution for creating, organizing, and filtering exercises\
-    Version 0.5.3\
+    Version 0.6.0\
     Nathan Scheinmann
   ]
 ]
@@ -122,6 +122,10 @@
 
 - Exercises with inline or deferred solutions
 - Teacher corrections with flexible display modes
+- Difficulty levels shown as badge colors, stars, or symbols
+- Clickable links between exercises and their deferred corrections
+- Split solution/correction placement, with an inline epigraph-style solution mode
+- Chapter-prefixed numbering ("3.5") and automatic end-of-chapter corrections
 - Draft mode for work-in-progress documents
 - Multiple display control options (what, where, which content)
 - Metadata support (topic, level, author, competencies)
@@ -135,7 +139,7 @@
 Import the package in your Typst document:
 
 ```typst
-#import "@preview/exercise-bank:0.5.3": exo, exo-setup
+#import "@preview/exercise-bank:0.6.0": exo, exo-setup
 ```
 
 == Quick Start
@@ -895,6 +899,175 @@ Control QR appearance globally via `exo-setup`:
 Use `show-qr: false` to suppress all QR codes (e.g. for a print version) without removing the URLs from bank definitions.
 
 // =============================================================================
+// DIFFICULTY LEVELS
+// =============================================================================
+
+= Difficulty Levels
+
+Tag each exercise with a `difficulty:` level (built-in scale: 1 to 5). By default the exercise badge takes the level color:
+
+#example(
+  [```typst
+#exo(exercise: [Introductory.],
+  difficulty: 1)
+#exo(exercise: [Exam-type.],
+  difficulty: 3)
+#exo(exercise: [Advanced.],
+  difficulty: 4)
+  ```],
+  [
+    #exo-reset-counter()
+    #exo(exercise: [Introductory.], difficulty: 1)
+    #exo(exercise: [Exam-type.], difficulty: 3)
+    #exo(exercise: [Advanced.], difficulty: 4)
+  ]
+)
+
+== Stars and Symbols
+
+`difficulty-display: "stars"` shows 1--5 small stars; `"symbols"` shows one drawn icon per level (seedling, pencil, target, mountain, star). Both are placed below the badge by default so the badge stays compact (`difficulty-position: "badge"` puts them inline).
+
+#example(
+  [```typst
+#exo-setup(
+  difficulty-display: "stars")
+#exo(exercise: [Three stars.],
+  difficulty: 3)
+
+#exo-setup(
+  difficulty-display: "symbols")
+#exo(exercise: [Mountain.],
+  difficulty: 4)
+  ```],
+  [
+    #exo-reset-counter()
+    #exo-setup(difficulty-display: "stars")
+    #exo(exercise: [Three stars.], difficulty: 3)
+    #exo-setup(difficulty-display: "symbols")
+    #exo(exercise: [Mountain.], difficulty: 4)
+    #exo-setup(difficulty-display: "color")
+  ]
+)
+
+== Custom Scale and Filtering
+
+The scale is a dictionary mapping any key to a color and/or symbol:
+
+```typst
+#exo-setup(difficulty-scale: (
+  "easy": (color: rgb("#00897b")),
+  "hard": (color: rgb("#e65100"), symbol: [🔥]),
+))
+#exo(exercise: [...], difficulty: "hard")
+
+// Filtering
+#exo-select(difficulty: 3)
+#exo-select(difficulties: (1, 2))
+#exo-count(difficulty: 4)
+```
+
+Difficulty combines well with the `optional` marker: encode every exercise's level, and mark the mandatory ones with `optional: false`.
+
+// =============================================================================
+// SOLUTION PLACEMENT & LINKS (0.6.0)
+// =============================================================================
+
+= Solution Placement and Links
+
+== Automatic End-of-Chapter Corrections
+
+With `corr-loc: "end-chapter"` the corrections are only _collected_; print them by calling `#exo-chapter-end()` where they should appear, or wrap the document with `exo-auto-chapter` to do it automatically before each new level-1 heading and at the end of the document:
+
+```typst
+#exo-setup(corr-loc: "end-chapter", counter-reset: "chapter")
+#show: exo-auto-chapter
+
+= Chapter 1
+#exo(exercise: [...], solution: [...])
+
+= Chapter 2  // <- Chapter 1 solutions print just before this title
+```
+
+== Separate Solution and Correction Placement
+
+`sol-loc` controls where _solutions_ go, independently of `corr-loc` (default `auto` = follow it). Typical setup: short answer under the statement, full correction at the end of the chapter:
+
+```typst
+#exo-setup(
+  corr-display: "correction",  // show correction and solution
+  sol-loc: "after",            // answer below the statement
+  corr-loc: "end-chapter",     // correction at chapter end
+  solution-style: "inline",    // epigraph-like, no badge
+)
+```
+
+== Inline Solution Style
+
+`solution-style: "inline"` renders the solution as a short rule + content right under the statement, with a small margin label (customizable via `inline-label`, `none` to hide; rule length via `inline-rule-length`):
+
+#example(
+  [```typst
+#exo-setup(
+  solution-style: "inline")
+#exo(
+  exercise: [Solve
+    $x^2 - 5x + 6 = 0$.],
+  solution: [$x in {2, 3}$],
+)
+  ```],
+  [
+    #exo-reset-counter()
+    #exo-setup(display: "both", corr-display: "solution", corr-loc: "after",
+      sol-loc: "after", solution-style: "inline")
+    #exo(
+      exercise: [Solve $x^2 - 5x + 6 = 0$.],
+      solution: [$x in {2, 3}$],
+    )
+    #exo-setup(solution-style: auto)
+  ]
+)
+
+== Clickable Exercise #sym.arrow.l.r Correction Links
+
+When corrections are deferred, `link-solutions: true` adds a clickable arrow icon next to the exercise badge that jumps to the correction, and a back-link on the correction. With `link-style: "page"` the exercise instead shows a textbook-style clickable reference ("Solution p. 30") at the top right of the statement:
+
+```typst
+#exo-setup(corr-loc: "end-chapter", link-solutions: true)
+// or, textbook style:
+#exo-setup(corr-loc: "end-chapter", link-solutions: true,
+  link-style: "page")
+```
+
+Customize with `link-icon` / `backlink-icon` (icons) or `page-ref-color` / `page-ref-format` (page reference).
+
+== Chapter-Prefixed Numbering
+
+`number-prefix: "heading"` prefixes displayed numbers with the current level-1 heading number, e.g. exercise 5 of chapter 3 shows as "3.5" (separator via `number-separator`):
+
+```typst
+#set heading(numbering: "1.")
+#exo-setup(number-prefix: "heading", counter-reset: "chapter")
+#show: exo-auto-chapter
+```
+
+`number-prefix` also accepts a counter or a function `() => value`, for heading packages that keep their own chapter counter instead of `counter(heading)`. With beautitled 0.3.0+ the native counter is kept in sync, so `number-prefix: "heading"` works directly; for earlier versions (or with `enable-parts`, where the first heading level is the part) use beautitled's exported counter:
+
+```typst
+#import "@preview/beautitled:0.2.7": beautitled-init, chapter-counter
+#show: beautitled-init
+#exo-setup(number-prefix: chapter-counter, counter-reset: "chapter")
+#show: exo-auto-chapter
+```
+
+With beautitled's direct `#chapter(...)` calls (no native headings), wrap the call instead of using `exo-auto-chapter`:
+
+```typst
+#let chapitre(..args) = {
+  exo-chapter-end(); chapter(..args); exo-chapter-start()
+}
+```
+
+// =============================================================================
 // VISUAL STYLES
 // =============================================================================
 
@@ -944,6 +1117,58 @@ Set the badge style with `exo-setup(badge-style: "...")`.
     #exo-reset-counter()
     #exo-setup(badge-style: "filled-circle", badge-color: rgb("#2563eb"))
     #exo(exercise: [Solve $x + 3 = 7$])
+  ]
+)
+
+== Rect and Filled Rect
+
+Compact number-only rectangles -- a minimal alternative when circles look too large in your font:
+
+#example(
+  [```typst
+#exo-setup(badge-style: "rect")
+#exo(exercise: [Solve $x + 3 = 7$])
+#exo-setup(
+  badge-style: "filled-rect",
+  badge-color: rgb("#1a4d8f"),
+)
+#exo(exercise: [Solve $2x = 10$])
+  ```],
+  [
+    #exo-reset-counter()
+    #exo-setup(badge-style: "rect", badge-color: black)
+    #exo(exercise: [Solve $x + 3 = 7$])
+    #exo-setup(badge-style: "filled-rect", badge-color: rgb("#1a4d8f"))
+    #exo(exercise: [Solve $2x = 10$])
+  ]
+)
+
+== Custom Badge Function
+
+For full control, pass a function `(label, number, font-size, color, is-solution) => content` as `badge-style`:
+
+#example(
+  [```typst
+#exo-setup(badge-style:
+  (label, number, font-size,
+   color, is-solution) => {
+    box(stroke:
+      (bottom: 1.5pt + color),
+      inset: (x: 4pt, y: 3pt),
+      text(weight: "bold",
+        size: font-size,
+        fill: color)[#number.])
+  })
+#exo(exercise: [Solve $x^2 = 4$])
+  ```],
+  [
+    #exo-reset-counter()
+    #exo-setup(badge-style: (label, number, font-size, color, is-solution) => {
+      box(stroke: (bottom: 1.5pt + color), inset: (x: 4pt, y: 3pt),
+        text(weight: "bold", size: font-size, fill: color)[#number.])
+    })
+    #exo(exercise: [Solve $x^2 = 4$])
+    #exo-setup(badge-style: "box")
   ]
 )
 
@@ -1134,10 +1359,13 @@ Same as `exo`, plus:
   [`display`], [string], ["both"], ["ex", "sol", "both"],
   [`corr-display`], [string], ["solution"], ["solution", "correction", "mixed"],
   [`corr-loc`], [string], ["after"], ["after", "pagebreak", "end-section", "end-chapter"],
+  [`sol-loc`], [string/auto], [auto], [Same values as `corr-loc`, for solutions only],
   [`exercise-label`], [string], ["Exercise"], [Label for exercises],
   [`solution-label`], [string], ["Solution"], [Label for solutions],
   [`correction-label`], [string], ["Correction"], [Label for corrections],
   [`counter-reset`], [string], ["section"], ["section", "chapter", "global"],
+  [`number-prefix`], [none/str/counter/function], [none], ["heading" (level-1 heading number), a custom counter, or a function],
+  [`number-separator`], [string], ["."], [Separator for chapter-prefixed numbers],
   [`show-id`], [bool], [false], [Show exercise IDs],
   [`show-competencies`], [bool], [false], [Show competency tags],
   [`draft-mode`], [bool], [false], [Show placeholders for empty content],
@@ -1153,7 +1381,7 @@ Same as `exo`, plus:
   stroke: (x: none, y: 0.3pt + luma(85%)),
   inset: 6pt,
   [*Parameter*], [*Type*], [*Default*], [*Description*],
-  [`badge-style`], [string], ["box"], [Style: "box", "circled", "filled-circle", "pill", "tag", "margin", "border-accent", "underline", "rounded-box", "header-card"],
+  [`badge-style`], [string/function], ["box"], [Style: "box", "circled", "filled-circle", "rect", "filled-rect", "pill", "tag", "margin", "border-accent", "underline", "rounded-box", "header-card" -- or a custom badge function],
   [`badge-color`], [color], [black], [Color for exercise badges],
   [`solution-color`], [color], [green], [Color for solution badges],
   [`correction-color`], [color], [green], [Color for correction badges],
@@ -1179,6 +1407,28 @@ Same as `exo`, plus:
   [`advanced-symbol`], [content/none], [`"*"`], [Symbol before label for advanced exercises],
   [`optional-symbol`], [content/none], [star icon], [Symbol before label for optional exercises],
   [`corr-given-symbol`], [content/none], [dumbbell icon], [Symbol before label when correction is handed out],
+)
+
+#v(0.5em)
+*Difficulty, Inline Solutions, and Links:*
+
+#table(
+  columns: (1.6fr, 0.8fr, 1fr, 2fr),
+  stroke: (x: none, y: 0.3pt + luma(85%)),
+  inset: 6pt,
+  [*Parameter*], [*Type*], [*Default*], [*Description*],
+  [`difficulty-display`], [string], ["color"], ["color", "stars", "symbols", "none"],
+  [`difficulty-scale`], [auto/dict], [auto], [auto = built-in 5-level scale, or dict key -> (color: .., symbol: ..)],
+  [`difficulty-position`], [string], ["below"], [Stars/symbols "below" the badge or inline in the "badge"],
+  [`solution-style`], [auto/string], [auto], ["inline" = epigraph-style rule instead of a badge box],
+  [`inline-rule-length`], [length], [3cm], [Rule length for inline solutions],
+  [`inline-label`], [auto/content/none], [auto], [Small margin label for inline solutions],
+  [`link-solutions`], [bool], [false], [Clickable links to deferred corrections],
+  [`link-style`], [string], ["icon"], ["icon" (arrow) or "page" ("Solution p. 30" reference)],
+  [`link-icon`], [content/none], [arrow icon], [Link icon on the exercise],
+  [`backlink-icon`], [content/none], [arrow icon], [Back-link icon on the correction],
+  [`page-ref-format`], [auto/function], [auto], [Custom page reference: (label, page) => content],
+  [`page-ref-color`], [auto/color], [auto], [Page reference color (auto = badge color)],
 )
 
 #v(0.5em)

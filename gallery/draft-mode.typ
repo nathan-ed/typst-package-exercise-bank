@@ -1,4 +1,4 @@
-#import "@preview/exercise-bank:0.5.3": *
+#import "@preview/exercise-bank:0.6.0": *
 
 #set page(width: 16cm, height: auto, margin: 1cm)
 

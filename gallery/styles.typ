@@ -1,7 +1,7 @@
 // Visual Styles Gallery - exercise-bank
-// All 10 badge styles with attractive colors
+// All 12 badge styles with attractive colors
 
-#import "@preview/exercise-bank:0.5.3": *
+#import "@preview/exercise-bank:0.6.0": *
 
 #set page(margin: 1.5cm)
 #set text(font: "New Computer Modern", size: 11pt)
@@ -16,6 +16,12 @@
 
 #exo-setup(badge-style: "filled-circle", badge-color: rgb("#2563eb"))
 #exo(exercise: [*Filled Circle* - High visibility])
+
+#exo-setup(badge-style: "rect", badge-color: rgb("#0f766e"))
+#exo(exercise: [*Rect* - Minimal, number only, compact])
+
+#exo-setup(badge-style: "filled-rect", badge-color: rgb("#b91c1c"))
+#exo(exercise: [*Filled Rect* - Minimal with high visibility])
 
 #exo-setup(badge-style: "pill", badge-color: rgb("#059669"))
 #exo(exercise: [*Pill* - Modern and friendly])

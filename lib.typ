@@ -13,9 +13,9 @@
 // State and Counters
 // =============================================================================
 
-#let optional-star-icon(size: 0.62em) = box(width: size, height: size, inset: 0pt)[
+#let optional-star-icon(size: 0.62em, fill: black) = box(width: size, height: size, inset: 0pt)[
   #polygon(
-    fill: black,
+    fill: fill,
     (0.50 * size, 0.00 * size),
     (0.62 * size, 0.34 * size),
     (0.98 * size, 0.35 * size),
@@ -44,8 +44,101 @@
   ]))
 ]
 
+// Difficulty icons, one per level of the default scale (same drawn-icon
+// convention as the markers above). The level-to-icon mapping is fully
+// configurable via difficulty-scale.
+
+// Level 1 (introductory): seedling
+#let difficulty-seedling-icon(size: 0.75em, fill: black) = box(width: size, height: size, inset: 0pt)[
+  #place(top + left, dx: 0.46 * size, dy: 0.40 * size,
+    rect(width: 0.10 * size, height: 0.55 * size, fill: fill))
+  #place(top + left, polygon(fill: fill,
+    (0.51 * size, 0.52 * size),
+    (0.10 * size, 0.44 * size),
+    (0.24 * size, 0.10 * size),
+  ))
+  #place(top + left, polygon(fill: fill,
+    (0.51 * size, 0.52 * size),
+    (0.92 * size, 0.44 * size),
+    (0.78 * size, 0.10 * size),
+  ))
+]
+
+// Level 2 (standard): pencil
+#let difficulty-pencil-icon(size: 0.75em, fill: black) = box(width: size, height: size, inset: 0pt)[
+  #place(top + left, rotate(45deg, origin: center, box(width: size, height: size)[
+    #place(top + left, dx: 0.40 * size, dy: 0.02 * size,
+      rect(width: 0.20 * size, height: 0.62 * size, fill: fill, radius: (top: 0.05 * size)))
+    #place(top + left, polygon(fill: fill,
+      (0.40 * size, 0.70 * size),
+      (0.60 * size, 0.70 * size),
+      (0.50 * size, 0.96 * size),
+    ))
+  ]))
+]
+
+// Level 3 (exam-type): target
+#let difficulty-target-icon(size: 0.75em, fill: black) = box(width: size, height: size, inset: 0pt)[
+  #place(center + horizon, circle(radius: 0.42 * size, stroke: 0.09 * size + fill))
+  #place(center + horizon, circle(radius: 0.14 * size, fill: fill))
+]
+
+// Level 4 (advanced): mountain
+#let difficulty-mountain-icon(size: 0.75em, fill: black) = box(width: size, height: size, inset: 0pt)[
+  #place(top + left, polygon(fill: fill,
+    (0.00 * size, 0.90 * size),
+    (0.36 * size, 0.16 * size),
+    (0.60 * size, 0.62 * size),
+    (0.50 * size, 0.90 * size),
+  ))
+  #place(top + left, polygon(fill: fill,
+    (0.34 * size, 0.90 * size),
+    (0.66 * size, 0.34 * size),
+    (1.00 * size, 0.90 * size),
+  ))
+]
+
+// Level 5 (expert): star
+#let difficulty-star-icon(size: 0.72em, fill: black) = optional-star-icon(size: size, fill: fill)
+
+// Arrow icons for the clickable exercise <-> correction links
+#let solution-link-icon(size: 0.7em, fill: black) = box(width: size, height: size, inset: 0pt)[
+  #place(top + left, dx: 0pt, dy: 0.40 * size,
+    rect(width: 0.55 * size, height: 0.20 * size, fill: fill))
+  #place(top + left, polygon(fill: fill,
+    (0.50 * size, 0.14 * size),
+    (1.00 * size, 0.50 * size),
+    (0.50 * size, 0.86 * size),
+  ))
+]
+
+#let solution-backlink-icon(size: 0.7em, fill: black) = box(width: size, height: size, inset: 0pt)[
+  #place(top + left, polygon(fill: fill,
+    (0.50 * size, 0.14 * size),
+    (0.00 * size, 0.50 * size),
+    (0.50 * size, 0.86 * size),
+  ))
+  #place(top + left, dx: 0.45 * size, dy: 0.40 * size,
+    rect(width: 0.55 * size, height: 0.20 * size, fill: fill))
+]
+
+// Built-in 5-level difficulty scale: keys are strings ("1".."5"); each entry
+// provides the badge color ("color" mode) and a tinted icon ("symbols" mode).
+#let default-difficulty-scale = (
+  "1": (color: rgb("#2e7d32"), symbol: difficulty-seedling-icon(fill: rgb("#2e7d32"))),
+  "2": (color: rgb("#c62828"), symbol: difficulty-pencil-icon(fill: rgb("#c62828"))),
+  "3": (color: rgb("#1565c0"), symbol: difficulty-target-icon(fill: rgb("#1565c0"))),
+  "4": (color: rgb("#6a1b9a"), symbol: difficulty-mountain-icon(fill: rgb("#6a1b9a"))),
+  "5": (color: rgb("#212121"), symbol: difficulty-star-icon(fill: rgb("#212121"))),
+)
+
 // Global exercise counter
 #let exo-counter = counter("exo-counter")
+
+// Global display counter: never reset, used to build document-unique label
+// names for the exercise <-> correction links (exo-counter restarts per
+// section, so its values collide across chapters)
+#let exo-display-counter = counter("exo-display-counter")
 
 // Configuration state
 #let exo-config = state("exo-config", (
@@ -53,12 +146,17 @@
   "display": "both",              // "ex" (exercises only), "sol" (solutions/corrections only), "both"
   "corrDisplay": "solution",   // "solution", "correction", "mixed"
   "corrLoc": "after",          // "after", "pagebreak", "end-section", "end-chapter"
+  "sol-loc": auto,             // location for solutions only; auto = follow corrLoc
+                               // (e.g. sol-loc: "after" + corr-loc: "end-chapter")
   // Labels
   "solution-label": "Solution",
   "correction-label": "Correction",
   "exercise-label": "Exercise",
   // Counter behavior
   "counter-reset": "section",    // "section", "chapter", "global"
+  "number-prefix": none,         // none, or "heading" to prefix exercise numbers with the
+                                 // current level-1 heading number (e.g. "3.5")
+  "number-separator": ".",       // Separator between chapter prefix and exercise number
   // Display options
   "show-metadata": false,
   "show-id": false,              // Show exercise UID below the badge
@@ -87,6 +185,30 @@
   "advanced-symbol": "*",     // Symbol shown before label for advanced exercises (none to disable)
   "optional-symbol": optional-star-icon(), // Symbol shown before label for optional exercises (none to disable)
   "corr-given-symbol": corr-given-icon(),  // Symbol shown before label when the correction will be handed out (none to disable)
+  // Difficulty encoding
+  "difficulty-display": "color",  // How the difficulty: level shows on exercises:
+                                  // "color" (badge takes the level color),
+                                  // "stars" (N small stars before the label, numeric levels),
+                                  // "symbols" (one icon per level), "none"
+  "difficulty-scale": auto,       // auto = built-in 5-level scale; or dict key -> (color: .., symbol: ..)
+  "difficulty-position": "below", // Where stars/symbols go: "below" the badge (keeps the
+                                  // badge compact) or "badge" (inline, before the label)
+  // Solution presentation
+  "solution-style": auto,         // auto = badge box; "inline" = epigraph-like short rule +
+                                  // content right under the statement (only for sol-loc "after")
+  "inline-rule-length": 3cm,      // Length of the rule above inline solutions
+  "inline-label": auto,           // Small margin label next to inline solutions:
+                                  // auto = solution-label, none to hide, or custom content
+  // Exercise <-> correction links (for deferred corrections)
+  "link-solutions": false,        // Clickable icon on the exercise jumping to its deferred
+                                  // solution/correction, and a back-link on the correction
+  "link-icon": solution-link-icon(),         // Icon next to the exercise badge (none to hide)
+  "backlink-icon": solution-backlink-icon(), // Icon next to the correction badge (none to hide)
+  "link-style": "icon",           // "icon" (arrow next to the badge) or "page"
+                                  // ("Solution p. 30" textbook-style reference at the
+                                  // top right of the statement)
+  "page-ref-format": auto,        // auto, or function (label, page) => content
+  "page-ref-color": auto,         // Color of the page reference; auto = exercise badge color
   // QR codes
   "show-qr": true,            // Master toggle for per-exercise QR codes
   "qr-size": 1.5cm,           // Target QR code size (shrinks to fit the label margin if needed)
@@ -150,12 +272,15 @@
   display: none,           // "ex", "sol", "both"
   corr-display: none,    // "solution", "correction", "mixed"
   corr-loc: none,        // "after", "pagebreak", "end-section", "end-chapter"
+  sol-loc: none,         // same values as corr-loc, or auto (= follow corr-loc); solutions only
   // Labels
   solution-label: none,
   correction-label: none,
   exercise-label: none,
   // Counter behavior
   counter-reset: none,
+  number-prefix: auto,     // auto = keep current; none, or "heading" for chapter-prefixed numbers
+  number-separator: none,  // Separator between chapter prefix and number (default ".")
   // Display options
   show-metadata: none,
   show-id: none,
@@ -184,6 +309,21 @@
   advanced-symbol: none,  // Symbol for advanced exercises (use "*", "†", emoji, etc.)
   optional-symbol: none,  // Symbol for optional exercises (use [★], [⛰], etc.)
   corr-given-symbol: none,  // Symbol for exercises whose correction is handed out
+  // Difficulty encoding
+  difficulty-display: none,  // "color", "stars", "symbols", "none"
+  difficulty-scale: none,    // auto (built-in scale) or dict key -> (color: .., symbol: ..)
+  difficulty-position: none, // "below" (under the badge) or "badge" (inline)
+  // Solution presentation
+  solution-style: none,      // auto (badge box) or "inline" (epigraph-like rule)
+  inline-rule-length: none,  // Length of the rule above inline solutions
+  inline-label: auto,        // Small margin label for inline solutions (none to hide)
+  // Exercise <-> correction links
+  link-solutions: none,      // true/false
+  link-icon: auto,           // Icon on the exercise (auto = keep current, none to hide)
+  backlink-icon: auto,       // Icon on the correction (auto = keep current, none to hide)
+  link-style: none,          // "icon" or "page" ("Solution p. 30" reference)
+  page-ref-format: none,     // auto or function (label, page) => content
+  page-ref-color: none,      // Color of the page reference (auto = badge color)
   // QR codes
   show-qr: none,          // Master toggle for per-exercise QR codes
   qr-size: none,          // Target QR code size
@@ -197,10 +337,13 @@
     if display != none { new.display = display }
     if corr-display != none { new.corrDisplay = corr-display }
     if corr-loc != none { new.corrLoc = corr-loc }
+    if sol-loc != none { new.sol-loc = sol-loc }
     if solution-label != none { new.solution-label = solution-label }
     if correction-label != none { new.correction-label = correction-label }
     if exercise-label != none { new.exercise-label = exercise-label }
     if counter-reset != none { new.counter-reset = counter-reset }
+    if number-prefix != auto { new.number-prefix = number-prefix }
+    if number-separator != none { new.number-separator = number-separator }
     if show-metadata != none { new.show-metadata = show-metadata }
     if show-id != none { new.show-id = show-id }
     if show-competencies != none { new.show-competencies = show-competencies }
@@ -226,6 +369,18 @@
     if advanced-symbol != none { new.advanced-symbol = advanced-symbol }
     if optional-symbol != none { new.optional-symbol = optional-symbol }
     if corr-given-symbol != none { new.corr-given-symbol = corr-given-symbol }
+    if difficulty-display != none { new.difficulty-display = difficulty-display }
+    if difficulty-scale != none { new.difficulty-scale = difficulty-scale }
+    if difficulty-position != none { new.difficulty-position = difficulty-position }
+    if solution-style != none { new.solution-style = solution-style }
+    if inline-rule-length != none { new.inline-rule-length = inline-rule-length }
+    if inline-label != auto { new.inline-label = inline-label }
+    if link-solutions != none { new.link-solutions = link-solutions }
+    if link-icon != auto { new.link-icon = link-icon }
+    if backlink-icon != auto { new.backlink-icon = backlink-icon }
+    if link-style != none { new.link-style = link-style }
+    if page-ref-format != none { new.page-ref-format = page-ref-format }
+    if page-ref-color != none { new.page-ref-color = page-ref-color }
     if show-qr != none { new.show-qr = show-qr }
     if qr-size != none { new.qr-size = qr-size }
     if qr-min-size != none { new.qr-min-size = qr-min-size }
@@ -282,15 +437,104 @@
   }
 }
 
-#let get-exercise-marker(cfg, metadata) = {
+// =============================================================================
+// Difficulty Helpers
+// =============================================================================
+
+// Resolve the difficulty scale entry (color/symbol dict) for an exercise
+#let get-difficulty-entry(cfg, metadata) = {
+  let diff = metadata.at("difficulty", default: none)
+  if diff == none { return none }
+  let scale = cfg.at("difficulty-scale", default: auto)
+  if scale == auto { scale = default-difficulty-scale }
+  scale.at(str(diff), default: none)
+}
+
+// Badge color for an exercise: the difficulty color in "color" mode,
+// otherwise auto (= use the configured badge-color)
+#let get-exercise-badge-color(cfg, metadata) = {
+  if cfg.at("difficulty-display", default: "color") == "color" {
+    let entry = get-difficulty-entry(cfg, metadata)
+    if entry != none and entry.at("color", default: none) != none {
+      return entry.color
+    }
+  }
+  auto
+}
+
+// Difficulty marker for "stars"/"symbols" display modes (none otherwise)
+#let get-difficulty-marker(cfg, metadata) = {
+  let mode = cfg.at("difficulty-display", default: "color")
+  if mode != "stars" and mode != "symbols" { return none }
+  let diff = metadata.at("difficulty", default: none)
+  if diff == none { return none }
+  let entry = get-difficulty-entry(cfg, metadata)
+  let color = if entry != none { entry.at("color", default: black) } else { black }
+  if mode == "stars" {
+    // One small star per level; requires a numeric difficulty
+    if str(diff).match(regex("^[0-9]+$")) == none { return none }
+    let n = calc.min(int(str(diff)), 5)
+    if n < 1 { return none }
+    box(stack(dir: ltr, spacing: 0.06em,
+      ..range(n).map(_ => optional-star-icon(size: 0.52em, fill: color))))
+  } else if entry != none {
+    entry.at("symbol", default: none)
+  }
+}
+
+// Difficulty marker rendered below the badge (difficulty-position: "below",
+// the default: keeps the badge compact instead of widening the label margin)
+#let get-difficulty-badge-sub(cfg, metadata) = {
+  if cfg.at("difficulty-position", default: "below") == "below" {
+    get-difficulty-marker(cfg, metadata)
+  }
+}
+
+#let get-exercise-marker(cfg, metadata, extra: none) = {
   let markers = ()
+  if cfg.at("difficulty-position", default: "below") == "badge" {
+    let diff-marker = get-difficulty-marker(cfg, metadata)
+    if diff-marker != none {
+      markers.push(diff-marker)
+    }
+  }
   if cfg.optional-symbol != none and metadata.at("optional", default: false) {
     markers.push(cfg.optional-symbol)
   }
   if cfg.at("corr-given-symbol", default: none) != none and metadata.at("corr-given", default: false) {
     markers.push(cfg.at("corr-given-symbol"))
   }
+  if extra != none {
+    markers.push(extra)
+  }
   if markers.len() > 0 { markers.join(h(2.5pt)) }
+}
+
+// =============================================================================
+// Number Formatting
+// =============================================================================
+
+// Displayed exercise number, optionally prefixed by a chapter number.
+// number-prefix may be "heading" (current level-1 heading number), a counter
+// (e.g. beautitled's chapter-counter, which bypasses counter(heading)), or a
+// function () => value evaluated in context. Must be called inside context.
+#let format-exo-number(cfg, num) = {
+  let prefix = cfg.at("number-prefix", default: none)
+  if prefix == none { return [#num] }
+  let chap = if prefix == "heading" {
+    counter(heading).get().first()
+  } else if type(prefix) == function {
+    prefix()
+  } else {
+    // Assume a counter (custom heading packages often keep their own)
+    prefix.get().first()
+  }
+  let show-prefix = if chap == none { false } else if type(chap) == int { chap > 0 } else { true }
+  if show-prefix {
+    [#chap#cfg.at("number-separator", default: ".")#num]
+  } else {
+    [#num]
+  }
 }
 
 // =============================================================================
@@ -317,9 +561,23 @@
     labels
   }
 
-  if style == "circled" or style == "filled-circle" {
+  if type(style) == function {
+    // Custom badge function: measure with the longest label and a 3-digit number
+    let max-width = 0pt
+    for label in labels {
+      let width = measure(style(label, 100, font-size, black, false)).width
+      if width > max-width { max-width = width }
+    }
+    max-width + 16pt
+  } else if style == "circled" or style == "filled-circle" {
     // Circle styles only show number, size is font-size * 2
     font-size * 2 + 16pt
+  } else if style == "rect" or style == "filled-rect" {
+    // Rect styles only show the number
+    measure(box(
+      inset: (x: 6pt),
+      text(weight: "bold", size: font-size)[100],
+    )).width + 16pt
   } else if style == "tag" {
     // Tag has arrow, measure with longest label
     let max-width = 0pt
@@ -488,16 +746,60 @@
   )
 }
 
-// Get badge based on style name (for badge-based styles only)
+// Style: rect - Number in a compact outlined rectangle (no label)
+#let badge-rect(label, number, font-size, color, is-solution) = {
+  let fill-color = if is-solution { color.lighten(85%) } else { white }
+  box(
+    height: font-size + 8pt,
+    stroke: 0.8pt + color,
+    fill: fill-color,
+    inset: (x: 6pt, y: 0pt),
+    align(horizon, text(weight: "bold", size: font-size, fill: color)[#number]),
+  )
+}
+
+// Style: filled-rect - Number in a compact filled rectangle
+#let badge-filled-rect(label, number, font-size, color, is-solution) = {
+  box(
+    height: font-size + 8pt,
+    fill: color,
+    radius: 2pt,
+    inset: (x: 6pt, y: 0pt),
+    align(horizon, text(weight: "bold", size: font-size, fill: white)[#number]),
+  )
+}
+
+// Attach marker icons (optional star, difficulty, link arrow...) to the left
+// of any badge shape
+#let badge-with-marker(badge, marker) = {
+  if marker == none { return badge }
+  box(grid(
+    columns: (auto, auto),
+    column-gutter: 3pt,
+    align: (center + horizon, center + horizon),
+    box(height: 0.75em, align(center + horizon, marker)),
+    badge,
+  ))
+}
+
+// Get badge based on style name (for badge-based styles only).
+// `style` may also be a function (label, number, font-size, color,
+// is-solution) => content for fully custom badges.
 #let get-badge(style, label, number, font-size, color, is-solution, label-marker: none) = {
-  if style == "circled" {
-    badge-circled(label, number, font-size, color, is-solution)
+  if type(style) == function {
+    badge-with-marker(style(label, number, font-size, color, is-solution), label-marker)
+  } else if style == "circled" {
+    badge-with-marker(badge-circled(label, number, font-size, color, is-solution), label-marker)
   } else if style == "filled-circle" {
-    badge-filled-circle(label, number, font-size, color, is-solution)
+    badge-with-marker(badge-filled-circle(label, number, font-size, color, is-solution), label-marker)
+  } else if style == "rect" {
+    badge-with-marker(badge-rect(label, number, font-size, color, is-solution), label-marker)
+  } else if style == "filled-rect" {
+    badge-with-marker(badge-filled-rect(label, number, font-size, color, is-solution), label-marker)
   } else if style == "pill" {
-    badge-pill(label, number, font-size, color, is-solution)
+    badge-with-marker(badge-pill(label, number, font-size, color, is-solution), label-marker)
   } else if style == "tag" {
-    badge-tag(label, number, font-size, color, is-solution)
+    badge-with-marker(badge-tag(label, number, font-size, color, is-solution), label-marker)
   } else {
     // Default: box
     badge-box(label, number, font-size, color, is-solution, label-marker: label-marker)
@@ -506,7 +808,7 @@
 
 // Check if style is a "full-width" style (wraps content instead of badge+content grid)
 #let is-fullwidth-style(style) = {
-  style in ("margin", "border-accent", "underline", "rounded-box", "header-card")
+  type(style) == str and style in ("margin", "border-accent", "underline", "rounded-box", "header-card")
 }
 
 // =============================================================================
@@ -671,6 +973,23 @@
   )
 }
 
+// Resolve the effective margin position from the config (must be called
+// inside context: measures the configured labels)
+#let calc-margin-pos(cfg) = {
+  if cfg.margin-position == auto {
+    // Let the widest badge use the label-extra space in the page margin
+    // instead of indenting all content by its full width
+    let needed = calc-default-margin(
+      font-size: cfg.label-font-size,
+      style: cfg.badge-style,
+      labels: (cfg.exercise-label, cfg.solution-label, cfg.correction-label),
+    )
+    calc.max(needed - cfg.label-extra, 0pt)
+  } else {
+    cfg.margin-position
+  }
+}
+
 // Competency tag styling
 #let competency-tag(comp) = {
   box(
@@ -694,8 +1013,10 @@
   points: none,            // Points for exam mode
   points-label: "pts",     // Label for points (e.g., "pts", "points")
   label-marker: none,      // Optional marker displayed before the badge label
+  badge-sub: none,         // Optional marker displayed right below the badge (e.g., difficulty)
   margin-content: none,    // Optional content below the badge (e.g., QR code, remarks)
   qr: none,                // QR code: URL string (rendered with tiaoma) or content
+  badge-color: auto,       // Override the badge color (e.g., difficulty color); auto = config
 ) = context {
   let cfg = exo-config.get()
 
@@ -704,6 +1025,8 @@
     cfg.solution-color
   } else if box-type == "correction" {
     cfg.correction-color
+  } else if badge-color != auto {
+    badge-color
   } else {
     cfg.badge-color
   }
@@ -750,6 +1073,24 @@
   // Check if this is a full-width style
   if is-fullwidth-style(cfg.badge-style) {
     // Use full-width layout (style wraps the content)
+    // Full-width styles have no label column: below-badge markers join the
+    // inline ones
+    let label-marker = if badge-sub == none { label-marker } else if label-marker == none {
+      badge-sub
+    } else {
+      label-marker + h(2.5pt) + badge-sub
+    }
+    // Markers (optional star, difficulty icon...) prefix the header label;
+    // header-card draws its label on a filled strip, so the marker sits on a
+    // small white chip to stay visible
+    let label = if label-marker == none { label } else {
+      let marker = box(height: 0.75em, align(center + horizon, label-marker))
+      if cfg.badge-style == "header-card" {
+        marker = box(fill: white, radius: 2pt, inset: (x: 2.5pt, y: 1.5pt),
+          box(height: 0.65em, align(center + horizon, label-marker)))
+      }
+      [#marker~#label]
+    }
     // "margin" places the QR in its 3.35cm label column (unless qr-position
     // is "wrap", or for its label-less solution variant); the others get it
     // at full qr-size since the content area is wide
@@ -805,19 +1146,7 @@
     }
 
     // Margin position and label space (like environments)
-    // If margin-position is auto, compute based on badge style and label size
-    let margin-pos = if cfg.margin-position == auto {
-      // Let the widest badge use the label-extra space in the page margin
-      // instead of indenting all content by its full width
-      let needed = calc-default-margin(
-        font-size: cfg.label-font-size,
-        style: cfg.badge-style,
-        labels: (cfg.exercise-label, cfg.solution-label, cfg.correction-label),
-      )
-      calc.max(needed - cfg.label-extra, 0pt)
-    } else {
-      cfg.margin-position
-    }
+    let margin-pos = calc-margin-pos(cfg)
     let label-extra = cfg.label-extra
     let gap = 6pt
 
@@ -840,6 +1169,7 @@
     let label-col-width = calc.max(
       margin-pos + label-extra,
       measure(badge-with-points).width,
+      if badge-sub != none { measure(badge-sub).width } else { 0pt },
       if qr-block != none { measure(qr-block).width } else { 0pt },
     )
 
@@ -848,6 +1178,9 @@
       set text(hyphenate: false)
       align(right)[
         #box[#badge-with-points]
+        #if badge-sub != none {
+          block(above: 3pt, badge-sub)
+        }
         #if show-id and exercise-id != none { id-block }
         #if qr-block != none {
           // Block keeps the QR on its own line, close below the badge
@@ -890,7 +1223,7 @@
   }
 }
 
-#let exo-solution-box(number: 1, body, exercise-id: none, show-id: false, qr: none) = context {
+#let exo-solution-box(number: 1, body, exercise-id: none, show-id: false, qr: none, label-marker: none) = context {
   let cfg = exo-config.get()
   exo-box(
     label: cfg.solution-label,
@@ -900,10 +1233,11 @@
     exercise-id: exercise-id,
     show-id: show-id,
     qr: qr,
+    label-marker: label-marker,
   )
 }
 
-#let exo-correction-box(number: 1, body, exercise-id: none, show-id: false, qr: none) = context {
+#let exo-correction-box(number: 1, body, exercise-id: none, show-id: false, qr: none, label-marker: none) = context {
   let cfg = exo-config.get()
   exo-box(
     label: cfg.correction-label,
@@ -913,6 +1247,7 @@
     exercise-id: exercise-id,
     show-id: show-id,
     qr: qr,
+    label-marker: label-marker,
   )
 }
 
@@ -990,26 +1325,193 @@
   })
 }
 
-// Render solution/correction items returned by determine-content-to-show
-#let show-content-items(items, number, exercise-id, cfg) = {
-  for item in items {
-    if item.type == "solution" {
-      exo-solution-box(
-        number: number,
-        item.content,
-        exercise-id: exercise-id,
-        show-id: cfg.show-id,
-        qr: item.at("qr", default: none),
+// Invisible link target (defined at module level: inside exo() the name
+// `metadata` is shadowed by the exercise metadata dict)
+#let make-link-target(name) = [#metadata(none)#label(name)]
+
+// Epigraph-style inline solution: a short rule + the content, right under
+// the statement (no badge box). A small margin label (inline-label, defaults
+// to the solution label) makes clear this is the solution. The layout mirrors
+// the badge grid so the rule aligns with the exercise content column.
+#let inline-solution-block(content, cfg) = context {
+  let small-label = {
+    let l = cfg.at("inline-label", default: auto)
+    if l == auto {
+      text(size: 8pt, fill: cfg.solution-color, style: "italic", cfg.solution-label)
+    } else {
+      l
+    }
+  }
+  let body = {
+    set par(first-line-indent: 0cm)
+    line(length: cfg.at("inline-rule-length", default: 3cm), stroke: 0.5pt + cfg.solution-color)
+    v(0.2em)
+    content
+  }
+  if is-fullwidth-style(cfg.badge-style) {
+    block(
+      above: cfg.solution-above,
+      below: cfg.solution-below,
+      width: 100%,
+      breakable: true,
+    )[
+      #if small-label != none [#small-label#v(0.1em)]
+      #body
+    ]
+  } else {
+    let label-extra = cfg.label-extra
+    block(
+      above: cfg.solution-above,
+      below: cfg.solution-below,
+      width: 100% + label-extra,
+      breakable: true,
+      inset: (left: -label-extra, right: label-extra),
+    )[
+      #grid(
+        columns: (calc-margin-pos(cfg) + label-extra, 1fr),
+        column-gutter: 6pt,
+        align: (right + top, left + top),
+        align(right, small-label),
+        body,
       )
+    ]
+  }
+}
+
+// Render solution/correction items returned by determine-content-to-show.
+// - loc: where these items are being placed ("after" enables the inline
+//   solution style)
+// - link-base: when set (and link-solutions is on), the first item receives
+//   the "exb-corr-<base>" link target and every item gets a back-link icon
+//   to the exercise
+#let show-content-items(items, number, exercise-id, cfg, loc: none, link-base: none) = {
+  let first = true
+  for item in items {
+    let body = item.content
+    let marker = none
+    if link-base != none and cfg.at("link-solutions", default: false) {
+      if first {
+        body = [#make-link-target("exb-corr-" + link-base)#body]
+      }
+      let icon = cfg.at("backlink-icon", default: none)
+      if icon != none {
+        marker = link(label("exb-ex-" + link-base), icon)
+      }
+    }
+    first = false
+    if item.type == "solution" {
+      if loc == "after" and cfg.at("solution-style", default: auto) == "inline" {
+        inline-solution-block(body, cfg)
+      } else {
+        exo-solution-box(
+          number: number,
+          body,
+          exercise-id: exercise-id,
+          show-id: cfg.show-id,
+          qr: item.at("qr", default: none),
+          label-marker: marker,
+        )
+      }
     } else {
       exo-correction-box(
         number: number,
-        item.content,
+        body,
         exercise-id: exercise-id,
         show-id: cfg.show-id,
         qr: item.at("qr", default: none),
+        label-marker: marker,
       )
     }
+  }
+}
+
+// Where an item type goes: solutions follow sol-loc (auto = corr-loc),
+// corrections follow corr-loc
+#let resolve-item-loc(cfg, item-type) = {
+  if item-type == "solution" {
+    let s = cfg.at("sol-loc", default: auto)
+    if s == auto { cfg.corrLoc } else { s }
+  } else {
+    cfg.corrLoc
+  }
+}
+
+// True if the exercise should carry a clickable link icon to its deferred
+// solution/correction
+#let has-deferred-items(items, cfg) = {
+  items.any(item => resolve-item-loc(cfg, item.type) != "after")
+}
+
+// Textbook-style page reference ("Solution p. 30") shown at the top right of
+// the statement, linking to the deferred solution/correction (link-style: "page")
+#let make-page-ref(cfg, link-base, items, badge-color) = {
+  let target = label("exb-corr-" + link-base)
+  let deferred = items.filter(item => resolve-item-loc(cfg, item.type) != "after")
+  let ref-label = if deferred.len() > 0 and deferred.first().type == "correction" {
+    cfg.correction-label
+  } else {
+    cfg.solution-label
+  }
+  context {
+    let found = query(target)
+    if found.len() > 0 {
+      let page-num = counter(page).at(found.first().location()).first()
+      let fmt = cfg.at("page-ref-format", default: auto)
+      let body = if fmt == auto {
+        let color = cfg.at("page-ref-color", default: auto)
+        if color == auto {
+          color = if badge-color != auto { badge-color } else { cfg.badge-color }
+        }
+        text(fill: color, size: 0.92em)[#ref-label p.~#page-num]
+      } else {
+        fmt(ref-label, page-num)
+      }
+      link(target, body)
+    }
+  }
+}
+
+// Place solution/correction items per type: immediately after the exercise,
+// after a pagebreak, or deferred to the pending queue (end-section /
+// end-chapter, printed by exo-print-solutions)
+#let place-content-items(items, number, exercise-id, cfg, link-base: none) = {
+  let after-items = ()
+  let pagebreak-items = ()
+  let deferred = ()
+  for item in items {
+    let loc = resolve-item-loc(cfg, item.type)
+    if loc == "pagebreak" {
+      pagebreak-items.push(item)
+    } else if loc == "end-section" or loc == "end-chapter" {
+      deferred.push((item: item, loc: loc))
+    } else {
+      after-items.push(item)
+    }
+  }
+  show-content-items(after-items, number, exercise-id, cfg, loc: "after")
+  let label-attached = false
+  if pagebreak-items.len() > 0 {
+    pagebreak(weak: true)
+    show-content-items(pagebreak-items, number, exercise-id, cfg, link-base: link-base)
+    label-attached = true
+  }
+  for (i, d) in deferred.enumerate() {
+    // The "exb-corr" link target must be unique: attach it to the first
+    // deferred item only if the pagebreak group didn't already carry it
+    let attach = link-base != none and not label-attached and i == 0
+    exo-pending-solutions.update(pending => {
+      pending.push((
+        number: number,
+        content: d.item.content,
+        type: d.item.type,
+        id: exercise-id,
+        qr: d.item.at("qr", default: none),
+        loc: d.loc,
+        link-base: link-base,
+        attach-label: attach,
+      ))
+      pending
+    })
   }
 }
 
@@ -1034,11 +1536,13 @@
   // Metadata fields
   topic: none,
   level: none,
+  difficulty: none,  // Difficulty level (key into difficulty-scale, e.g. 1-5)
   authors: (),  // Array of authors, e.g., ("Nathan", "Raph")
   ..extra-metadata
 ) = {
-  // Step counter first (outside context)
+  // Step counters first (outside context)
   exo-counter.step()
+  exo-display-counter.step()
 
   context {
     let cfg = exo-config.get()
@@ -1057,6 +1561,7 @@
   let metadata = (
     topic: topic,
     level: level,
+    difficulty: difficulty,
     authors: authors,
     optional: optional,
     corr-given: corr-given,
@@ -1071,6 +1576,10 @@
     solInCorr: sol-in-corr,
     showCorr: show-corr,
   )
+
+  // Displayed number (possibly chapter-prefixed) and difficulty badge color
+  let disp-num = format-exo-number(cfg, num)
+  let ex-badge-color = get-exercise-badge-color(cfg, metadata)
 
   // Create exercise record
   let exercise-record = (
@@ -1098,53 +1607,61 @@
   if cfg.display == "sol" {
     // Only show solution/correction
     let items-to-show = determine-content-to-show(solution, correction, cfg, exercise-flags, qr-sol: qr-sol, qr-corr: qr-corr)
-    show-content-items(items-to-show, num, exercise-id, cfg)
+    show-content-items(items-to-show, disp-num, exercise-id, cfg)
   } else if cfg.display == "ex" {
     // Only show exercise
     exo-box(
       label: get-exercise-label(cfg, metadata),
-      number: num,
+      number: disp-num,
       exercise,
       exercise-id: exercise-id,
       show-id: cfg.show-id,
       label-marker: get-exercise-marker(cfg, metadata),
+      badge-sub: get-difficulty-badge-sub(cfg, metadata),
       margin-content: margin-content,
       qr: qr,
+      badge-color: ex-badge-color,
     )
   } else {
     // "both" mode - show exercise and solution/correction
+    let items-to-show = determine-content-to-show(solution, correction, cfg, exercise-flags, qr-sol: qr-sol, qr-corr: qr-corr)
+
+    // Exercise <-> correction links: only when something is actually deferred
+    let link-base = none
+    let link-marker = none
+    let exercise-body = exercise
+    if cfg.at("link-solutions", default: false) and has-deferred-items(items-to-show, cfg) {
+      link-base = str(exo-display-counter.get().first())
+      exercise-body = [#make-link-target("exb-ex-" + link-base)#exercise-body]
+      if cfg.at("link-style", default: "icon") == "page" {
+        exercise-body = qr-wrap-body(
+          make-page-ref(cfg, link-base, items-to-show, ex-badge-color),
+          exercise-body,
+        )
+      } else {
+        let icon = cfg.at("link-icon", default: none)
+        if icon != none {
+          link-marker = link(label("exb-corr-" + link-base), icon)
+        }
+      }
+    }
 
     // Show exercise
     exo-box(
       label: get-exercise-label(cfg, metadata),
-      number: num,
-      exercise,
+      number: disp-num,
+      exercise-body,
       exercise-id: exercise-id,
       show-id: cfg.show-id,
-      label-marker: get-exercise-marker(cfg, metadata),
+      label-marker: get-exercise-marker(cfg, metadata, extra: link-marker),
+      badge-sub: get-difficulty-badge-sub(cfg, metadata),
       margin-content: margin-content,
       qr: qr,
+      badge-color: ex-badge-color,
     )
 
-    // Handle solution/correction display
-    let items-to-show = determine-content-to-show(solution, correction, cfg, exercise-flags, qr-sol: qr-sol, qr-corr: qr-corr)
-
-    if items-to-show.len() > 0 {
-      if cfg.corrLoc == "after" {
-        show-content-items(items-to-show, num, exercise-id, cfg)
-      } else if cfg.corrLoc == "pagebreak" {
-        pagebreak(weak: true)
-        show-content-items(items-to-show, num, exercise-id, cfg)
-      } else if cfg.corrLoc == "end-section" or cfg.corrLoc == "end-chapter" {
-        // Store for later display
-        for item in items-to-show {
-          exo-pending-solutions.update(pending => {
-            pending.push((number: num, content: item.content, type: item.type, id: exercise-id, qr: item.at("qr", default: none)))
-            pending
-          })
-        }
-      }
-    }
+    // Handle solution/correction display (per-type location)
+    place-content-items(items-to-show, disp-num, exercise-id, cfg, link-base: link-base)
   }
   }  // close context
 }  // close function
@@ -1153,13 +1670,31 @@
 // Solution Display Functions
 // =============================================================================
 
-#let exo-print-solutions(title: auto) = context {
+// Print collected solutions/corrections. With loc: "end-section" or
+// "end-chapter", only the items deferred to that location are printed
+// (the others stay pending); loc: none prints everything.
+#let exo-print-solutions(title: auto, loc: none) = context {
   let cfg = exo-config.get()
   let pending = exo-pending-solutions.get()
 
-  if pending.len() > 0 {
+  let to-print = ()
+  let to-keep = ()
+  for item in pending {
+    if loc == none or item.at("loc", default: none) == loc {
+      to-print.push(item)
+    } else {
+      to-keep.push(item)
+    }
+  }
+
+  if to-print.len() > 0 {
     let section-title = if title == auto {
-      cfg.solution-label + "s"
+      // "Corrections" when only corrections are pending, "Solutions" otherwise
+      if to-print.all(item => item.at("type", default: "solution") == "correction") {
+        cfg.correction-label + "s"
+      } else {
+        cfg.solution-label + "s"
+      }
     } else {
       title
     }
@@ -1168,10 +1703,23 @@
     text(weight: "bold", size: 12pt)[#section-title]
     v(0.5em)
 
-    for item in pending {
+    for item in to-print {
       let content = item.at("content", default: none)
       let item-type = item.at("type", default: "solution")
       let item-qr = item.at("qr", default: none)
+
+      // Exercise <-> correction links: link target + back-link icon
+      let marker = none
+      let link-base = item.at("link-base", default: none)
+      if link-base != none and cfg.at("link-solutions", default: false) {
+        if item.at("attach-label", default: false) {
+          content = [#make-link-target("exb-corr-" + link-base)#content]
+        }
+        let icon = cfg.at("backlink-icon", default: none)
+        if icon != none {
+          marker = link(label("exb-ex-" + link-base), icon)
+        }
+      }
 
       if item-type == "solution" {
         exo-solution-box(
@@ -1180,6 +1728,7 @@
           exercise-id: item.at("id", default: none),
           show-id: cfg.show-id,
           qr: item-qr,
+          label-marker: marker,
         )
       } else {
         exo-correction-box(
@@ -1188,27 +1737,54 @@
           exercise-id: item.at("id", default: none),
           show-id: cfg.show-id,
           qr: item-qr,
+          label-marker: marker,
         )
       }
     }
   }
 
-  // Clear pending solutions
-  exo-pending-solutions.update(())
+  // Keep only the items deferred to another location
+  exo-pending-solutions.update(to-keep)
 }
 
-#let exo-section-end() = context {
-  let cfg = exo-config.get()
-  if cfg.corrLoc == "end-section" {
-    exo-print-solutions()
-  }
+#let exo-section-end() = {
+  exo-print-solutions(loc: "end-section")
 }
 
-#let exo-chapter-end() = context {
-  let cfg = exo-config.get()
-  if cfg.corrLoc == "end-chapter" {
-    exo-print-solutions()
+#let exo-chapter-end() = {
+  exo-print-solutions(loc: "end-chapter")
+}
+
+// Wrap the whole document to automate end-chapter corrections: the pending
+// items are printed before each new level-1 heading and at the end of the
+// document, and the exercise counter resets at each chapter (per the
+// counter-reset setting).
+//
+//   #show: exo-auto-chapter
+#let exo-auto-chapter(body) = context {
+  // Corrections printed inside the heading show rule would inherit the
+  // heading text style (bold, large); capture the base style here to reset it
+  let base-size = text.size
+  let base-weight = text.weight
+  show heading.where(level: 1): it => {
+    // Headings emitted internally by heading-styling packages (e.g.
+    // beautitled's hidden outline headings, labelled <_btl-internal>) must
+    // not trigger a chapter boundary: they can sit inside place(hide(..)),
+    // where the corrections would print invisibly yet be cleared from the
+    // pending queue
+    if it.at("label", default: none) == label("_btl-internal") {
+      it
+    } else {
+      {
+        set text(size: base-size, weight: base-weight)
+        exo-chapter-end()
+      }
+      it
+      exo-chapter-start()
+    }
   }
+  body
+  exo-chapter-end()
 }
 
 // =============================================================================
@@ -1218,6 +1794,7 @@
 #let exo-filter(
   topic: none,
   level: none,
+  difficulty: none,  // Filter: matches the exercise's difficulty level
   author: none,  // Filter: matches if author is in exercise's authors array
   custom: none,  // Function (metadata) => bool
   show-solutions: true,
@@ -1232,6 +1809,10 @@
     // Check filters
     if topic != none and meta.topic != topic { matches = false }
     if level != none and meta.level != level { matches = false }
+    if difficulty != none {
+      let ex-diff = meta.at("difficulty", default: none)
+      if ex-diff == none or str(ex-diff) != str(difficulty) { matches = false }
+    }
     // Author filter: check if author is in the authors array
     if author != none {
       let ex-authors = meta.at("authors", default: ())
@@ -1254,7 +1835,9 @@
           exercise-id: exercise.id,
           show-id: cfg.show-id,
           label-marker: get-exercise-marker(cfg, meta),
+          badge-sub: get-difficulty-badge-sub(cfg, meta),
           qr: exercise.at("qr", default: none),
+          badge-color: get-exercise-badge-color(cfg, meta),
         )
       }
 
@@ -1296,6 +1879,7 @@
   // Metadata fields
   topic: none,
   level: none,
+  difficulty: none,  // Difficulty level (key into difficulty-scale, e.g. 1-5)
   authors: (),  // Array of authors, e.g., ("Nathan", "Raph")
   ..extra-metadata
 ) = {
@@ -1316,6 +1900,7 @@
     let metadata = (
       topic: topic,
       level: level,
+      difficulty: difficulty,
       authors: authors,
       optional: optional,
       corr-given: corr-given,
@@ -1360,6 +1945,7 @@
   corr-given-symbol: auto, // auto = use current config; content/none = override for this display
 ) = {
   exo-counter.step()
+  exo-display-counter.step()
 
   context {
     let cfg = exo-config.get()
@@ -1419,6 +2005,10 @@
         showCorr: found.at("showCorr", default: false),
       )
 
+      // Displayed number (possibly chapter-prefixed) and difficulty badge color
+      let disp-num = format-exo-number(cfg, num)
+      let ex-badge-color = get-exercise-badge-color(cfg, display-metadata)
+
       // Check display mode
       if cfg.display-mode == "exam" {
         // EXAM MODE: Use exo-box with points
@@ -1427,7 +2017,7 @@
         // Display exercise with points in the badge
         exo-box(
           label: get-exercise-label(display-cfg, display-metadata),
-          number: num,
+          number: disp-num,
           found.exercise,
           exercise-id: found.id,
           show-id: cfg.show-id,
@@ -1435,7 +2025,9 @@
           show-competencies: cfg.show-competencies,
           points: pts,
           label-marker: get-exercise-marker(display-cfg, display-metadata),
+          badge-sub: get-difficulty-badge-sub(display-cfg, display-metadata),
           qr: ex-qr,
+          badge-color: ex-badge-color,
         )
 
         // Show solution if configured
@@ -1447,38 +2039,54 @@
         }
       } else {
         // EXERCISE MODE: Use default exo-box format (no points)
+        // Determine what content to show
+        let items-to-show = determine-content-to-show(sol, corr, cfg, exercise-flags, qr-sol: ex-qr-sol, qr-corr: ex-qr-corr)
+        let show-items = items-to-show.len() > 0 and (cfg.display == "sol" or (cfg.display == "both" and do-show-solution))
+
+        // Exercise <-> correction links: only when something is actually deferred
+        let link-base = none
+        let link-marker = none
+        let exercise-body = found.exercise
+        if (cfg.display != "sol" and show-items and cfg.at("link-solutions", default: false)
+            and has-deferred-items(items-to-show, cfg)) {
+          link-base = str(exo-display-counter.get().first())
+          exercise-body = [#make-link-target("exb-ex-" + link-base)#exercise-body]
+          if cfg.at("link-style", default: "icon") == "page" {
+            exercise-body = qr-wrap-body(
+              make-page-ref(cfg, link-base, items-to-show, ex-badge-color),
+              exercise-body,
+            )
+          } else {
+            let icon = cfg.at("link-icon", default: none)
+            if icon != none {
+              link-marker = link(label("exb-corr-" + link-base), icon)
+            }
+          }
+        }
+
         // Display exercise based on show mode
         if cfg.display != "sol" {
           exo-box(
             label: get-exercise-label(display-cfg, display-metadata),
-            number: num,
-            found.exercise,
+            number: disp-num,
+            exercise-body,
             exercise-id: found.id,
             show-id: cfg.show-id,
             competencies: comps,
             show-competencies: cfg.show-competencies,
-            label-marker: get-exercise-marker(display-cfg, display-metadata),
+            label-marker: get-exercise-marker(display-cfg, display-metadata, extra: link-marker),
+            badge-sub: get-difficulty-badge-sub(display-cfg, display-metadata),
             qr: ex-qr,
+            badge-color: ex-badge-color,
           )
         }
 
-        // Determine what content to show
-        let items-to-show = determine-content-to-show(sol, corr, cfg, exercise-flags, qr-sol: ex-qr-sol, qr-corr: ex-qr-corr)
-
-        // Handle solution/correction display
-        if items-to-show.len() > 0 and (cfg.display == "sol" or (cfg.display == "both" and do-show-solution)) {
-          if cfg.corrLoc == "after" or cfg.display == "sol" {
-            show-content-items(items-to-show, num, found.id, cfg)
-          } else if cfg.corrLoc == "pagebreak" {
-            pagebreak(weak: true)
-            show-content-items(items-to-show, num, found.id, cfg)
-          } else if cfg.corrLoc == "end-section" or cfg.corrLoc == "end-chapter" {
-            for item in items-to-show {
-              exo-pending-solutions.update(pending => {
-                pending.push((number: num, content: item.content, type: item.type, id: found.id, qr: item.at("qr", default: none)))
-                pending
-              })
-            }
+        // Handle solution/correction display (per-type location)
+        if show-items {
+          if cfg.display == "sol" {
+            show-content-items(items-to-show, disp-num, found.id, cfg)
+          } else {
+            place-content-items(items-to-show, disp-num, found.id, cfg, link-base: link-base)
           }
         }
       }
@@ -1509,11 +2117,13 @@
   // Simple filters (match exact value)
   topic: none,
   level: none,
+  difficulty: none,   // Filter by difficulty level
   author: none,       // Filter: matches if author is in exercise's authors array
   competency: none,   // Filter by single competency
   // List filters (match any in list)
   topics: none,       // e.g., ("algebra", "geometry")
   levels: none,       // e.g., ("1M", "2M")
+  difficulties: none, // e.g., (1, 2) - match any
   competencies: none, // e.g., ("C1.1", "C2.3") - match any
   // Custom filter function
   where: none,       // Function (exercise) => bool
@@ -1522,9 +2132,14 @@
   renumber: true,    // Renumber exercises sequentially
   max: none,         // Maximum number to show
   shuffle: false,    // Randomize order (needs seed)
-) = context {
+) = {
+  // Stepped outside context: base for document-unique link label names
+  exo-display-counter.step()
+
+  context {
   let cfg = exo-config.get()
   let registry = exo-registry.get()
+  let call-base = exo-display-counter.get().first()
 
   // Determine solution display
   let do-show-solutions = if show-solutions == auto {
@@ -1542,6 +2157,10 @@
     // Simple exact filters
     if topic != none and meta.topic != topic { matches = false }
     if level != none and meta.level != level { matches = false }
+    if difficulty != none {
+      let ex-diff = meta.at("difficulty", default: none)
+      if ex-diff == none or str(ex-diff) != str(difficulty) { matches = false }
+    }
     // Author filter: check if author is in the authors array
     if author != none {
       let ex-authors = meta.at("authors", default: ())
@@ -1560,6 +2179,16 @@
       let found = false
       for l in levels {
         if meta.level == l { found = true; break }
+      }
+      if not found { matches = false }
+    }
+    if difficulties != none {
+      let ex-diff = meta.at("difficulty", default: none)
+      let found = false
+      if ex-diff != none {
+        for d in difficulties {
+          if str(ex-diff) == str(d) { found = true; break }
+        }
       }
       if not found { matches = false }
     }
@@ -1607,6 +2236,10 @@
       showCorr: exercise.at("showCorr", default: false),
     )
 
+    // Displayed number (possibly chapter-prefixed) and difficulty badge color
+    let disp-num = format-exo-number(cfg, num)
+    let ex-badge-color = get-exercise-badge-color(cfg, exercise.metadata)
+
     // Apply page break before if configured
     if cfg.page-break == "before" or cfg.page-break == "around" {
       pagebreak(weak: true)
@@ -1620,7 +2253,7 @@
       // Display exercise with points in the badge
       exo-box(
         label: get-exercise-label(cfg, exercise.metadata),
-        number: num,
+        number: disp-num,
         exercise.exercise,
         exercise-id: exercise.id,
         show-id: cfg.show-id,
@@ -1628,7 +2261,9 @@
         show-competencies: cfg.show-competencies,
         points: pts,
         label-marker: get-exercise-marker(cfg, exercise.metadata),
+        badge-sub: get-difficulty-badge-sub(cfg, exercise.metadata),
         qr: ex-qr,
+        badge-color: ex-badge-color,
       )
 
       // Show solution if configured
@@ -1640,40 +2275,58 @@
       }
     } else {
       // EXERCISE MODE: Use default exo-box format (no points)
-      if cfg.display != "sol" {
-        exo-box(
-          label: get-exercise-label(cfg, exercise.metadata),
-          number: num,
-          exercise.exercise,
-          exercise-id: exercise.id,
-          show-id: cfg.show-id,
-          competencies: ex-comps,
-          show-competencies: cfg.show-competencies,
-          label-marker: get-exercise-marker(cfg, exercise.metadata),
-          qr: ex-qr,
-        )
-      }
-
       // Determine what content to show
       let items-to-show = determine-content-to-show(
         sol, corr, cfg, exercise-flags,
         qr-sol: exercise.at("qr-sol", default: none),
         qr-corr: exercise.at("qr-corr", default: none),
       )
+      let show-items = items-to-show.len() > 0 and (cfg.display == "sol" or do-show-solutions)
 
-      if items-to-show.len() > 0 and (cfg.display == "sol" or do-show-solutions) {
-        if cfg.corrLoc == "after" or cfg.display == "sol" {
-          show-content-items(items-to-show, num, exercise.id, cfg)
-        } else if cfg.corrLoc == "pagebreak" {
-          pagebreak(weak: true)
-          show-content-items(items-to-show, num, exercise.id, cfg)
-        } else if cfg.corrLoc == "end-section" or cfg.corrLoc == "end-chapter" {
-          for item in items-to-show {
-            exo-pending-solutions.update(pending => {
-              pending.push((number: num, content: item.content, type: item.type, id: exercise.id, qr: item.at("qr", default: none)))
-              pending
-            })
+      // Exercise <-> correction links: only when something is actually deferred.
+      // Label base combines the call base and the loop index for uniqueness.
+      let link-base = none
+      let link-marker = none
+      let exercise-body = exercise.exercise
+      if (cfg.display != "sol" and show-items and cfg.at("link-solutions", default: false)
+          and has-deferred-items(items-to-show, cfg)) {
+        link-base = str(call-base) + "-" + str(display-num)
+        exercise-body = [#make-link-target("exb-ex-" + link-base)#exercise-body]
+        if cfg.at("link-style", default: "icon") == "page" {
+          exercise-body = qr-wrap-body(
+            make-page-ref(cfg, link-base, items-to-show, ex-badge-color),
+            exercise-body,
+          )
+        } else {
+          let icon = cfg.at("link-icon", default: none)
+          if icon != none {
+            link-marker = link(label("exb-corr-" + link-base), icon)
           }
+        }
+      }
+
+      if cfg.display != "sol" {
+        exo-box(
+          label: get-exercise-label(cfg, exercise.metadata),
+          number: disp-num,
+          exercise-body,
+          exercise-id: exercise.id,
+          show-id: cfg.show-id,
+          competencies: ex-comps,
+          show-competencies: cfg.show-competencies,
+          label-marker: get-exercise-marker(cfg, exercise.metadata, extra: link-marker),
+          badge-sub: get-difficulty-badge-sub(cfg, exercise.metadata),
+          qr: ex-qr,
+          badge-color: ex-badge-color,
+        )
+      }
+
+      // Handle solution/correction display (per-type location)
+      if show-items {
+        if cfg.display == "sol" {
+          show-content-items(items-to-show, disp-num, exercise.id, cfg)
+        } else {
+          place-content-items(items-to-show, disp-num, exercise.id, cfg, link-base: link-base)
         }
       }
     }
@@ -1683,6 +2336,7 @@
       pagebreak(weak: true)
     }
   }
+  }  // close context
 }
 
 // =============================================================================
@@ -1701,6 +2355,7 @@
 #let exo-count(
   topic: none,
   level: none,
+  difficulty: none,  // Filter: matches the exercise's difficulty level
   author: none,  // Filter: matches if author is in exercise's authors array
 ) = context {
   let registry = exo-registry.get()
@@ -1712,6 +2367,10 @@
 
     if topic != none and meta.topic != topic { matches = false }
     if level != none and meta.level != level { matches = false }
+    if difficulty != none {
+      let ex-diff = meta.at("difficulty", default: none)
+      if ex-diff == none or str(ex-diff) != str(difficulty) { matches = false }
+    }
     // Author filter: check if author is in the authors array
     if author != none {
       let ex-authors = meta.at("authors", default: ())
