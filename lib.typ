@@ -216,8 +216,9 @@
                               // if the label margin is narrower, the QR extends into the page margin
   "qr-color": black,          // QR module color
   "qr-caption": none,         // Optional small caption below every QR code (e.g. [Corrigé])
-  "qr-position": "auto",      // "auto" (per badge style: label margin or wrapped) or
-                              // "wrap" (always wrap the exercise content around the QR)
+  "qr-position": "auto",      // "auto" (per badge style: label margin or wrapped),
+                              // "wrap" (always wrap the exercise content around the QR) or
+                              // "tasks" (overlay the QR; a taskize #tasks body flows around it)
 ))
 
 // Registry of all exercises (for filtering)
@@ -330,7 +331,8 @@
   qr-min-size: none,      // Minimum QR code size (may overflow narrow label margins)
   qr-color: none,         // QR module color
   qr-caption: auto,       // Small caption below every QR code (none to remove)
-  qr-position: none,      // "auto" (per badge style) or "wrap" (always wrap content)
+  qr-position: none,      // "auto" (per badge style), "wrap" (always wrap content)
+                          // or "tasks" (overlay; taskize #tasks bodies flow around the QR)
 ) = {
   exo-config.update(cfg => {
     let new = cfg
@@ -930,6 +932,36 @@
   columns: (1fr, auto),
 )
 
+// Shared state key read by taskize (>= 0.2.8): a top-right zone that the next
+// #tasks call flows around (first rows narrowed, rest full width). This is the
+// only coupling between the two packages — the state key, not an import.
+#let _taskize-wrap-zone = state("taskize-wrap-zone", none)
+
+// qr-position: "tasks" — overlay the QR at the top right (zero flow height)
+// and publish the zone for the body's #tasks block. wrap-it can only flow
+// plain text around the QR; a taskize grid is one opaque block to it, so the
+// whole grid used to land below a reserved QR-height row. Here taskize itself
+// splits its rows around the zone instead. Bodies without a #tasks block do
+// not avoid the overlay — "tasks" is opt-in for taskize-based content.
+#let qr-overlay-body(qr, body) = context {
+  let padded = box(inset: (left: 10pt, bottom: 6pt), qr)
+  let size = measure(padded)
+  place(top + right, padded)
+  _taskize-wrap-zone.update((width: size.width, height: size.height))
+  body
+  _taskize-wrap-zone.update(none)
+}
+
+// Attach a top-right floater (QR code, page reference) to a body, honoring
+// qr-position: "tasks" (taskize flows around it) vs the wrap-it default.
+#let qr-attach-body(qr, body, cfg) = {
+  if qr == none { body } else if cfg.at("qr-position", default: "auto") == "tasks" {
+    qr-overlay-body(qr, body)
+  } else {
+    qr-wrap-body(qr, body)
+  }
+}
+
 // Get full-width style block
 // For the "margin" style the QR code goes below the side label; for the other
 // full-width styles the exercise content wraps around the QR at the top right.
@@ -1098,10 +1130,7 @@
     if cfg.badge-style == "margin" and qr-pos != "wrap" and not is-solution {
       qr-block = make-exo-qr(qr, cfg, max-width: 3.35cm)
     } else {
-      let wrap-qr = make-exo-qr(qr, cfg)
-      if wrap-qr != none {
-        full-body = qr-wrap-body(wrap-qr, full-body)
-      }
+      full-body = qr-attach-body(make-exo-qr(qr, cfg), full-body, cfg)
     }
     block(
       above: space-above,
@@ -1155,11 +1184,8 @@
     // into the content column instead, wrapped by the exercise text
     let qr-block = none
     let content-body = body
-    if qr-pos == "wrap" {
-      let wrap-qr = make-exo-qr(qr, cfg)
-      if wrap-qr != none {
-        content-body = qr-wrap-body(wrap-qr, body)
-      }
+    if qr-pos == "wrap" or qr-pos == "tasks" {
+      content-body = qr-attach-body(make-exo-qr(qr, cfg), body, cfg)
     } else {
       qr-block = make-exo-qr(qr, cfg, max-width: margin-pos + label-extra)
     }
@@ -1634,9 +1660,9 @@
       link-base = str(exo-display-counter.get().first())
       exercise-body = [#make-link-target("exb-ex-" + link-base)#exercise-body]
       if cfg.at("link-style", default: "icon") == "page" {
-        exercise-body = qr-wrap-body(
+        exercise-body = qr-attach-body(
           make-page-ref(cfg, link-base, items-to-show, ex-badge-color),
-          exercise-body,
+          exercise-body, cfg,
         )
       } else {
         let icon = cfg.at("link-icon", default: none)
@@ -2052,9 +2078,9 @@
           link-base = str(exo-display-counter.get().first())
           exercise-body = [#make-link-target("exb-ex-" + link-base)#exercise-body]
           if cfg.at("link-style", default: "icon") == "page" {
-            exercise-body = qr-wrap-body(
+            exercise-body = qr-attach-body(
               make-page-ref(cfg, link-base, items-to-show, ex-badge-color),
-              exercise-body,
+              exercise-body, cfg,
             )
           } else {
             let icon = cfg.at("link-icon", default: none)
@@ -2293,9 +2319,9 @@
         link-base = str(call-base) + "-" + str(display-num)
         exercise-body = [#make-link-target("exb-ex-" + link-base)#exercise-body]
         if cfg.at("link-style", default: "icon") == "page" {
-          exercise-body = qr-wrap-body(
+          exercise-body = qr-attach-body(
             make-page-ref(cfg, link-base, items-to-show, ex-badge-color),
-            exercise-body,
+            exercise-body, cfg,
           )
         } else {
           let icon = cfg.at("link-icon", default: none)

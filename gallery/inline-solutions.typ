@@ -2,7 +2,7 @@
 // The short answer stays with the statement (epigraph-like rule), while the
 // full correction goes to the end of the chapter
 
-#import "@preview/exercise-bank:0.6.0": *
+#import "@preview/exercise-bank:0.6.1": *
 
 #set page(width: 14cm, height: auto, margin: 1cm)
 #set text(font: "New Computer Modern", size: 11pt)

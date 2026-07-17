@@ -1,4 +1,4 @@
-#import "@preview/exercise-bank:0.6.0": *
+#import "@preview/exercise-bank:0.6.1": *
 
 // =============================================================================
 // DOCUMENT SETUP
@@ -95,7 +95,7 @@
   #v(1cm)
   #text(size: 11pt)[
     A comprehensive solution for creating, organizing, and filtering exercises\
-    Version 0.6.0\
+    Version 0.6.1\
     Nathan Scheinmann
   ]
 ]
@@ -139,7 +139,7 @@
 Import the package in your Typst document:
 
 ```typst
-#import "@preview/exercise-bank:0.6.0": exo, exo-setup
+#import "@preview/exercise-bank:0.6.1": exo, exo-setup
 ```
 
 == Quick Start
@@ -898,6 +898,37 @@ Control QR appearance globally via `exo-setup`:
 
 Use `show-qr: false` to suppress all QR codes (e.g. for a print version) without removing the URLs from bank definitions.
 
+== QR Placement Modes
+
+`qr-position` controls how the exercise body flows around the QR code for full-width badge styles:
+
+#table(
+  columns: (auto, 1fr),
+  stroke: (x: none, y: 0.3pt + luma(85%)),
+  inset: 6pt,
+  [*Value*], [*Behavior*],
+  [`"auto"` (default)], [Placed per badge style: label margin for badge styles, wrapped for full-width styles],
+  [`"wrap"`], [Always wrap the exercise text around the QR at the top right, using #link("https://typst.app/universe/package/wrap-it/")[wrap-it]],
+  [`"tasks"`], [Overlay the QR at the top right without reserving flow height; a #link("https://typst.app/universe/package/taskize/")[taskize] `#tasks` body inside the exercise narrows its own top rows to flow around the QR instead of the whole block being pushed below it],
+)
+
+`"tasks"` is opt-in and only takes effect when the exercise body actually contains a `#tasks(...)` call from taskize 0.2.8 or newer — the two packages coordinate purely through a shared state key (`taskize-wrap-zone`), with no import dependency in either direction. Bodies without a `#tasks` block ignore the overlay zone and render as if `qr-position` were unset.
+
+#example(
+  [```typst
+#exo-setup(qr-position: "tasks")
+#exo(
+  exercise: tasks(
+    [First short task.],
+    [Second short task.],
+    [Third short task.],
+  ),
+  qr: "https://example.com/quiz",
+)
+  ```],
+  []
+)
+
 // =============================================================================
 // DIFFICULTY LEVELS
 // =============================================================================
@@ -1444,7 +1475,7 @@ Same as `exo`, plus:
   [`qr-min-size`], [length], [1cm], [Minimum size; below this the QR extends into page margin],
   [`qr-color`], [color], [black], [QR module color],
   [`qr-caption`], [content/none], [none], [Small caption below every QR code],
-  [`qr-position`], [string], ["auto"], ["auto" (per badge style) or "wrap" (always wrap content)],
+  [`qr-position`], [string], ["auto"], ["auto" (per badge style), "wrap" (always wrap content), or "tasks" (overlay; a taskize `#tasks` body flows around it)],
 )
 
 #pagebreak()
@@ -1462,13 +1493,17 @@ Same as `exo`, plus:
   [*Function*], [*Description*],
   [`exo-reset-counter()`], [Reset exercise numbering to 0],
   [`exo-clear-registry()`], [Clear all registered exercises],
+  [`exo-get-registry()`], [Retrieve the current registry of exercise metadata (context-dependent)],
   [`exo-section-start()`], [Call at section start (triggers reset if configured)],
   [`exo-chapter-start()`], [Call at chapter start (triggers reset if configured)],
+  [`exo-section-end()`], [Print solutions pending for end-of-section placement],
+  [`exo-chapter-end()`], [Print solutions pending for end-of-chapter placement],
   [`exo-print-solutions()`], [Print collected solutions (for end-section/chapter modes)],
   [`exo-count(topic: ..)`], [Count exercises matching criteria],
   [`exo-show("id")`], [Display exercise by ID],
   [`exo-show-many("a", "b")`], [Display multiple exercises by ID],
   [`exo-filter(topic: ..)`], [Filter and display matching exercises],
+  [`competency-tag("comp")`], [Render a single competency as a small styled pill (used internally by `show-competencies`)],
 )
 
 = Exam Integration
