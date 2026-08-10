@@ -1,7 +1,7 @@
 # exercise-bank
 
 [![exercise-bank on Typst Universe](https://img.shields.io/badge/Typst_Universe-v._0.6.2-239dad?labelColor=eee)](https://typst.app/universe/package/exercise-bank)
-[![Full package manual as PDF](https://img.shields.io/badge/Manual-pdf-333333?labelColor=eee)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/a14876e91956969deba92fa152c34c777a1204ba/docs/manual.pdf)
+[![Full package manual as PDF](https://img.shields.io/badge/Manual-pdf-333333?labelColor=eee)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/fad06140cb9fc7c1445779c07ad330f9f330b77b/docs/manual.pdf)
 [![Distributed under the MIT license](https://img.shields.io/badge/License-MIT-333333?labelColor=eee)](LICENSE)
 
 A comprehensive Typst package for creating and managing exercises with solutions, metadata, filtering, and exercise banks. Perfect for teachers, textbook authors, and educational content creators.
