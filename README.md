@@ -987,7 +987,7 @@ MIT License - see LICENSE file for details.
 
 #### Fixed
 - **Page-counter convergence for `link-style: "page"` references** — the "Solution p. 30" reference sits in an `auto` grid column, so its width feeds back into the layout: a page number growing from 9 to 10 narrowed the text column, reflowed the statement and changed the number again ("page counter did not converge"). `make-page-ref` now reserves a width computed from an all-9s number of the same digit count, which no longer varies between layout passes.
-- **Measurement stability for `link-style: "page"` references** — `make-page-ref` no longer opens its own `context`. With `badge-position: "margin"` the reference is measured by wrap-it to reserve the wrap zone, and a nested `context` could not resolve against the real document, producing "a measured element did not stabilize" and "query for elements labelled … did not stabilize" errors.
+- **Measurement stability for `link-style: "page"` references** — with `badge-position: "margin"` the reference was handed to wrap-it, which measures it to size the wrap zone; `measure` cannot resolve the link's label against the real document and falls back to the closest matching element, so the measurement changed from one layout pass to the next ("a measured element did not stabilize", "query for elements labelled … did not stabilize"). The wrap zone is now reserved with an empty box of the reference's exact size — nothing introspective to resolve — and the reference is placed out of flow on top, where it is never measured.
 
 ### [0.6.1] - 2026-07-17
 
