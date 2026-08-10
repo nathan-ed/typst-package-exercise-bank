@@ -2,7 +2,7 @@
 // exo-auto-chapter prints the pending corrections before each new level-1
 // heading and at the end of the document
 
-#import "@preview/exercise-bank:0.6.1": *
+#import "@preview/exercise-bank:0.6.2": *
 
 #set page(width: 14cm, height: auto, margin: 1cm)
 #set text(font: "New Computer Modern", size: 11pt)

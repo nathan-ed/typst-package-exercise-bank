@@ -1528,6 +1528,15 @@
 
 // Textbook-style page reference ("Solution p. 30") shown at the top right of
 // the statement, linking to the deferred solution/correction (link-style: "page")
+//
+// Must be called from inside a context block (all call sites already are). It
+// deliberately does *not* open its own `context`: with badge-position "margin"
+// the reference is handed to wrap-it, which measures it to reserve the wrap
+// zone, and `measure` cannot resolve a nested `context` against the real
+// document — it falls back to "the closest matching element", which changes
+// from one layout pass to the next ("a measured element did not stabilize",
+// and downstream "query for elements labelled <...> did not stabilize").
+// Resolving the query in the caller's context makes the measured content plain.
 #let make-page-ref(cfg, link-base, items, badge-color) = {
   let target = label("exb-corr-" + link-base)
   let deferred = items.filter(item => resolve-item-loc(cfg, item.type) != "after")
@@ -1536,31 +1545,29 @@
   } else {
     cfg.solution-label
   }
-  context {
-    let found = query(target)
-    if found.len() > 0 {
-      let page-num = counter(page).at(found.first().location()).first()
-      let fmt = cfg.at("page-ref-format", default: auto)
-      let render = num => if fmt == auto {
-        let color = cfg.at("page-ref-color", default: auto)
-        if color == auto {
-          color = if badge-color != auto { badge-color } else { cfg.badge-color }
-        }
-        text(fill: color, size: 0.92em)[#ref-label p.~#num]
-      } else {
-        fmt(ref-label, num)
+  let found = query(target)
+  if found.len() > 0 {
+    let page-num = counter(page).at(found.first().location()).first()
+    let fmt = cfg.at("page-ref-format", default: auto)
+    let render = num => if fmt == auto {
+      let color = cfg.at("page-ref-color", default: auto)
+      if color == auto {
+        color = if badge-color != auto { badge-color } else { cfg.badge-color }
       }
-      // The reference sits in an `auto` grid column next to the statement, so
-      // its width feeds back into the layout: a page number that grows from
-      // 9 to 10 would narrow the text column, reflow the statement, shift the
-      // pages and change the number again ("page counter did not converge").
-      // Reserve a width computed from an all-9s number of the same digit
-      // count (padded to 3), which is the widest number of that width and no
-      // longer varies from one layout pass to the next.
-      let digits = calc.max(3, str(page-num).len())
-      let reserved = measure(render(int("9" * digits))).width
-      box(width: reserved, align(right, link(target, render(page-num))))
+      text(fill: color, size: 0.92em)[#ref-label p.~#num]
+    } else {
+      fmt(ref-label, num)
     }
+    // The reference sits in an `auto` grid column next to the statement, so
+    // its width feeds back into the layout: a page number that grows from
+    // 9 to 10 would narrow the text column, reflow the statement, shift the
+    // pages and change the number again ("page counter did not converge").
+    // Reserve a width computed from an all-9s number of the same digit
+    // count (padded to 3), which is the widest number of that width and no
+    // longer varies from one layout pass to the next.
+    let digits = calc.max(3, str(page-num).len())
+    let reserved = measure(render(int("9" * digits))).width
+    box(width: reserved, align(right, link(target, render(page-num))))
   }
 }
 
