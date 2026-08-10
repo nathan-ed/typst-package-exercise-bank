@@ -559,6 +559,18 @@ Available styles: `"box"` (default), `"circled"`, `"filled-circle"`, `"rect"`, `
 
 The `"rect"` and `"filled-rect"` styles show a compact number-only rectangle - a minimal alternative to the circle styles when circles look too large in your font.
 
+### Badge Position
+
+By default the badge sits in its own column on the left, so the statement is indented for its whole height. In a narrow measure - two-column layouts especially - that column is expensive, and it gets worse when the statement holds an enumeration, whose indent stacks on top of it.
+
+`badge-position: "above"` puts the badge alone on a header line and lets the statement run the full width underneath:
+
+```typst
+#exo-setup(badge-style: "filled-circle", badge-position: "above")
+```
+
+The setting is independent of `badge-style`, so every badge look above keeps working. When `link-style: "page"` is on, the "Solution p. 34" reference moves onto the badge line as well instead of being wrapped into the statement.
+
 #### Custom badge function
 
 For full control without touching the package, pass a function as `badge-style`. It receives `(label, number, font-size, color, is-solution)` and returns the badge content:
@@ -884,6 +896,7 @@ Level 1M exercises: #exo-count(level: "1M")
 | `correction-placeholder` | content | `[_To be completed_]` | Placeholder for empty corrections |
 | `solution-placeholder` | content | `[_To be completed_]` | Placeholder for empty solutions |
 | `badge-style` | string/function | "box" | Visual style for badges, or a custom badge function |
+| `badge-position` | string | "margin" | `"margin"` (badge in its own left column) or `"above"` (badge on a header line, statement full width below) |
 | `badge-color` | color | black | Color for exercise badges |
 | `solution-color` | color | green | Color for solution badges |
 | `correction-color` | color | green | Color for correction badges |

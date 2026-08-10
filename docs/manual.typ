@@ -1312,6 +1312,47 @@ The label appears flush-right in a fixed-width left column; content flows in the
   ]
 )
 
+== Badge Position
+
+Every style above places the badge in its own column on the left, so the statement is indented for the whole height of the exercise. In a narrow measure -- two-column layouts especially -- that column costs its width on *every* line, and it gets worse when the statement holds an enumeration, whose own indent stacks on top of it.
+
+`badge-position: "above"` puts the badge alone on a header line and lets the statement run the full width underneath. It is independent of `badge-style`, so every badge look keeps working:
+
+#example-full(
+  [```typst
+#exo-setup(badge-style: "filled-circle")
+#exo(exercise: [...])            // badge-position: "margin" (default)
+
+#exo-setup(badge-position: "above")
+#exo(exercise: [...])            // same badge, full-width statement
+  ```],
+  [
+    #exo-reset-counter()
+    #exo-setup(badge-style: "filled-circle", badge-color: rgb("#1a4d8f"))
+    #let statement = [
+      A floor is covered with 500 square tiles. Tiles 5 cm longer and wider
+      would have taken 320 of them.
+      + Express the side length of the first tiles.
+      + How many tiles of side $x + 5$ would be needed?
+    ]
+    // Narrowed to a two-column measure: that is where the left badge column
+    // is worth the most, and where the enumeration indent hurts twice
+    #block(width: 7.4cm)[
+      #text(size: 8pt, style: "italic", fill: luma(45%))[badge-position: "margin"]
+      #exo(exercise: statement)
+    ]
+    #v(0.4em)
+    #exo-setup(badge-position: "above")
+    #block(width: 7.4cm)[
+      #text(size: 8pt, style: "italic", fill: luma(45%))[badge-position: "above"]
+      #exo(exercise: statement)
+    ]
+    #exo-setup(badge-position: "margin", badge-style: "box", badge-color: black)
+  ]
+)
+
+With `link-style: "page"` the "Solution p. 34" reference moves onto the badge line as well, instead of being wrapped into the top right of the statement.
+
 #pagebreak()
 
 // =============================================================================
@@ -1413,6 +1454,7 @@ Same as `exo`, plus:
   inset: 6pt,
   [*Parameter*], [*Type*], [*Default*], [*Description*],
   [`badge-style`], [string/function], ["box"], [Style: "box", "circled", "filled-circle", "rect", "filled-rect", "pill", "tag", "margin", "border-accent", "underline", "rounded-box", "header-card" -- or a custom badge function],
+  [`badge-position`], [string], ["margin"], ["margin" (badge in its own left column) or "above" (badge on a header line, statement full width below)],
   [`badge-color`], [color], [black], [Color for exercise badges],
   [`solution-color`], [color], [green], [Color for solution badges],
   [`correction-color`], [color], [green], [Color for correction badges],

@@ -164,6 +164,11 @@
   "display-mode": "exercise",    // "exercise" (default exo-box) or "exam" (g-exam question)
   // Visual styling
   "badge-style": "box",          // "box", "circled", "filled-circle", "pill", "tag", "margin", "border-accent", "underline", "rounded-box", "header-card"
+  "badge-position": "margin",    // Where the badge sits relative to the statement:
+                                 // "margin" (own left column, the text is indented for the
+                                 // whole height of the exercise) or "above" (badge alone on a
+                                 // header line, the text runs the full width underneath —
+                                 // saves a lot of width in narrow columns and with enumerations)
   "badge-color": black,          // Color for exercise badges
   "solution-color": rgb("#4a7c59"),    // Color for solution badges (green)
   "correction-color": rgb("#4a7c59"),  // Color for correction badges (green)
@@ -289,6 +294,8 @@
   display-mode: none,  // "exercise" or "exam"
   // Visual styling
   badge-style: none,   // "box", "circled", "filled-circle", "pill", "tag", "margin", "border-accent", "underline", "rounded-box", "header-card"
+  badge-position: none, // "margin" (badge in its own left column) or "above"
+                        // (badge on a header line, statement full width below)
   badge-color: none,   // Color for exercise badges
   solution-color: none,   // Color for solution badges
   correction-color: none, // Color for correction badges
@@ -351,6 +358,7 @@
     if show-competencies != none { new.show-competencies = show-competencies }
     if display-mode != none { new.display-mode = display-mode }
     if badge-style != none { new.badge-style = badge-style }
+    if badge-position != none { new.badge-position = badge-position }
     if badge-color != none { new.badge-color = badge-color }
     if solution-color != none { new.solution-color = solution-color }
     if correction-color != none { new.correction-color = correction-color }
@@ -1049,6 +1057,9 @@
   margin-content: none,    // Optional content below the badge (e.g., QR code, remarks)
   qr: none,                // QR code: URL string (rendered with tiaoma) or content
   badge-color: auto,       // Override the badge color (e.g., difficulty color); auto = config
+  header-right: none,      // Content pinned to the right of the badge line (badge-position:
+                           // "above" only — the page reference, which would otherwise have to
+                           // be wrapped into the statement itself)
 ) = context {
   let cfg = exo-config.get()
 
@@ -1172,6 +1183,53 @@
     let id-block = if show-id and exercise-id != none {
       linebreak()
       text(size: 7pt, fill: rgb("#666666"), style: "italic")[#exercise-id]
+    }
+
+    if cfg.at("badge-position", default: "margin") == "above" {
+      // Badge alone on a header line, statement at full width underneath. The
+      // left column costs its width on *every* line of the exercise, which is
+      // expensive in a two-column layout and worse again once the statement
+      // holds an enumeration (its own indent stacks on top). Here the badge
+      // costs one line, once.
+      let header-left = {
+        set text(hyphenate: false)
+        box[#badge-with-points]
+        if badge-sub != none { h(4pt); badge-sub }
+        if show-id and exercise-id != none { id-block }
+      }
+      // The QR keeps its own line under the header unless it was asked to be
+      // wrapped by the text, in which case the body already carries it
+      let stacked-body = body
+      let qr-block = none
+      if qr-pos == "wrap" or qr-pos == "tasks" {
+        stacked-body = qr-attach-body(make-exo-qr(qr, cfg), body, cfg)
+      } else {
+        qr-block = make-exo-qr(qr, cfg)
+      }
+      return block(
+        above: space-above,
+        below: space-below,
+        width: 100%,
+        breakable: true,
+      )[
+        #if header-right == none {
+          header-left
+        } else {
+          grid(
+            columns: (auto, 1fr),
+            column-gutter: 8pt,
+            align: (left + horizon, right + horizon),
+            header-left,
+            header-right,
+          )
+        }
+        #if qr-block != none { block(above: 4pt, qr-block) }
+        #if margin-content != none { block(above: 4pt, margin-content) }
+        #block(above: 4pt, width: 100%, breakable: true)[
+          #stacked-body
+          #if show-competencies and competencies.len() > 0 { comp-block }
+        ]
+      ]
     }
 
     // Margin position and label space (like environments)
@@ -1483,17 +1541,38 @@
     if found.len() > 0 {
       let page-num = counter(page).at(found.first().location()).first()
       let fmt = cfg.at("page-ref-format", default: auto)
-      let body = if fmt == auto {
+      let render = num => if fmt == auto {
         let color = cfg.at("page-ref-color", default: auto)
         if color == auto {
           color = if badge-color != auto { badge-color } else { cfg.badge-color }
         }
-        text(fill: color, size: 0.92em)[#ref-label p.~#page-num]
+        text(fill: color, size: 0.92em)[#ref-label p.~#num]
       } else {
-        fmt(ref-label, page-num)
+        fmt(ref-label, num)
       }
-      link(target, body)
+      // The reference sits in an `auto` grid column next to the statement, so
+      // its width feeds back into the layout: a page number that grows from
+      // 9 to 10 would narrow the text column, reflow the statement, shift the
+      // pages and change the number again ("page counter did not converge").
+      // Reserve a width computed from an all-9s number of the same digit
+      // count (padded to 3), which is the widest number of that width and no
+      // longer varies from one layout pass to the next.
+      let digits = calc.max(3, str(page-num).len())
+      let reserved = measure(render(int("9" * digits))).width
+      box(width: reserved, align(right, link(target, render(page-num))))
     }
+  }
+}
+
+// Route the page reference to wherever it belongs for the current layout:
+// with badge-position "above" the badge line has room for it on the right;
+// otherwise it has to be wrapped into the top right of the statement itself.
+// Returns the (possibly rewrapped) body and the header slot for exo-box.
+#let attach-page-ref(cfg, ref, body) = {
+  if cfg.at("badge-position", default: "margin") == "above" {
+    (body: body, header-right: ref)
+  } else {
+    (body: qr-attach-body(ref, body, cfg), header-right: none)
   }
 }
 
@@ -1655,15 +1734,19 @@
     // Exercise <-> correction links: only when something is actually deferred
     let link-base = none
     let link-marker = none
+    let header-right = none
     let exercise-body = exercise
     if cfg.at("link-solutions", default: false) and has-deferred-items(items-to-show, cfg) {
       link-base = str(exo-display-counter.get().first())
       exercise-body = [#make-link-target("exb-ex-" + link-base)#exercise-body]
       if cfg.at("link-style", default: "icon") == "page" {
-        exercise-body = qr-attach-body(
+        let routed = attach-page-ref(
+          cfg,
           make-page-ref(cfg, link-base, items-to-show, ex-badge-color),
-          exercise-body, cfg,
+          exercise-body,
         )
+        exercise-body = routed.body
+        header-right = routed.header-right
       } else {
         let icon = cfg.at("link-icon", default: none)
         if icon != none {
@@ -1684,6 +1767,7 @@
       margin-content: margin-content,
       qr: qr,
       badge-color: ex-badge-color,
+      header-right: header-right,
     )
 
     // Handle solution/correction display (per-type location)
@@ -1769,8 +1853,14 @@
     }
   }
 
-  // Keep only the items deferred to another location
-  exo-pending-solutions.update(to-keep)
+  // Keep only the items deferred to another location. The new value must be a
+  // pure function of the previous one: passing `to-keep` would make a state
+  // update depend on a value obtained by introspection (the `.get()` above),
+  // which closes a cycle in the introspection graph and can stop the document
+  // from converging. The predicate below is the same filter, applied lazily.
+  exo-pending-solutions.update(pending => if loc == none { () } else {
+    pending.filter(item => item.at("loc", default: none) != loc)
+  })
 }
 
 #let exo-section-end() = {
@@ -2072,16 +2162,20 @@
         // Exercise <-> correction links: only when something is actually deferred
         let link-base = none
         let link-marker = none
+        let header-right = none
         let exercise-body = found.exercise
         if (cfg.display != "sol" and show-items and cfg.at("link-solutions", default: false)
             and has-deferred-items(items-to-show, cfg)) {
           link-base = str(exo-display-counter.get().first())
           exercise-body = [#make-link-target("exb-ex-" + link-base)#exercise-body]
           if cfg.at("link-style", default: "icon") == "page" {
-            exercise-body = qr-attach-body(
+            let routed = attach-page-ref(
+              cfg,
               make-page-ref(cfg, link-base, items-to-show, ex-badge-color),
-              exercise-body, cfg,
+              exercise-body,
             )
+            exercise-body = routed.body
+            header-right = routed.header-right
           } else {
             let icon = cfg.at("link-icon", default: none)
             if icon != none {
@@ -2104,6 +2198,7 @@
             badge-sub: get-difficulty-badge-sub(display-cfg, display-metadata),
             qr: ex-qr,
             badge-color: ex-badge-color,
+            header-right: header-right,
           )
         }
 
@@ -2313,16 +2408,20 @@
       // Label base combines the call base and the loop index for uniqueness.
       let link-base = none
       let link-marker = none
+      let header-right = none
       let exercise-body = exercise.exercise
       if (cfg.display != "sol" and show-items and cfg.at("link-solutions", default: false)
           and has-deferred-items(items-to-show, cfg)) {
         link-base = str(call-base) + "-" + str(display-num)
         exercise-body = [#make-link-target("exb-ex-" + link-base)#exercise-body]
         if cfg.at("link-style", default: "icon") == "page" {
-          exercise-body = qr-attach-body(
+          let routed = attach-page-ref(
+            cfg,
             make-page-ref(cfg, link-base, items-to-show, ex-badge-color),
-            exercise-body, cfg,
+            exercise-body,
           )
+          exercise-body = routed.body
+          header-right = routed.header-right
         } else {
           let icon = cfg.at("link-icon", default: none)
           if icon != none {
@@ -2344,6 +2443,7 @@
           badge-sub: get-difficulty-badge-sub(cfg, exercise.metadata),
           qr: ex-qr,
           badge-color: ex-badge-color,
+          header-right: header-right,
         )
       }
 
