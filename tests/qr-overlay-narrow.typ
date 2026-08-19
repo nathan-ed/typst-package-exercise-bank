@@ -24,3 +24,11 @@
   ])
 
 #columns(2, gutter: 8mm)[#ex()]
+
+#pagebreak()
+
+// An exercise with no #tasks call at all: the whole body has to keep clear of
+// the overlay, since there is no grid to hand the zone to.
+#let plain = exo.with(id: "B", qr: rect(width: 100%, height: 1.8cm, fill: black),
+  exercise: [Un exercice sans aucun bloc de taches, seulement une consigne redigee.])
+#columns(2, gutter: 8mm)[#plain()]

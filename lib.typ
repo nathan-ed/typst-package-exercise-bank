@@ -951,6 +951,20 @@
 // whole grid used to land below a reserved QR-height row. Here taskize itself
 // splits its rows around the zone instead. Bodies without a #tasks block do
 // not avoid the overlay — "tasks" is opt-in for taskize-based content.
+// True when a body holds no block-level content at all, i.e. no #tasks call:
+// then the whole of it has to keep clear of the overlay.
+#let _is-all-inline(body) = {
+  if type(body) != content { return true }
+  let f = repr(body.func())
+  if f == "styled" { return _is-all-inline(body.child) }
+  if f == "sequence" { return body.children.all(_is-all-inline) }
+  f in (
+    "text", "space", "smartquote", "linebreak", "h", "parbreak",
+    "strong", "emph", "sub", "super", "underline", "overline", "strike",
+    "highlight", "link", "ref", "equation",
+  )
+}
+
 // Split a body into the run of inline content that opens it and the rest.
 // An exercise usually reads "instruction sentence, then #tasks": the sentence
 // is inline and ends at the paragraph break, the tasks block follows.
@@ -1006,24 +1020,45 @@
   place(top + right, padded)
 
   let (lead, rest) = _split-leading-text(body)
+  // A body that is all text (no tasks call) is entirely "lead": it has to keep
+  // clear of the overlay on its own.
+  let (lead, rest) = if lead == none and rest != none and _is-all-inline(body) {
+    (body, none)
+  } else {
+    (lead, rest)
+  }
+
   if lead == none {
     _taskize-wrap-zone.update((width: size.width, height: size.height))
     body
     _taskize-wrap-zone.update(none)
   } else {
-    let narrow = layout(available => {
-      let lead-height = measure(
-        block(width: available.width - size.width, lead)
-      ).height
-      let remaining = calc.max(0pt, size.height - lead-height)
-      block(width: available.width - size.width, lead)
-      _taskize-wrap-zone.update(
-        if remaining > 0pt { (width: size.width, height: remaining) } else { none }
-      )
-      rest
-      _taskize-wrap-zone.update(none)
+    layout(available => {
+      let narrow-width = available.width - size.width
+      let lead-height = measure(block(width: narrow-width, lead)).height
+      if lead-height >= size.height {
+        // The text runs past the overlay: let wrap-it flow it around an
+        // invisible stand-in for the code, so it returns to the full width
+        // once it is clear of it, instead of staying narrow to the end.
+        _wrap-content(
+          box(width: size.width, height: size.height),
+          lead,
+          align: top + right,
+          column-gutter: 0pt,
+          columns: (1fr, auto),
+        )
+        if rest != none { rest }
+      } else {
+        // The text fits beside the code; the height the code still occupies
+        // below it is published for the tasks grid to flow around.
+        block(width: narrow-width, lead)
+        if rest != none {
+          _taskize-wrap-zone.update((width: size.width, height: size.height - lead-height))
+          rest
+          _taskize-wrap-zone.update(none)
+        }
+      }
     })
-    narrow
   }
 }
 
