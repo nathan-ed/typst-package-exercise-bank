@@ -1,4 +1,4 @@
-#import "@preview/exercise-bank:0.6.2": *
+#import "@preview/exercise-bank:0.6.3": *
 
 // =============================================================================
 // DOCUMENT SETUP
@@ -139,7 +139,7 @@
 Import the package in your Typst document:
 
 ```typst
-#import "@preview/exercise-bank:0.6.2": exo, exo-setup
+#import "@preview/exercise-bank:0.6.3": exo, exo-setup
 ```
 
 == Quick Start

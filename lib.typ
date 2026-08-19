@@ -951,13 +951,80 @@
 // whole grid used to land below a reserved QR-height row. Here taskize itself
 // splits its rows around the zone instead. Bodies without a #tasks block do
 // not avoid the overlay — "tasks" is opt-in for taskize-based content.
+// Split a body into the run of inline content that opens it and the rest.
+// An exercise usually reads "instruction sentence, then #tasks": the sentence
+// is inline and ends at the paragraph break, the tasks block follows.
+#let _split-leading-text(body) = {
+  if type(body) != content { return (none, body) }
+  // A body carrying `set` rules arrives wrapped in a styled node; split what
+  // is inside and put the styles back on both halves.
+  if repr(body.func()) == "styled" {
+    let (h, t) = _split-leading-text(body.child)
+    if h == none { return (none, body) }
+    let f = body.func()
+    return (f(h, body.styles), f(t, body.styles))
+  }
+  if repr(body.func()) != "sequence" {
+    return (none, body)
+  }
+  let inline-funcs = (
+    "text", "space", "smartquote", "linebreak", "h",
+    "strong", "emph", "sub", "super", "underline", "overline", "strike",
+    "highlight", "link", "ref", "styled",
+  )
+  let head = ()
+  let rest = ()
+  let in-head = true
+  for child in body.children {
+    if not in-head { rest.push(child); continue }
+    let f = repr(child.func())
+    if f == "parbreak" { in-head = false; continue }
+    let inline = f in inline-funcs or (f == "equation" and not child.at("block", default: true))
+    if inline { head.push(child) } else { in-head = false; rest.push(child) }
+  }
+  let has-ink = head.any(c => {
+    let f = repr(c.func())
+    if f in ("space", "h") { false } else if f == "text" { c.text.trim() != "" } else { true }
+  })
+  if not has-ink or rest.len() == 0 { return (none, body) }
+  (head.join(), rest.join())
+}
+
+// qr-position: "tasks" — the QR is an overlay of zero flow height, and the
+// zone it occupies is published for the body's #tasks call to flow around.
+//
+// Text placed before that #tasks call is not part of the grid taskize lays
+// out, so it would run straight under the overlay. It is therefore set at a
+// reduced width for as long as the overlay lasts, and only the height the
+// overlay still occupies below it is published as the wrap zone. In a wide
+// single column the sentence is one line and the tasks grid gets nearly the
+// whole zone; in a narrow column it takes two or three lines and the zone
+// shrinks accordingly, which is exactly the case that used to collide.
 #let qr-overlay-body(qr, body) = context {
   let padded = box(inset: (left: 10pt, bottom: 6pt), qr)
   let size = measure(padded)
   place(top + right, padded)
-  _taskize-wrap-zone.update((width: size.width, height: size.height))
-  body
-  _taskize-wrap-zone.update(none)
+
+  let (lead, rest) = _split-leading-text(body)
+  if lead == none {
+    _taskize-wrap-zone.update((width: size.width, height: size.height))
+    body
+    _taskize-wrap-zone.update(none)
+  } else {
+    let narrow = layout(available => {
+      let lead-height = measure(
+        block(width: available.width - size.width, lead)
+      ).height
+      let remaining = calc.max(0pt, size.height - lead-height)
+      block(width: available.width - size.width, lead)
+      _taskize-wrap-zone.update(
+        if remaining > 0pt { (width: size.width, height: remaining) } else { none }
+      )
+      rest
+      _taskize-wrap-zone.update(none)
+    })
+    narrow
+  }
 }
 
 // Attach a top-right floater (QR code, page reference) to a body, honoring
