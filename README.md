@@ -888,7 +888,7 @@ Collected corrections (`corr-loc: "end-chapter"` or `"end-section"`) are printed
 Two layouts hide behind that setting:
 
 - **Without a rule**, this is Typst's own `columns`: the corrections flow from one column into the next and on across pages.
-- **With a rule**, they are laid out as a grid, which draws the bar itself at the true height of the content on every page the section spans. The corrections are then distributed up front instead of flowing from one column into the next - each is measured at its column width and the columns are filled to equal height, so they still come out level.
+- **With a rule**, they are laid out as a grid, which draws the bar itself at the true height of the content on every page the section spans. The corrections are then distributed up front instead of flowing from one column into the next, and by piece count rather than by measured height (measuring `context` elements would leave the document short of converging) - so one much taller correction leaves its column longer.
 
 `corr-columns-badge-position` decides where the badge sits in those columns: `auto` (default) uses `"above"` as soon as there are two columns or more; pass `"margin"` to keep the badges beside the corrections. `corr-columns-rule: none` removes a rule set earlier - that parameter's "leave as is" value is `auto`, unlike the rest of `exo-setup`, so that `none` can mean what it says.
 

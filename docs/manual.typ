@@ -1518,7 +1518,7 @@ Collected corrections (`corr-loc: "end-chapter"` or `"end-section"`) are printed
 Two layouts hide behind that setting, and they differ in how a long correction section behaves:
 
 - *Without a rule*, this is Typst's own `columns`: the corrections flow from one column into the next and on across pages, exactly like body text.
-- *With a rule*, they are laid out as a grid, which draws the vertical bar itself at the true height of the content on every page the section spans. The corrections are then distributed between the columns up front instead of flowing from one into the next -- each one is measured at its column width and the columns are filled to equal height, so they still come out level.
+- *With a rule*, they are laid out as a grid, which draws the vertical bar itself at the true height of the content on every page the section spans. The corrections are then distributed between the columns up front instead of flowing from one into the next, and by piece count rather than by measured height: every correction is a `context` element, and `measure` cannot resolve an introspection against the real document, so measuring them would leave it short of converging. A correction much taller than its neighbours therefore leaves its column longer than the others.
 
 `corr-columns-badge-position` decides where the badge sits inside those columns: `auto` (the default) uses `"above"` as soon as there are two columns or more, since a badge column would eat a large share of a narrow measure. Pass `"margin"` to keep the badges beside the corrections anyway. `corr-columns-rule: none` removes a rule set earlier (that parameter's "leave as is" value is `auto`, unlike the rest of `exo-setup`, so that `none` can mean what it says).
 
@@ -1743,7 +1743,7 @@ Same parameters as `exo-page-columns`, plus the height controls of the block:
   stroke: (x: none, y: 0.3pt + luma(85%)),
   inset: 6pt,
   [*Parameter*], [*Type*], [*Default*], [*Description*],
-  [`balance`], [auto \| bool], [auto], [auto = split the body between the columns when it can be split (exact, breaks across pages); false = flow through `columns` in a block of estimated height],
+  [`balance`], [auto \| bool], [auto], [auto (default) = flow through `columns` in a block of estimated height; true = split the body between the columns, which is exact and breaks across pages (needs a `rule`, no explicit `height`, and a splittable body)],
   [`height`], [length \| auto], [auto], [Fixed block height; implies the flowing path],
   [`slack`], [int], [3], [Lines of margin added to the estimated column height (flowing path only)],
 )
