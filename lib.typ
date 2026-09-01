@@ -175,6 +175,19 @@
   "label-font-size": 12pt,       // Font size for badge label text
   "margin-position": auto,       // Position of content margin from left (auto = computed from label size)
   "label-extra": 1cm,            // Extra space for labels to extend into left margin
+  "badge-scale": 1.0,            // Multiplies the built-in badge paddings (and the diameter of
+                                 // the circle styles): 0.6 for discreet badges, 1.5 for big ones.
+                                 // The label text keeps its own size (label-font-size)
+  "badge-pad-x": auto,           // Explicit horizontal padding inside the badge (overrides badge-scale)
+  "badge-pad-y": auto,           // Explicit vertical padding; the badge height is
+                                 // label-font-size + 2 * badge-pad-y (overrides badge-scale)
+  "badge-radius": auto,          // Explicit corner radius (auto = the style's own, scaled)
+  "margin-label-width": 3.35cm,  // Width of the side-label column of badge-style "margin"
+  "margin-label-gutter": 0.55cm, // Gap between that column and the statement
+  "margin-fold-below": auto,     // Below this measure the "margin" style folds its side label
+                                 // onto a header line so the statement keeps the full width
+                                 // (auto = 3 * margin-label-width + gutter; 0pt = never fold).
+                                 // badge-position "above" folds it whatever the width
   "page-break": "none",          // "none", "before", "after", "around" - page break behavior for exercises
   // Draft mode
   "draft-mode": false,                            // Show placeholders for empty corrections/solutions
@@ -204,6 +217,13 @@
   "inline-rule-length": 3cm,      // Length of the rule above inline solutions
   "inline-label": auto,           // Small margin label next to inline solutions:
                                   // auto = solution-label, none to hide, or custom content
+  // Deferred correction section (corr-loc "end-section" / "end-chapter")
+  "corr-columns": 1,              // Number of columns the collected corrections are set in
+  "corr-columns-gutter": 4%,      // Gutter between those columns
+  "corr-columns-rule": none,      // Stroke for a vertical separator between them (e.g. 0.5pt + gray)
+  "corr-columns-badge-position": auto, // Badge position inside the correction columns:
+                                  // auto = "above" when corr-columns > 1 (badges cost no column
+                                  // width), or "margin" / "above" to force one
   // Exercise <-> correction links (for deferred corrections)
   "link-solutions": false,        // Clickable icon on the exercise jumping to its deferred
                                   // solution/correction, and a back-link on the correction
@@ -300,6 +320,14 @@
   solution-color: none,   // Color for solution badges
   correction-color: none, // Color for correction badges
   label-font-size: none,
+  badge-scale: none,   // Multiplies the built-in badge paddings (1.0 = default size)
+  badge-pad-x: none,   // Explicit badge padding, overriding badge-scale
+  badge-pad-y: none,   // (auto puts the shape's own value back)
+  badge-radius: none,  // Explicit badge corner radius (auto = the style's own)
+  margin-label-width: none,   // Side-label column of badge-style "margin"
+  margin-label-gutter: none,
+  margin-fold-below: none,    // Fold that side label onto a header line below this
+                              // measure (auto = computed; 0pt = never fold)
   margin-position: none,
   label-extra: none,
   page-break: none,    // "none", "before", "after", "around"
@@ -325,6 +353,12 @@
   solution-style: none,      // auto (badge box) or "inline" (epigraph-like rule)
   inline-rule-length: none,  // Length of the rule above inline solutions
   inline-label: auto,        // Small margin label for inline solutions (none to hide)
+  // Deferred correction section
+  corr-columns: none,            // Number of columns for the collected corrections
+  corr-columns-gutter: none,
+  corr-columns-rule: auto,       // Vertical separator between them, e.g. 0.5pt + gray
+                                 // (none removes a separator set earlier)
+  corr-columns-badge-position: auto,  // auto = "above" as soon as there are 2+ columns
   // Exercise <-> correction links
   link-solutions: none,      // true/false
   link-icon: auto,           // Icon on the exercise (auto = keep current, none to hide)
@@ -363,6 +397,13 @@
     if solution-color != none { new.solution-color = solution-color }
     if correction-color != none { new.correction-color = correction-color }
     if label-font-size != none { new.label-font-size = label-font-size }
+    if badge-scale != none { new.badge-scale = badge-scale }
+    if badge-pad-x != none { new.badge-pad-x = badge-pad-x }
+    if badge-pad-y != none { new.badge-pad-y = badge-pad-y }
+    if badge-radius != none { new.badge-radius = badge-radius }
+    if margin-label-width != none { new.margin-label-width = margin-label-width }
+    if margin-label-gutter != none { new.margin-label-gutter = margin-label-gutter }
+    if margin-fold-below != none { new.margin-fold-below = margin-fold-below }
     if margin-position != none { new.margin-position = margin-position }
     if label-extra != none { new.label-extra = label-extra }
     if page-break != none { new.page-break = page-break }
@@ -385,6 +426,10 @@
     if solution-style != none { new.solution-style = solution-style }
     if inline-rule-length != none { new.inline-rule-length = inline-rule-length }
     if inline-label != auto { new.inline-label = inline-label }
+    if corr-columns != none { new.corr-columns = corr-columns }
+    if corr-columns-gutter != none { new.corr-columns-gutter = corr-columns-gutter }
+    if corr-columns-rule != auto { new.corr-columns-rule = corr-columns-rule }
+    if corr-columns-badge-position != auto { new.corr-columns-badge-position = corr-columns-badge-position }
     if link-solutions != none { new.link-solutions = link-solutions }
     if link-icon != auto { new.link-icon = link-icon }
     if backlink-icon != auto { new.backlink-icon = backlink-icon }
@@ -561,68 +606,6 @@
   measure(badge).width
 }
 
-// Compute default margin based on badge style and longest label with 3-digit number
-// Measures the configured labels so exercise/solution/correction boxes align;
-// falls back to the default English/French labels
-#let calc-default-margin(font-size: 12pt, style: "box", labels: auto) = {
-  let labels = if labels == auto {
-    ("Exercise", "Solution", "Correction", "Exercice", "Corrigé")
-  } else {
-    labels
-  }
-
-  if type(style) == function {
-    // Custom badge function: measure with the longest label and a 3-digit number
-    let max-width = 0pt
-    for label in labels {
-      let width = measure(style(label, 100, font-size, black, false)).width
-      if width > max-width { max-width = width }
-    }
-    max-width + 16pt
-  } else if style == "circled" or style == "filled-circle" {
-    // Circle styles only show number, size is font-size * 2
-    font-size * 2 + 16pt
-  } else if style == "rect" or style == "filled-rect" {
-    // Rect styles only show the number
-    measure(box(
-      inset: (x: 6pt),
-      text(weight: "bold", size: font-size)[100],
-    )).width + 16pt
-  } else if style == "tag" {
-    // Tag has arrow, measure with longest label
-    let max-width = 0pt
-    for label in labels {
-      let content = box(
-        inset: (x: 8pt, y: 3pt),
-        text(weight: "bold", size: font-size)[#label 100],
-      )
-      let width = measure(content).width
-      if width > max-width { max-width = width }
-    }
-    max-width + 8pt + 16pt  // arrow width + padding
-  } else if style == "pill" {
-    // Pill has more padding
-    let max-width = 0pt
-    for label in labels {
-      let content = box(
-        inset: (x: 10pt, y: 4pt),
-        text(weight: "medium", size: font-size)[#label 100],
-      )
-      let width = measure(content).width
-      if width > max-width { max-width = width }
-    }
-    max-width + 16pt
-  } else {
-    // Default box style
-    let max-width = 0pt
-    for label in labels {
-      let width = calc-badge-width(label, 100, font-size)
-      if width > max-width { max-width = width }
-    }
-    max-width + 16pt
-  }
-}
-
 // =============================================================================
 // QR Codes
 // =============================================================================
@@ -660,8 +643,35 @@
 // Badge Styles
 // =============================================================================
 
+// Badge geometry ------------------------------------------------------------
+// Every built-in badge shape declares its own paddings and corner radius; the
+// document scales them with `badge-scale` or replaces them outright with
+// `badge-pad-x` / `badge-pad-y` / `badge-radius`. The label text is *not*
+// touched here: its size stays `label-font-size`, so a smaller scale gives a
+// tighter badge around the same number, not smaller digits.
+#let badge-metrics(cfg) = (
+  scale: cfg.at("badge-scale", default: 1.0),
+  pad-x: cfg.at("badge-pad-x", default: auto),
+  pad-y: cfg.at("badge-pad-y", default: auto),
+  radius: cfg.at("badge-radius", default: auto),
+)
+
+// Resolve one shape's defaults against those settings.
+#let badge-geom(metrics, pad-x: 4pt, pad-y: 4pt, radius: 0pt) = {
+  let scale = metrics.at("scale", default: 1.0)
+  let px = metrics.at("pad-x", default: auto)
+  let py = metrics.at("pad-y", default: auto)
+  let r = metrics.at("radius", default: auto)
+  (
+    x: if px == auto { pad-x * scale } else { px },
+    y: if py == auto { pad-y * scale } else { py },
+    radius: if r == auto { radius * scale } else { r },
+  )
+}
+
 // Style: box (default) - Rectangle with stroke
-#let badge-box(label, number, font-size, color, is-solution, label-marker: none) = {
+#let badge-box(label, number, font-size, color, is-solution, label-marker: none, metrics: (:)) = {
+  let g = badge-geom(metrics, pad-x: 4pt, pad-y: 4pt, radius: 0pt)
   let fill-color = if is-solution { color.lighten(85%) } else { white }
   let label-text = text(weight: "bold", size: font-size, fill: color)[#label~#number]
   let label-content = if label-marker == none {
@@ -677,18 +687,20 @@
     )
   }
   box(
-    height: font-size + 8pt,
+    height: font-size + 2 * g.y,
     stroke: 0.8pt + color,
     fill: fill-color,
-    inset: (x: 4pt, y: 0pt),
+    radius: g.radius,
+    inset: (x: g.x, y: 0pt),
   )[
     #align(horizon)[#label-content]
   ]
 }
 
 // Style: circled - Number in a circle (no label)
-#let badge-circled(label, number, font-size, color, is-solution) = {
-  let size = font-size * 2
+#let badge-circled(label, number, font-size, color, is-solution, metrics: (:)) = {
+  let g = badge-geom(metrics, pad-x: font-size / 2, pad-y: font-size / 2)
+  let size = font-size + 2 * g.y
   box(
     width: size,
     height: size,
@@ -701,8 +713,9 @@
 }
 
 // Style: filled-circle - Number in a filled circle
-#let badge-filled-circle(label, number, font-size, color, is-solution) = {
-  let size = font-size * 2
+#let badge-filled-circle(label, number, font-size, color, is-solution, metrics: (:)) = {
+  let g = badge-geom(metrics, pad-x: font-size / 2, pad-y: font-size / 2)
+  let size = font-size + 2 * g.y
   box(
     width: size,
     height: size,
@@ -715,28 +728,30 @@
 }
 
 // Style: pill - Rounded pill shape
-#let badge-pill(label, number, font-size, color, is-solution) = {
+#let badge-pill(label, number, font-size, color, is-solution, metrics: (:)) = {
+  let g = badge-geom(metrics, pad-x: 10pt, pad-y: 4pt, radius: 12pt)
   let stroke-color = 0.8pt + color
   let fill-color = if is-solution { color.lighten(85%) } else { rgb("#f3f4f6") }
   box(
     stroke: stroke-color,
     fill: fill-color,
-    radius: 12pt,
-    inset: (x: 10pt, y: 4pt),
+    radius: g.radius,
+    inset: (x: g.x, y: g.y),
   )[#text(weight: "medium", size: font-size, fill: color)[#label~#number]]
 }
 
 // Style: tag - Arrow-shaped tag
-#let badge-tag(label, number, font-size, color, is-solution) = {
-  let arrow-width = 8pt
-  let tag-height = font-size + 10pt
+#let badge-tag(label, number, font-size, color, is-solution, metrics: (:)) = {
+  let g = badge-geom(metrics, pad-x: 8pt, pad-y: 5pt, radius: 3pt)
+  let arrow-width = 8pt * metrics.at("scale", default: 1.0)
+  let tag-height = font-size + 2 * g.y
   let fill-color = color
   stack(dir: ltr, spacing: 0pt,
     box(
       height: tag-height,
       fill: fill-color,
-      radius: (left: 3pt, right: 0pt),
-      inset: (x: 8pt, y: 3pt),
+      radius: (left: g.radius, right: 0pt),
+      inset: (x: g.x, y: 0pt),
     )[
       #align(horizon)[
         #text(weight: "bold", size: font-size, fill: white)[#label~#number]
@@ -757,24 +772,27 @@
 }
 
 // Style: rect - Number in a compact outlined rectangle (no label)
-#let badge-rect(label, number, font-size, color, is-solution) = {
+#let badge-rect(label, number, font-size, color, is-solution, metrics: (:)) = {
+  let g = badge-geom(metrics, pad-x: 6pt, pad-y: 4pt, radius: 0pt)
   let fill-color = if is-solution { color.lighten(85%) } else { white }
   box(
-    height: font-size + 8pt,
+    height: font-size + 2 * g.y,
     stroke: 0.8pt + color,
     fill: fill-color,
-    inset: (x: 6pt, y: 0pt),
+    radius: g.radius,
+    inset: (x: g.x, y: 0pt),
     align(horizon, text(weight: "bold", size: font-size, fill: color)[#number]),
   )
 }
 
 // Style: filled-rect - Number in a compact filled rectangle
-#let badge-filled-rect(label, number, font-size, color, is-solution) = {
+#let badge-filled-rect(label, number, font-size, color, is-solution, metrics: (:)) = {
+  let g = badge-geom(metrics, pad-x: 6pt, pad-y: 4pt, radius: 2pt)
   box(
-    height: font-size + 8pt,
+    height: font-size + 2 * g.y,
     fill: color,
-    radius: 2pt,
-    inset: (x: 6pt, y: 0pt),
+    radius: g.radius,
+    inset: (x: g.x, y: 0pt),
     align(horizon, text(weight: "bold", size: font-size, fill: white)[#number]),
   )
 }
@@ -795,25 +813,45 @@
 // Get badge based on style name (for badge-based styles only).
 // `style` may also be a function (label, number, font-size, color,
 // is-solution) => content for fully custom badges.
-#let get-badge(style, label, number, font-size, color, is-solution, label-marker: none) = {
+#let get-badge(style, label, number, font-size, color, is-solution, label-marker: none, metrics: (:)) = {
   if type(style) == function {
+    // Custom badge functions keep the documented 5-argument contract: the
+    // geometry settings are the built-in shapes' business, not theirs
     badge-with-marker(style(label, number, font-size, color, is-solution), label-marker)
   } else if style == "circled" {
-    badge-with-marker(badge-circled(label, number, font-size, color, is-solution), label-marker)
+    badge-with-marker(badge-circled(label, number, font-size, color, is-solution, metrics: metrics), label-marker)
   } else if style == "filled-circle" {
-    badge-with-marker(badge-filled-circle(label, number, font-size, color, is-solution), label-marker)
+    badge-with-marker(badge-filled-circle(label, number, font-size, color, is-solution, metrics: metrics), label-marker)
   } else if style == "rect" {
-    badge-with-marker(badge-rect(label, number, font-size, color, is-solution), label-marker)
+    badge-with-marker(badge-rect(label, number, font-size, color, is-solution, metrics: metrics), label-marker)
   } else if style == "filled-rect" {
-    badge-with-marker(badge-filled-rect(label, number, font-size, color, is-solution), label-marker)
+    badge-with-marker(badge-filled-rect(label, number, font-size, color, is-solution, metrics: metrics), label-marker)
   } else if style == "pill" {
-    badge-with-marker(badge-pill(label, number, font-size, color, is-solution), label-marker)
+    badge-with-marker(badge-pill(label, number, font-size, color, is-solution, metrics: metrics), label-marker)
   } else if style == "tag" {
-    badge-with-marker(badge-tag(label, number, font-size, color, is-solution), label-marker)
+    badge-with-marker(badge-tag(label, number, font-size, color, is-solution, metrics: metrics), label-marker)
   } else {
     // Default: box
-    badge-box(label, number, font-size, color, is-solution, label-marker: label-marker)
+    badge-box(label, number, font-size, color, is-solution, label-marker: label-marker, metrics: metrics)
   }
+}
+
+// Compute default margin based on badge style and longest label with 3-digit
+// number. The badge is measured as it will actually be drawn (same shape, same
+// `badge-scale` / padding settings), so a rescaled badge moves the margin with it.
+#let calc-default-margin(font-size: 12pt, style: "box", labels: auto, metrics: (:)) = {
+  let labels = if labels == auto {
+    ("Exercise", "Solution", "Correction", "Exercice", "Corrigé")
+  } else {
+    labels
+  }
+
+  let max-width = 0pt
+  for label in labels {
+    let width = measure(get-badge(style, label, 100, font-size, black, false, metrics: metrics)).width
+    if width > max-width { max-width = width }
+  }
+  max-width + 16pt
 }
 
 // Check if style is a "full-width" style (wraps content instead of badge+content grid)
@@ -827,7 +865,20 @@
 
 // Style: margin - Side label with rule in the margin.
 // For the solution variant the QR (if any) is already wrapped into the body.
-#let style-margin(label, number, body, font-size, color, is-solution, qr: none) = {
+//
+// The side label costs `label-width` on every line of the statement, which a
+// two-column measure cannot afford: below `fold-below` (and whenever the
+// document asks for badge-position "above") the label folds onto a header line
+// under the rule instead, and the statement keeps the full width. `fold` is
+// none for the automatic decision, or true/false to force it.
+#let style-margin(
+  label, number, body, font-size, color, is-solution,
+  qr: none,
+  label-width: 3.35cm,
+  gutter: 0.55cm,
+  fold-below: auto,
+  fold: none,
+) = {
   if is-solution {
     block(
       width: 100%,
@@ -841,16 +892,26 @@
       #text(size: 9pt)[#body]
     ]
   } else {
-    grid(
-      columns: (3.35cm, 1fr),
-      column-gutter: 0.55cm,
+    let side-label = text(size: font-size, weight: "bold", fill: color)[#label~#number:]
+    let folded = {
+      // Header line: the rule runs the whole measure, the label sits under it
+      // on the right, the statement keeps the full width below
+      block(width: 100%, breakable: false, {
+        line(length: 100%, stroke: 0.45pt + color)
+        v(-0.2em)
+        align(right, side-label)
+        if qr != none { v(0.45em); align(right, qr) }
+      })
+      block(above: 0.35em, width: 100%, body)
+    }
+    let sided = grid(
+      columns: (label-width, 1fr),
+      column-gutter: gutter,
       align: top,
       [
         #line(length: 100%, stroke: 0.45pt + color)
         #v(-0.2em)
-        #align(right)[
-          #text(size: font-size, weight: "bold", fill: color)[#label~#number:]
-        ]
+        #align(right)[#side-label]
         #if qr != none {
           v(0.45em)
           align(right, qr)
@@ -862,6 +923,16 @@
         #body
       ],
     )
+    if fold == true {
+      folded
+    } else if fold == false {
+      sided
+    } else {
+      // Automatic: fold as soon as the statement column would be narrower than
+      // twice the label column
+      let threshold = if fold-below == auto { 3 * label-width + gutter } else { fold-below }
+      layout(size => if size.width < threshold { folded } else { sided })
+    }
   }
 }
 
@@ -1075,9 +1146,23 @@
 // Get full-width style block
 // For the "margin" style the QR code goes below the side label; for the other
 // full-width styles the exercise content wraps around the QR at the top right.
-#let get-fullwidth-style(style, label, number, body, font-size, color, is-solution, qr: none) = {
+#let get-fullwidth-style(
+  style, label, number, body, font-size, color, is-solution,
+  qr: none,
+  margin-label-width: 3.35cm,
+  margin-label-gutter: 0.55cm,
+  margin-fold-below: auto,
+  margin-fold: none,
+) = {
   if style == "margin" {
-    style-margin(label, number, body, font-size, color, is-solution, qr: qr)
+    style-margin(
+      label, number, body, font-size, color, is-solution,
+      qr: qr,
+      label-width: margin-label-width,
+      gutter: margin-label-gutter,
+      fold-below: margin-fold-below,
+      fold: margin-fold,
+    )
   } else if qr != none {
     get-fullwidth-style(style, label, number, qr-wrap-body(qr, body), font-size, color, is-solution)
   } else if style == "border-accent" {
@@ -1125,6 +1210,7 @@
       font-size: cfg.label-font-size,
       style: cfg.badge-style,
       labels: (cfg.exercise-label, cfg.solution-label, cfg.correction-label),
+      metrics: badge-metrics(cfg),
     )
     calc.max(needed - cfg.label-extra, 0pt)
   } else {
@@ -1141,6 +1227,18 @@
     inset: (x: 4pt, y: 2pt),
     text(size: 8pt, fill: rgb("#1565c0"))[#comp]
   )
+}
+
+// Keep a badge header line with what follows it: at a column or page break the
+// header must never stay behind on its own. `block(sticky: true)` does exactly
+// that from Typst 0.13 on; on older compilers it silently degrades to a plain
+// block rather than raising the package's minimum compiler version.
+#let sticky-block(above: 0pt, below: 0pt, body) = {
+  if sys.version >= version(0, 13, 0) {
+    block(above: above, below: below, sticky: true, body)
+  } else {
+    block(above: above, below: below, body)
+  }
 }
 
 #let exo-box(
@@ -1162,6 +1260,11 @@
   header-right: none,      // Content pinned to the right of the badge line (badge-position:
                            // "above" only — the page reference, which would otherwise have to
                            // be wrapped into the statement itself)
+  badge-position: auto,    // Override the configured badge position for this box only
+                           // (auto = follow the configuration). Passed as an argument rather
+                           // than set through exo-setup so that a caller which already read
+                           // the config — the deferred correction section — does not write
+                           // back into it, which would close a cycle in the introspection graph
 ) = context {
   let cfg = exo-config.get()
 
@@ -1215,6 +1318,12 @@
 
   let qr-pos = cfg.at("qr-position", default: "auto")
 
+  let badge-pos = if badge-position == auto {
+    cfg.at("badge-position", default: "margin")
+  } else {
+    badge-position
+  }
+
   // Check if this is a full-width style
   if is-fullwidth-style(cfg.badge-style) {
     // Use full-width layout (style wraps the content)
@@ -1236,15 +1345,27 @@
       }
       [#marker~#label]
     }
-    // "margin" places the QR in its 3.35cm label column (unless qr-position
+    // "margin" places the QR in its side-label column (unless qr-position
     // is "wrap", or for its label-less solution variant); the others get it
     // at full qr-size since the content area is wide
     let qr-block = none
     if cfg.badge-style == "margin" and qr-pos != "wrap" and not is-solution {
-      qr-block = make-exo-qr(qr, cfg, max-width: 3.35cm)
+      qr-block = make-exo-qr(qr, cfg, max-width: cfg.at("margin-label-width", default: 3.35cm))
     } else {
       full-body = qr-attach-body(make-exo-qr(qr, cfg), full-body, cfg)
     }
+    // The page reference (link-style "page") gets a right-aligned line of its
+    // own above the statement: the full-width styles have no badge line to pin
+    // it to, and wrapping the statement around it is what used to destabilise
+    // the layout (see attach-page-ref)
+    if header-right != none {
+      full-body = {
+        block(width: 100%, spacing: 0pt, align(right, header-right))
+        v(2pt, weak: true)
+        full-body
+      }
+    }
+
     block(
       above: space-above,
       below: space-below,
@@ -1260,6 +1381,12 @@
         actual-color,
         is-solution,
         qr: qr-block,
+        margin-label-width: cfg.at("margin-label-width", default: 3.35cm),
+        margin-label-gutter: cfg.at("margin-label-gutter", default: 0.55cm),
+        margin-fold-below: cfg.at("margin-fold-below", default: auto),
+        // badge-position "above" is a document-wide statement that the badge
+        // must not cost column width: the side label folds with it
+        margin-fold: if badge-pos == "above" { true } else { none },
       )
     ]
   } else {
@@ -1272,6 +1399,7 @@
       actual-color,
       is-solution,
       label-marker: label-marker,
+      metrics: badge-metrics(cfg),
     )
 
     // Badge with optional points displayed inline after the box
@@ -1287,7 +1415,7 @@
       text(size: 7pt, fill: rgb("#666666"), style: "italic")[#exercise-id]
     }
 
-    if cfg.at("badge-position", default: "margin") == "above" {
+    if badge-pos == "above" {
       // Badge alone on a header line, statement at full width underneath. The
       // left column costs its width on *every* line of the exercise, which is
       // expensive in a two-column layout and worse again once the statement
@@ -1314,7 +1442,7 @@
         width: 100%,
         breakable: true,
       )[
-        #if header-right == none {
+        #sticky-block(if header-right == none {
           header-left
         } else {
           grid(
@@ -1324,9 +1452,9 @@
             header-left,
             header-right,
           )
-        }
-        #if qr-block != none { block(above: 4pt, qr-block) }
-        #if margin-content != none { block(above: 4pt, margin-content) }
+        })
+        #if qr-block != none { sticky-block(above: 4pt, qr-block) }
+        #if margin-content != none { sticky-block(above: 4pt, margin-content) }
         #block(above: 4pt, width: 100%, breakable: true)[
           #stacked-body
           #if show-competencies and competencies.len() > 0 { comp-block }
@@ -1350,18 +1478,25 @@
       qr-block = make-exo-qr(qr, cfg, max-width: margin-pos + label-extra)
     }
 
-    // Never let the label column content overflow: if the badge (or QR) is
-    // wider than the configured margin, widen the column instead
-    let label-col-width = calc.max(
-      margin-pos + label-extra,
-      measure(badge-with-points).width,
-      if badge-sub != none { measure(badge-sub).width } else { 0pt },
-      if qr-block != none { measure(qr-block).width } else { 0pt },
-    )
+    // Never let the label column content overflow: the column is `auto`, so it
+    // takes the width of whatever the label holds (badge, difficulty marker,
+    // QR code), and a zero-height strut of the configured margin keeps it from
+    // shrinking below the width every exercise, solution and correction lines
+    // up on.
+    //
+    // The obvious alternative — measuring the badge here and passing an
+    // explicit column width — is what this replaces: measuring the real badge
+    // feeds a layout-dependent value back into the layout, and in a document
+    // that both mixes badge styles and resolves page references ("Solution
+    // p. 30") the two never agreed, so it never converged ("a measured element
+    // did not stabilize"). The strut states the same constraint declaratively,
+    // with nothing to converge on.
+    let label-col-min = margin-pos + label-extra
 
     // Build the label column content
     let label-column = {
       set text(hyphenate: false)
+      block(width: label-col-min, height: 0pt, spacing: 0pt)
       align(right)[
         #box[#badge-with-points]
         #if badge-sub != none {
@@ -1388,7 +1523,7 @@
       inset: (left: -label-extra, right: label-extra),  // Add right margin to compensate
     )[
       #grid(
-        columns: (label-col-width, 1fr),
+        columns: (auto, 1fr),
         column-gutter: gap,
         align: (right + top, left + top),
         // Label column - has space for label, right-aligned
@@ -1409,7 +1544,7 @@
   }
 }
 
-#let exo-solution-box(number: 1, body, exercise-id: none, show-id: false, qr: none, label-marker: none) = context {
+#let exo-solution-box(number: 1, body, exercise-id: none, show-id: false, qr: none, label-marker: none, badge-position: auto) = context {
   let cfg = exo-config.get()
   exo-box(
     label: cfg.solution-label,
@@ -1420,10 +1555,11 @@
     show-id: show-id,
     qr: qr,
     label-marker: label-marker,
+    badge-position: badge-position,
   )
 }
 
-#let exo-correction-box(number: 1, body, exercise-id: none, show-id: false, qr: none, label-marker: none) = context {
+#let exo-correction-box(number: 1, body, exercise-id: none, show-id: false, qr: none, label-marker: none, badge-position: auto) = context {
   let cfg = exo-config.get()
   exo-box(
     label: cfg.correction-label,
@@ -1434,6 +1570,7 @@
     show-id: show-id,
     qr: qr,
     label-marker: label-marker,
+    badge-position: badge-position,
   )
 }
 
@@ -1648,37 +1785,48 @@
     cfg.solution-label
   }
   let found = query(target)
-  if found.len() > 0 {
-    let page-num = counter(page).at(found.first().location()).first()
-    let fmt = cfg.at("page-ref-format", default: auto)
-    let render = num => if fmt == auto {
-      let color = cfg.at("page-ref-color", default: auto)
-      if color == auto {
-        color = if badge-color != auto { badge-color } else { cfg.badge-color }
-      }
-      text(fill: color, size: 0.92em)[#ref-label p.~#num]
-    } else {
-      fmt(ref-label, num)
-    }
-    // The reference sits in an `auto` grid column next to the statement, so
-    // its width feeds back into the layout: a page number that grows from
-    // 9 to 10 would narrow the text column, reflow the statement, shift the
-    // pages and change the number again ("page counter did not converge").
-    // Reserve a size computed from an all-9s number of the same digit count
-    // (padded to 3), which is the widest number of that width and no longer
-    // varies from one layout pass to the next.
-    let digits = calc.max(3, str(page-num).len())
-    let size = measure(render(int("9" * digits)))
-    // Returns the size alongside the content: with badge-position "margin"
-    // the caller must reserve the wrap zone with a placeholder of exactly
-    // these dimensions rather than with the reference itself (see
-    // attach-page-ref).
-    (
-      width: size.width,
-      height: size.height,
-      body: box(width: size.width, align(right, link(target, render(page-num)))),
-    )
+  let page-num = if found.len() > 0 {
+    counter(page).at(found.first().location()).first()
   }
+  let fmt = cfg.at("page-ref-format", default: auto)
+  let render = num => if fmt == auto {
+    let color = cfg.at("page-ref-color", default: auto)
+    if color == auto {
+      color = if badge-color != auto { badge-color } else { cfg.badge-color }
+    }
+    text(fill: color, size: 0.92em)[#ref-label p.~#num]
+  } else {
+    fmt(ref-label, num)
+  }
+  // The reference sits in an `auto` grid column next to the statement, so its
+  // width feeds back into the layout: a page number that grows from 9 to 10
+  // would narrow the text column, reflow the statement, shift the pages and
+  // change the number again ("page counter did not converge"). Reserve a size
+  // computed from an all-9s number of the same digit count (padded to 3), which
+  // is the widest number of that width and no longer varies from one layout
+  // pass to the next.
+  //
+  // The same holds for the reference's mere *presence*: on the first layout
+  // pass the correction has not been laid out yet, so the query finds nothing.
+  // Emitting no reference at all on that pass, and one on the next, changes the
+  // layout underneath the very page numbers being resolved, and a document that
+  // is close to a page boundary can flip between the two for ever. So the space
+  // is reserved either way, and only the text inside it appears once the target
+  // is known.
+  let digits = if page-num == none { 3 } else { calc.max(3, str(page-num).len()) }
+  let size = measure(render(int("9" * digits)))
+  // Returns the size alongside the content: with badge-position "margin" the
+  // caller must reserve the wrap zone with a placeholder of exactly these
+  // dimensions rather than with the reference itself (see attach-page-ref).
+  (
+    width: size.width,
+    height: size.height,
+    body: if page-num == none {
+      box(width: size.width, height: size.height)
+    } else {
+      box(width: size.width, align(right, link(target, render(page-num))))
+    },
+  )
 }
 
 // Route the page reference to wherever it belongs for the current layout:
@@ -1687,12 +1835,25 @@
 // `ref` is the dict returned by make-page-ref, or none when there is nothing
 // to link to. Returns the (possibly rewrapped) body and the header slot for
 // exo-box.
-#let attach-page-ref(cfg, ref, body) = {
+#let attach-page-ref(cfg, ref, body, badge-pos: auto) = {
+  let badge-pos = if badge-pos == auto {
+    cfg.at("badge-position", default: "margin")
+  } else { badge-pos }
   if ref == none {
     (body: body, header-right: none)
-  } else if cfg.at("badge-position", default: "margin") == "above" {
-    // Goes in a grid cell, which is laid out, never measured — the reference
+  } else if (
+    badge-pos == "above" or is-fullwidth-style(cfg.at("badge-style", default: "box"))
+  ) {
+    // Goes in a grid cell (or, for the full-width styles, on a line of its own
+    // above the statement), which is laid out, never measured — the reference
     // itself can be used as is.
+    //
+    // The full-width styles used to take the wrap-it branch below instead, and
+    // that is what stopped such documents from converging: wrap-it measures the
+    // *content* as well as the float, the content carries the exercise's own
+    // link target, and `measure` cannot resolve an introspection against the
+    // real document — it falls back to the closest matching element, which
+    // moved from one layout pass to the next.
     (body: body, header-right: ref.body)
   } else {
     // wrap-it measures the float to size the wrap zone, and `measure` cannot
@@ -1916,12 +2077,293 @@
 }  // close function
 
 // =============================================================================
-// Solution Display Functions
+// Multi-column layouts
 // =============================================================================
 
-// Print collected solutions/corrections. With loc: "end-section" or
-// "end-chapter", only the items deferred to that location are printed
-// (the others stay pending); loc: none prints everything.
+// Typst's default page margin when `page.margin` (or one of its sides) is auto.
+#let _default-page-margin(w, h) = 2.5 / 21 * calc.min(w, h)
+
+// Resolve `page.margin` (auto, a length/ratio, or a dictionary) into four
+// absolute lengths, so the column rules can be placed in the text area.
+#let _resolve-page-margins(m, w, h) = {
+  let d = _default-page-margin(w, h)
+  let pick(v, base) = {
+    if v == auto or v == none { d }
+    else if type(v) == ratio { v * base }
+    else { v }
+  }
+  if type(m) == dictionary {
+    let rest = m.at("rest", default: auto)
+    (
+      left: pick(m.at("left", default: m.at("x", default: rest)), w),
+      right: pick(m.at("right", default: m.at("x", default: rest)), w),
+      top: pick(m.at("top", default: m.at("y", default: rest)), h),
+      bottom: pick(m.at("bottom", default: m.at("y", default: rest)), h),
+    )
+  } else {
+    (left: pick(m, w), right: pick(m, w), top: pick(m, h), bottom: pick(m, h))
+  }
+}
+
+// Vertical separators centred in each gutter of a `count`-column area of the
+// given size, offset by (dx, dy). Placed, so they take no space.
+#let _column-rules(
+  width: 0pt,
+  height: 0pt,
+  count: 2,
+  gutter: 4%,
+  rule: none,
+  rule-inset: 0pt,
+  dx: 0pt,
+  dy: 0pt,
+) = {
+  if rule == none or count < 2 { return }
+  let g = if type(gutter) == ratio { gutter * width } else { gutter }
+  let colw = (width - g * (count - 1)) / count
+  for i in range(1, count) {
+    place(
+      top + left,
+      dx: dx + colw * i + g * (i - 0.5),
+      dy: dy + rule-inset,
+      line(angle: 90deg, length: height - 2 * rule-inset, stroke: rule),
+    )
+  }
+}
+
+// Scoped `badge-position` switch: exercises inside a narrow column are much
+// more readable with the badge above the statement, but the change must not
+// leak into the rest of the document.
+#let _with-badge-position(pos, body) = {
+  if pos == none { return body }
+  let pos = if pos == auto { "above" } else { pos }
+  context {
+    let previous = exo-config.get().at("badge-position", default: "margin")
+    exo-setup(badge-position: pos)
+    body
+    exo-setup(badge-position: previous)
+  }
+}
+
+// Whole document (or everything after it) in `count` columns, with an optional
+// vertical rule between them:
+//
+//   #show: exo-page-columns.with(count: 2, rule: 0.5pt + gray)
+//
+// Columns are page columns, so the text flows across pages normally and the
+// rule is drawn on every page.
+#let exo-page-columns(
+  count: 2,
+  gutter: 4%,
+  rule: none,        // none, or a stroke for the separator, e.g. 0.5pt + gray
+  rule-inset: 0pt,   // Shorten the rule by this much at the top and bottom
+  badge-position: auto,  // auto = "above" (badges cost no column width),
+                         // none = leave the current configuration alone
+  body,
+) = {
+  let bg = context {
+    let w = page.width
+    let h = page.height
+    let m = _resolve-page-margins(page.margin, w, h)
+    _column-rules(
+      width: w - m.left - m.right,
+      height: h - m.top - m.bottom,
+      count: count,
+      gutter: gutter,
+      rule: rule,
+      rule-inset: rule-inset,
+      dx: m.left,
+      dy: m.top,
+    )
+  }
+  set columns(gutter: gutter)
+  set page(columns: count, background: bg)
+  _with-badge-position(badge-position, body)
+}
+
+// Split a body into the pieces a columned grid can distribute. Only a top-level
+// sequence can be split — anything else (a single element, or a `styled` node
+// wrapping the whole body, which cannot be re-applied to its pieces one by one)
+// comes back whole, and the caller falls back to flowing `columns`.
+//
+// Zero-height companions (the spaces and paragraph breaks between two
+// exercises, a `state` update, a bare label) are attached to the piece they
+// follow so a column never opens on a stray blank line.
+#let _split-into-items(body) = {
+  if type(body) != content { return (body,) }
+  // Elements that take no room of their own and belong with the piece that
+  // *follows* them: `exo()` emits two counter updates before its content, and
+  // cutting between them would renumber the exercises. Spaces and paragraph
+  // breaks join them so a column never opens on a stray blank line.
+  let invisible = ("space", "parbreak", "linebreak", "counter-update",
+                   "state-update", "metadata", "styled-empty")
+
+  // `#exo-columns(..)[ #for .. ]` hands over sequence(space, <the loop>, space):
+  // everything worth splitting sits one level down. Descend for as long as a
+  // sequence holds a single sequence of its own — never through anything else,
+  // and in particular never through a `styled` node, whose styles could not be
+  // re-applied to the pieces one by one.
+  let node = body
+  let depth = 0
+  while depth < 8 and repr(node.func()) == "sequence" {
+    let real = node.children.filter(c => repr(c.func()) not in invisible)
+    if real.len() == 1 and repr(real.first().func()) == "sequence" {
+      node = real.first()
+      depth += 1
+    } else {
+      break
+    }
+  }
+  if repr(node.func()) != "sequence" { return (node,) }
+
+  let items = ()
+  let pending = ()
+  for child in node.children {
+    if repr(child.func()) in invisible {
+      pending.push(child)
+    } else {
+      items.push(pending.join() + child)
+      pending = ()
+    }
+  }
+  // Anything trailing has nothing to lead: keep it with the last piece
+  if pending.len() > 0 and items.len() > 0 {
+    items.last() = items.last() + pending.join()
+  } else if pending.len() > 0 {
+    items.push(pending.join())
+  }
+  items
+}
+
+// Lay `items` out in `count` columns with a vertical rule between them.
+//
+// A grid, unlike `columns`, draws the rule itself at the real height of the
+// row, on every page the row breaks over -- so the rule stops where the content
+// stops, and a row longer than a page simply continues on the next one. The
+// price is that the items have to be handed to the columns up front instead of
+// flowing from one into the next.
+//
+// They are split by count, not by measured height. Measuring would balance the
+// columns better, but every item here is a `context` element (an exercise, a
+// correction box), and `measure` cannot resolve an introspection against the
+// real document -- it falls back to "the closest matching element", which moves
+// between layout passes as soon as a document holds several similar boxes, and
+// the document then never converges. So: an item much taller than its
+// neighbours leaves its column longer than the others, and nothing wobbles.
+#let _ruled-columns(count: 2, gutter: 4%, rule: none, items) = {
+  let per = calc.ceil(items.len() / count)
+  let cells = range(count).map(i => items.slice(
+    calc.min(i * per, items.len()),
+    calc.min((i + 1) * per, items.len()),
+  ).join())
+
+  // Half-gutter spacer columns so the rule lands in the middle of the gutter
+  // (a grid line sits on a column edge, never inside a gutter).
+  let g = gutter
+  let half = if type(g) == ratio { g / 2 } else { g / 2 }
+  let cols = ()
+  let body = ()
+  for i in range(count) {
+    if i > 0 {
+      cols.push(half)
+      cols.push(half)
+      body.push([])
+      body.push([])
+    }
+    cols.push(1fr)
+    body.push(cells.at(i))
+  }
+  grid(
+    columns: cols,
+    align: top,
+    ..range(1, count).map(i => grid.vline(x: 3 * i - 1, stroke: rule)),
+    ..body,
+  )
+}
+
+// One columned block inside an otherwise single-column document, with an
+// optional vertical rule between the columns:
+//
+//   #exo-columns(count: 2, rule: 0.5pt + gray)[ ... exercises ... ]
+//
+// By default the block is `columns` inside a block whose height is estimated
+// from the content: it balances well, but the estimate caps the block, so a
+// body taller than the estimate is cut off — and a body longer than a page is
+// lost outright.
+//
+// `balance: true` asks instead for the body to be split into its own pieces and
+// laid out as a grid (see _ruled-columns), which breaks across pages like any
+// other block and stops the rule at the content. It is opt-in because two ruled
+// grids in one document — a split block plus corrections in ruled columns —
+// together with `exo-auto-chapter` can leave the document short of converging.
+//
+// For a whole two-column document use `exo-page-columns`.
+#let exo-columns(
+  count: 2,
+  gutter: 4%,
+  rule: none,        // none, or a stroke for the separator, e.g. 0.5pt + gray
+  rule-inset: 0pt,   // Shorten the rule by this much at the top and bottom
+                     // (flowing path only; the grid stops at the content)
+  height: auto,      // auto = balance the columns; or a fixed block height
+  slack: 3,          // Extra lines added to the estimated column height
+                     // (flowing path only)
+  balance: auto,     // auto (default) = flow through `columns` in a block of
+                     // estimated height; true = split the body between the
+                     // columns, which breaks across pages and stops the rule at
+                     // the content (needs a body that can be split, and a rule)
+  badge-position: auto,  // auto = "above", none = leave the configuration alone
+  body,
+) = {
+  // The body has to be split *before* the badge-position wrapper goes on: that
+  // wrapper is a single `context` element, so splitting after it would always
+  // yield one piece and silently fall back to the estimate.
+  let items = if balance == true and rule != none and height == auto {
+    _split-into-items(body)
+  } else {
+    ()
+  }
+  if items.len() >= count {
+    return _with-badge-position(
+      badge-position,
+      _ruled-columns(count: count, gutter: gutter, rule: rule, items),
+    )
+  }
+
+  let body = _with-badge-position(badge-position, body)
+  layout(size => context {
+    let w = size.width
+    let g = if type(gutter) == ratio { gutter * w } else { gutter }
+    let colw = (w - g * (count - 1)) / count
+    let h = if height == auto {
+      // `columns` fills column after column, so an open block would put
+      // everything in the first column: give it the balanced height instead.
+      let natural = measure(block(width: colw, body)).height
+      let line-height = measure(block(width: colw, [X])).height
+      calc.min(natural / count + slack * line-height, size.height)
+    } else {
+      height
+    }
+    block(width: w, height: h, {
+      _column-rules(
+        width: w,
+        height: h,
+        count: count,
+        gutter: g,
+        rule: rule,
+        rule-inset: rule-inset,
+      )
+      columns(count, gutter: g, body)
+    })
+  })
+}
+
+#let _columned-corrections(count: 1, gutter: 4%, rule: none, items) = {
+  if count == none or count <= 1 { return items.join() }
+  if rule == none {
+    return columns(count, gutter: gutter, items.join())
+  }
+  _ruled-columns(count: count, gutter: gutter, rule: rule, items)
+}
+
 #let exo-print-solutions(title: auto, loc: none) = context {
   let cfg = exo-config.get()
   let pending = exo-pending-solutions.get()
@@ -1952,6 +2394,15 @@
     text(weight: "bold", size: 12pt)[#section-title]
     v(0.5em)
 
+    // Narrow columns: the badge goes above the correction (it costs no column
+    // width there). Passed down to each box as an argument — see exo-box.
+    let col-count = cfg.at("corr-columns", default: 1)
+    let corr-pos = cfg.at("corr-columns-badge-position", default: auto)
+    if corr-pos == auto {
+      corr-pos = if col-count != none and col-count > 1 { "above" } else { auto }
+    }
+
+    let boxes = ()
     for item in to-print {
       let content = item.at("content", default: none)
       let item-type = item.at("type", default: "solution")
@@ -1971,25 +2422,34 @@
       }
 
       if item-type == "solution" {
-        exo-solution-box(
+        boxes.push(exo-solution-box(
           number: item.number,
           content,
           exercise-id: item.at("id", default: none),
           show-id: cfg.show-id,
           qr: item-qr,
           label-marker: marker,
-        )
+          badge-position: corr-pos,
+        ))
       } else {
-        exo-correction-box(
+        boxes.push(exo-correction-box(
           number: item.number,
           content,
           exercise-id: item.at("id", default: none),
           show-id: cfg.show-id,
           qr: item-qr,
           label-marker: marker,
-        )
+          badge-position: corr-pos,
+        ))
       }
     }
+
+    _columned-corrections(
+      count: col-count,
+      gutter: cfg.at("corr-columns-gutter", default: 4%),
+      rule: cfg.at("corr-columns-rule", default: none),
+      boxes,
+    )
   }
 
   // Keep only the items deferred to another location. The new value must be a

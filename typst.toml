@@ -1,6 +1,6 @@
 [package]
 name = "exercise-bank"
-version = "0.6.3"
+version = "0.6.4"
 entrypoint = "lib.typ"
 authors = ["Nathan Scheinmann"]
 license = "MIT"

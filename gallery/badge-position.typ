@@ -2,7 +2,7 @@
 // badge-position: "above" frees the width the left badge column costs on every
 // line, which matters most in a narrow measure and with enumerations
 
-#import "@preview/exercise-bank:0.6.3": *
+#import "@preview/exercise-bank:0.6.4": *
 
 #set page(width: 9cm, height: auto, margin: 1cm)
 #set text(font: "New Computer Modern", size: 10pt)

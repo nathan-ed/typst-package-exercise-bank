@@ -1,4 +1,4 @@
-#import "@preview/exercise-bank:0.6.3": *
+#import "@preview/exercise-bank:0.6.4": *
 
 // =============================================================================
 // DOCUMENT SETUP
@@ -95,7 +95,7 @@
   #v(1cm)
   #text(size: 11pt)[
     A comprehensive solution for creating, organizing, and filtering exercises\
-    Version 0.6.1\
+    Version 0.6.4\
     Nathan Scheinmann
   ]
 ]
@@ -139,7 +139,7 @@
 Import the package in your Typst document:
 
 ```typst
-#import "@preview/exercise-bank:0.6.3": exo, exo-setup
+#import "@preview/exercise-bank:0.6.4": exo, exo-setup
 ```
 
 == Quick Start
@@ -1312,7 +1312,7 @@ The label appears flush-right in a fixed-width left column; content flows in the
   ]
 )
 
-== Badge Position
+== Badge Position <sec-badge-position>
 
 Every style above places the badge in its own column on the left, so the statement is indented for the whole height of the exercise. In a narrow measure -- two-column layouts especially -- that column costs its width on *every* line, and it gets worse when the statement holds an enumeration, whose own indent stacks on top of it.
 
@@ -1352,6 +1352,187 @@ Every style above places the badge in its own column on the left, so the stateme
 )
 
 With `link-style: "page"` the "Solution p. 34" reference moves onto the badge line as well, instead of being wrapped into the top right of the statement.
+
+== Badge Size <sec-badge-size>
+
+Every badge shape ships with its own paddings and corner radius, tuned for a 12pt label. `badge-scale` multiplies them: below 1 the badge closes in on the number, above 1 it grows into a block. The label text keeps the size given by `label-font-size` -- scaling the badge changes the box, not the digits, so lower both together for a genuinely discreet badge.
+
+#example-full(
+  [```typst
+#exo-setup(badge-style: "filled-rect")
+
+#exo-setup(badge-scale: 0.5)   // tight
+#exo(exercise: [...])
+
+#exo-setup(badge-scale: 1.0)   // default
+#exo(exercise: [...])
+
+#exo-setup(badge-scale: 1.6)   // roomy
+#exo(exercise: [...])
+  ```],
+  [
+    #exo-reset-counter()
+    #exo-setup(badge-style: "filled-rect", badge-position: "above")
+    #for scale in (0.5, 1.0, 1.6) {
+      exo-setup(badge-scale: scale)
+      exo(exercise: [Badge at scale #scale.])
+    }
+    #exo-setup(badge-scale: 1.0, badge-style: "box", badge-position: "margin")
+  ]
+)
+
+For full control, `badge-pad-x`, `badge-pad-y` and `badge-radius` replace the shape's own values outright (and ignore `badge-scale`). The badge height is always `label-font-size + 2 * badge-pad-y`, so these two knobs also set how tall the badge is:
+
+```typst
+#exo-setup(
+  badge-style: "pill",
+  label-font-size: 9pt,
+  badge-pad-x: 6pt,     // horizontal padding
+  badge-pad-y: 2pt,     // -> 9pt + 4pt = 13pt tall
+  badge-radius: 6.5pt,  // half the height: still a pill, just a smaller one
+)
+```
+
+The margin reserved for the badge column follows the badge as it is resized, so `badge-position: "margin"` keeps its alignment without touching `margin-position`. Custom badge functions keep the documented five-argument contract and are left alone by all four settings -- a function draws its own geometry.
+
+#pagebreak()
+
+// =============================================================================
+// MULTI-COLUMN LAYOUTS
+// =============================================================================
+
+= Multi-Column Layouts
+
+Exercise sheets often read better on two columns, statements and solutions flowing side by side. Typst's built-in `columns` does the flowing, but it draws no separator and it leaves the badge column at its full width, which eats a large share of a narrow measure. The package wraps both concerns.
+
+== A Whole Two-Column Document
+
+`exo-page-columns` is a show rule: it switches the page to `count` columns, draws an optional vertical rule in the middle of every gutter, and (unless told otherwise) moves the badges above the statements so they cost no column width.
+
+```typst
+#import "@preview/exercise-bank:0.6.4": exo, exo-page-columns
+
+#show: exo-page-columns.with(count: 2, rule: 0.5pt + gray)
+
+#exo(exercise: [...], solution: [...])
+#exo(exercise: [...], solution: [...])
+```
+
+Because these are page columns, the text flows from page to page as usual and the rule is redrawn on every page. Put the show rule after `#set page(...)`: it reads the page geometry to place the rule inside the text area, and it resolves `auto` margins the same way Typst does.
+
+#block(inset: (left: 8pt), stroke: (left: 2pt + luma(160)))[
+  *Order matters with `exo-auto-chapter`.* Show rules nest in the order they are written, so `exo-page-columns` must come *first*:
+
+  ```typst
+  #show: exo-page-columns.with(count: 2, rule: 0.5pt + gray)
+  #show: exo-auto-chapter
+  ```
+
+  The other way round, the corrections that `exo-auto-chapter` prints at the end of the document sit outside the columned body and come out full width, silently. If you would rather not depend on the order, set `corr-columns` instead (see below): it wraps the corrections where they are printed, so it holds either way.
+]
+
+The rule is page furniture here: it is drawn across the full text area of every page, including a last page the exercises only half fill. That is deliberate for a document set in columns from end to end -- the rule belongs to the page, not to the content -- but it is the one place where `exo-columns`, whose grid stops the rule at the content, reads better. `rule-inset` trims a fixed amount off both ends:
+
+```typst
+#show: exo-page-columns.with(
+  count: 3,
+  gutter: 1cm,
+  rule: 0.4pt + luma(160),
+  rule-inset: 6pt,
+)
+```
+
+== One Columned Block
+
+`exo-columns` puts a single block of the document on several columns while the rest stays full width -- a page of drill exercises inside a chapter, for instance.
+
+#example-full(
+  [```typst
+#exo-columns(count: 2, rule: 0.5pt + gray, gutter: 0.7cm)[
+  #exo(exercise: [Solve $2x + 3 = 13$.], solution: [$x = 5$])
+  #exo(exercise: [Solve $3x - 6 = 0$.], solution: [$x = 2$])
+  #exo(exercise: [Expand $(x + 1)^2$.], solution: [$x^2 + 2x + 1$])
+  #exo(exercise: [Factor $x^2 - 9$.], solution: [$(x-3)(x+3)$])
+]
+  ```],
+  [
+    #exo-reset-counter()
+    #exo-columns(count: 2, rule: 0.5pt + gray, gutter: 0.7cm)[
+      #exo(exercise: [Solve $2x + 3 = 13$.], solution: [$x = 5$])
+      #exo(exercise: [Solve $3x - 6 = 0$.], solution: [$x = 2$])
+      #exo(exercise: [Expand $(x + 1)^2$.], solution: [$x^2 + 2x + 1$])
+      #exo(exercise: [Factor $x^2 - 9$.], solution: [$(x-3)(x+3)$])
+    ]
+  ]
+)
+
+Unlike page columns, a block has to know its height before `columns` can balance it -- otherwise it fills the first column to the bottom of the region and leaves the others empty. By default `exo-columns` estimates that height by measuring the content at column width and dividing by `count`, plus `slack` lines of margin. The estimate is deliberately generous, since a block slightly too tall only ends with a shorter last column. It is also a cap: a body that outgrows it is cut off, and a body longer than a page is lost outright. Pass an explicit `height` to set the block's height yourself.
+
+=== `balance: true`
+
+`balance: true` takes a different route. Instead of `columns`, the body is split into its own pieces (one exercise is one piece) and handed to a grid, which draws the rule itself at the real height of the content and breaks across pages like any other block. Nothing is estimated and nothing is lost: the rule stops where the exercises stop, and a block longer than a page continues on the next one.
+
+#example-full(
+  [```typst
+#exo-columns(
+  count: 2,
+  rule: 0.5pt + gray,
+  balance: true,   // exact; breaks across pages
+)[
+  #for i in range(1, 60) { exo(exercise: [...]) }
+]
+  ```],
+  [
+    #exo-reset-counter()
+    #exo-columns(count: 2, rule: 0.5pt + gray, gutter: 0.7cm, balance: true)[
+      #exo(exercise: [Solve $2x + 3 = 13$.])
+      #exo(exercise: [Solve $3x - 6 = 0$.])
+      #exo(exercise: [Expand $(x + 1)^2$.])
+      #exo(exercise: [Factor $x^2 - 9$.])
+    ]
+  ]
+)
+
+It needs a rule to draw (a plain `columns` already balances and flows on its own, so there is nothing to gain), no explicit `height`, and a body it can take apart -- a sequence of exercises, which is what `[ #for .. { exo(..) } ]` and a run of `#exo(..)` calls both are. A body that is one indivisible element -- a `#block[..]` around everything, or a `set` rule applied to the whole body, whose styles could not be re-applied to the pieces one by one -- silently falls back to the estimate, as does a body with fewer pieces than columns. Counter updates travel with the exercise they belong to, so a split never renumbers anything.
+
+The columns are filled by piece count, not by measured height: every piece here is a `context` element, and `measure` cannot resolve an introspection against the real document, so measuring them would leave the document short of converging. One piece much taller than its neighbours therefore leaves its column longer than the others.
+
+It is opt-in for one reason: two ruled grids in the same document -- a split block *and* corrections in ruled columns (`corr-columns` with `corr-columns-rule`) -- together with `exo-auto-chapter` can leave the document short of converging. One split block alongside ruled corrections is fine; several are not. If Typst reports "document did not converge", drop back to the default on the blocks that can afford the estimate.
+
+For a document that is two-column from end to end, `exo-page-columns` is still the right tool.
+
+== Corrections on Two Columns
+
+Collected corrections (`corr-loc: "end-chapter"` or `"end-section"`) are printed by `exo-print-solutions`, which is called from inside the flow rather than by you -- so they cannot be wrapped in `exo-columns` by hand. `corr-columns` sets them on their own columns instead, whatever the rest of the document does:
+
+```typst
+#exo-setup(
+  corr-loc: "end-chapter",
+  corr-columns: 2,
+  corr-columns-gutter: 0.7cm,
+  corr-columns-rule: 0.5pt + gray,   // optional vertical bar
+)
+#show: exo-auto-chapter
+```
+
+Two layouts hide behind that setting, and they differ in how a long correction section behaves:
+
+- *Without a rule*, this is Typst's own `columns`: the corrections flow from one column into the next and on across pages, exactly like body text.
+- *With a rule*, they are laid out as a grid, which draws the vertical bar itself at the true height of the content on every page the section spans. The corrections are then distributed between the columns up front instead of flowing from one into the next -- each one is measured at its column width and the columns are filled to equal height, so they still come out level.
+
+`corr-columns-badge-position` decides where the badge sits inside those columns: `auto` (the default) uses `"above"` as soon as there are two columns or more, since a badge column would eat a large share of a narrow measure. Pass `"margin"` to keep the badges beside the corrections anyway. `corr-columns-rule: none` removes a rule set earlier (that parameter's "leave as is" value is `auto`, unlike the rest of `exo-setup`, so that `none` can mean what it says).
+
+For a document that is *entirely* two-column, use `exo-page-columns` instead and leave `corr-columns` at 1: the corrections then flow with everything else and the page rule is drawn for them too.
+
+== Badges in Narrow Columns
+
+Both functions take `badge-position`, which they apply only to their own body and reset afterwards:
+
+- `auto` (the default) uses `"above"`: the badge sits on a header line and the statement runs the full column width. This is what makes two columns readable -- see @sec-badge-position.
+- `none` leaves the current configuration untouched, badges keep whatever `exo-setup` set.
+- Any explicit value (`"margin"`, `"above"`) is used as given.
+
+The badge styles that wrap the whole exercise (`border-accent`, `underline`, `rounded-box`, `header-card`) already run the full width and are unaffected. The exception is `margin`, whose side label is a fixed column of its own: in a two-column measure it would leave the statement about as wide as the label. It therefore folds -- the rule runs the whole measure, the label sits under it on the right, the statement keeps the full width below -- either when the measure drops under `margin-fold-below` (`auto` = three times the label column) or whenever `badge-position` is `"above"`, which is exactly what the two column functions ask for. `margin-label-width` and `margin-label-gutter` set the unfolded geometry; `margin-fold-below: 0pt` never folds.
 
 #pagebreak()
 
@@ -1459,6 +1640,13 @@ Same as `exo`, plus:
   [`solution-color`], [color], [green], [Color for solution badges],
   [`correction-color`], [color], [green], [Color for correction badges],
   [`label-font-size`], [length], [12pt], [Font size for badge labels],
+  [`badge-scale`], [float], [1.0], [Multiplies the built-in badge paddings and the circle diameter (the label text keeps `label-font-size`)],
+  [`badge-pad-x`], [length/auto], [auto], [Horizontal padding inside the badge, overriding `badge-scale`],
+  [`badge-pad-y`], [length/auto], [auto], [Vertical padding; the badge is `label-font-size + 2 * badge-pad-y` tall],
+  [`badge-radius`], [length/auto], [auto], [Corner radius of the badge (auto = the style's own, scaled)],
+  [`margin-label-width`], [length], [3.35cm], [Side-label column of badge-style "margin"],
+  [`margin-label-gutter`], [length], [0.55cm], [Gap between that column and the statement],
+  [`margin-fold-below`], [length/auto], [auto], [Below this measure the "margin" side label folds onto a header line (auto = 3 × `margin-label-width`; 0pt = never)],
   [`margin-position`], [length/auto], [auto], [Width reserved for badge column],
   [`label-extra`], [length], [1cm], [Extra space for labels in margin],
 )
@@ -1496,6 +1684,10 @@ Same as `exo`, plus:
   [`solution-style`], [auto/string], [auto], ["inline" = epigraph-style rule instead of a badge box],
   [`inline-rule-length`], [length], [3cm], [Rule length for inline solutions],
   [`inline-label`], [auto/content/none], [auto], [Small margin label for inline solutions],
+  [`corr-columns`], [int], [1], [Number of columns for the collected (end-section / end-chapter) corrections],
+  [`corr-columns-gutter`], [length/ratio], [4%], [Gutter between those columns],
+  [`corr-columns-rule`], [stroke/none], [none], [Vertical separator between them, e.g. `0.5pt + gray`],
+  [`corr-columns-badge-position`], [auto/string], [auto], [Badge position inside those columns; auto = "above" from two columns on],
   [`link-solutions`], [bool], [false], [Clickable links to deferred corrections],
   [`link-style`], [string], ["icon"], ["icon" (arrow) or "page" ("Solution p. 30" reference)],
   [`link-icon`], [content/none], [arrow icon], [Link icon on the exercise],
@@ -1525,6 +1717,38 @@ Same as `exo`, plus:
 // =============================================================================
 // UTILITY FUNCTIONS
 // =============================================================================
+
+== `exo-page-columns` Function
+
+Show rule: `#show: exo-page-columns.with(...)`.
+
+#table(
+  columns: (1.2fr, 0.8fr, 0.8fr, 2fr),
+  stroke: (x: none, y: 0.3pt + luma(85%)),
+  inset: 6pt,
+  [*Parameter*], [*Type*], [*Default*], [*Description*],
+  [`count`], [int], [2], [Number of page columns],
+  [`gutter`], [length \| ratio], [4%], [Space between columns],
+  [`rule`], [stroke], [none], [Vertical separator drawn in each gutter],
+  [`rule-inset`], [length], [0pt], [Shortens the rule at top and bottom],
+  [`badge-position`], [str \| auto \| none], [auto], [auto = "above" inside the columns; none = leave the configuration alone],
+)
+
+== `exo-columns` Function
+
+Same parameters as `exo-page-columns`, plus the height controls of the block:
+
+#table(
+  columns: (1.2fr, 0.8fr, 0.8fr, 2fr),
+  stroke: (x: none, y: 0.3pt + luma(85%)),
+  inset: 6pt,
+  [*Parameter*], [*Type*], [*Default*], [*Description*],
+  [`balance`], [auto \| bool], [auto], [auto = split the body between the columns when it can be split (exact, breaks across pages); false = flow through `columns` in a block of estimated height],
+  [`height`], [length \| auto], [auto], [Fixed block height; implies the flowing path],
+  [`slack`], [int], [3], [Lines of margin added to the estimated column height (flowing path only)],
+)
+
+`rule-inset` applies to the flowing path only: the split path's grid already stops the rule at the content.
 
 = Utility Functions
 

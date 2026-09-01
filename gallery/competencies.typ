@@ -1,4 +1,4 @@
-#import "@preview/exercise-bank:0.6.3": exo-define, exo-show, exo-setup
+#import "@preview/exercise-bank:0.6.4": exo-define, exo-show, exo-setup
 
 #set page(width: 14cm, height: auto, margin: 1cm)
 

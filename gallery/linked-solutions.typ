@@ -3,7 +3,7 @@
 // arrow icon on the exercise jumps to its correction, and the correction
 // carries a back-link to the statement
 
-#import "@preview/exercise-bank:0.6.3": *
+#import "@preview/exercise-bank:0.6.4": *
 
 #set page(width: 14cm, height: auto, margin: 1cm)
 #set text(font: "New Computer Modern", size: 11pt)
