@@ -1,7 +1,7 @@
 // Per-section numbering and corrections - exercise-bank
 // number-prefix "section" + exo-auto-chapter: nothing to call by hand
 
-#import "@preview/exercise-bank:0.6.5": *
+#import "@preview/exercise-bank:0.7.0": *
 
 #set page(width: 14cm, height: auto, margin: 1cm)
 #set text(font: "New Computer Modern", size: 11pt, lang: "fr")

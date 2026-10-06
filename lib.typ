@@ -164,6 +164,8 @@
   "title-format": auto,          // auto, or function (title) => content
   "title-in-solutions": false,   // Repeat the title on solution/correction boxes
   // Header spacing (full-width styles and badge-position "above"; auto = style default)
+  "underline-gap": auto,         // Header lower edge -> rule centre; auto follows header-rule-gap
+  "underline-below": auto,       // Rule centre -> body upper edge; auto follows header-body-gap
   "header-rule-gap": auto,       // underline style: space between the label and the rule
   "header-body-gap": auto,       // Space between the header (label/rule) and the statement
   // Display options
@@ -322,6 +324,8 @@
   title-format: none,      // auto or function (title) => content
   title-in-solutions: none, // Repeat the title on solution/correction boxes
   // Header spacing
+  underline-gap: none,     // Header lower edge -> rule centre (auto = legacy option/default)
+  underline-below: none,   // Rule centre -> body upper edge (auto = legacy option/default)
   header-rule-gap: none,   // underline style: label -> rule (auto = style default)
   header-body-gap: none,   // header -> statement (auto = style default)
   // Display options
@@ -408,6 +412,8 @@
     if title-separator != auto { new.title-separator = title-separator }
     if title-format != none { new.title-format = title-format }
     if title-in-solutions != none { new.title-in-solutions = title-in-solutions }
+    if underline-gap != none { new.underline-gap = underline-gap }
+    if underline-below != none { new.underline-below = underline-below }
     if header-rule-gap != none { new.header-rule-gap = header-rule-gap }
     if header-body-gap != none { new.header-body-gap = header-body-gap }
     if show-metadata != none { new.show-metadata = show-metadata }
@@ -660,6 +666,109 @@
   } else {
     [#num]
   }
+}
+
+// =============================================================================
+// References to displayed exercises
+// =============================================================================
+
+// Record the number actually passed to the badge, rather than reconstructing
+// it from bank order. The zero-size marker lives in the number on the header,
+// so its page follows page/column breaks and is never measured by wrap-it.
+// Shared labels are queried as a collection; links use each marker's location.
+#let _exo-reference-data(id, number, cfg, topic, group: none) = {
+  let part = none
+  let part-label = none
+  if _beautitled-parts() {
+    let num = counter("beautitled-part").get().first()
+    if num > 0 {
+      let part-cfg = state("beautitled-config", (enable-parts: false)).get()
+      let pattern = part-cfg.at("part-numbering", default: auto)
+      part = numbering(if pattern == auto { "I" } else { pattern }, num)
+      part-label = part-cfg.at("part-prefix", default: "Part")
+    }
+  }
+  (
+    id: id,
+    number: number,
+    supplement: cfg.exercise-label,
+    group: group,
+    topic: topic,
+    part: part,
+    part-label: part-label,
+  )
+}
+
+#let _exo-reference-marker(info) = [#metadata(info) <_exb-reference>]
+
+// Cite a rendered exercise, forwards or backwards, within the compiled
+// document. An optional label on exo/exo-show/exo-select/exo-filter selects that display
+// call; occurrence selects among repeated displays (1-based, document order).
+// Missing/hidden exercises produce an unlinked ?? placeholder.
+#let exo-cite(
+  id,
+  pos-label: none,
+  topic: none,
+  occurrence: 1,
+  show-page: true,
+  show-part: false,
+  prefix: auto,
+  page-prefix: "p. ",
+  part-prefix: auto,
+  ..targets,
+) = context {
+  assert(targets.named().len() == 0 and targets.pos().len() <= 1,
+    message: "exo-cite accepts at most one display label after the id")
+  let pos-label = if targets.pos().len() > 0 {
+    assert(pos-label == none, message: "exo-cite display label was supplied twice")
+    targets.pos().first()
+  } else { pos-label }
+  assert(type(occurrence) == int and occurrence > 0,
+    message: "exo-cite occurrence must be a positive integer")
+  assert(pos-label == none or type(pos-label) == label,
+    message: "exo-cite pos-label must be a label or none")
+  let hits = query(<_exb-reference>).filter(it => it.value.id == id)
+  if topic != none {
+    hits = hits.filter(it => it.value.topic == topic)
+  }
+  if pos-label != none {
+    let groups = query(pos-label)
+    if groups.len() == 1 {
+      // A label on the call attaches to its sequence, before the initial step.
+      let group = exo-display-counter.at(groups.first().location()).first() + 1
+      hits = hits.filter(it => it.value.group == group)
+    } else {
+      hits = ()
+    }
+  }
+  let hit = hits.at(occurrence - 1, default: none)
+  let found = hit != none
+  let info = if found { hit.value } else { (
+    number: [??], supplement: exo-config.get().exercise-label,
+    part: none, part-label: none,
+  ) }
+  let supplement = if prefix == auto { info.supplement } else { prefix }
+  let body = if supplement in (none, []) { info.number } else { [#supplement~#info.number] }
+  let details = ()
+  if show-page {
+    let page-text = if found {
+      let loc = hit.location()
+      let pattern = loc.page-numbering()
+      let pattern = if pattern == none { "1" } else { pattern }
+      if sys.version >= version(0, 15, 0) {
+        counter(page).display(pattern, at: loc)
+      } else {
+        numbering(pattern, ..counter(page).at(loc))
+      }
+    } else { [??] }
+    details.push([#page-prefix#page-text])
+  }
+  if show-part and info.part != none {
+    let supplement = if part-prefix == auto { info.part-label } else { part-prefix }
+    details.push(if supplement in (none, []) { info.part } else { [#supplement~#info.part] })
+  }
+  if details.len() > 0 { body += [ (#details.join([, ]))] }
+  if found { link(hit.location(), body) } else { body }
 }
 
 // =============================================================================
@@ -1006,11 +1115,23 @@
   }
 }
 
+// Keep a badge header line with what follows it: at a column or page break the
+// header must never stay behind on its own. `block(sticky: true)` does exactly
+// that from Typst 0.13 on; on older compilers it silently degrades to a plain
+// block rather than raising the package's minimum compiler version.
+#let sticky-block(above: 0pt, below: 0pt, body, ..args) = {
+  if sys.version >= version(0, 13, 0) {
+    block(above: above, below: below, sticky: true, body, ..args)
+  } else {
+    block(above: above, below: below, body, ..args)
+  }
+}
+
 // Header line followed by the body at an exact distance (header-body-gap):
 // both sit in blocks of their own so the paragraph spacing does not add up
 // with the requested gap
 #let _header-then-body(header, body, gap) = {
-  block(spacing: 0pt, width: 100%, header)
+  sticky-block(width: 100%, breakable: false, header)
   block(above: gap, below: 0pt, width: 100%, breakable: true, body)
 }
 
@@ -1025,7 +1146,10 @@
     width: 100%,
   )[
     #if body-gap == auto [
-      #header
+      #context {
+        set text(size: calc.max(font-size, text.size))
+        context sticky-block(below: par.spacing.to-absolute(), header)
+      }
       #v(0.3em)
       #body
     ] else {
@@ -1035,31 +1159,25 @@
 }
 
 // Style: underline - Bold header with underline
-#let style-underline(label, number, body, font-size, color, is-solution, gaps: (:)) = {
+#let style-underline(label, number, body, font-size, color, is-solution, gaps: (:)) = context {
   let line-color = color
   let rule-gap = gaps.at("rule", default: auto)
   let body-gap = gaps.at("body", default: auto)
   let header = text(weight: "bold", size: font-size + 1pt, fill: line-color)[#label~#number]
   let rule = line(length: 100%, stroke: 0.8pt + line-color)
-  if rule-gap == auto and body-gap == auto {
-    block(width: 100%)[
-      #header
-      #v(-0.3em)
-      #rule
-      #v(0.5em)
-      #body
-    ]
-  } else {
-    // Explicit gaps: every piece in its own block, spaced exactly. An auto gap
-    // keeps (approximately) the style's default distance
-    let rule-gap = if rule-gap == auto { 0.9em } else { rule-gap }
-    let body-gap = if body-gap == auto { 1.7em } else { body-gap }
-    block(width: 100%, {
+  // Legacy default par.spacing was resolved in the header's font size, then
+  // v(-0.3em) in the surrounding size. Freeze that geometry independently of
+  // the document's paragraph spacing. The horizontal rule has zero flow height
+  // (its 0.8pt stroke extends 0.4pt on each side of its centre).
+  let rule-gap = if rule-gap == auto { 1.2 * calc.max(font-size + 1pt, text.size) - 0.3em } else { rule-gap }
+  let body-gap = if body-gap == auto { 1.7em } else { body-gap }
+  block(width: 100%, {
+    sticky-block(width: 100%, breakable: false, {
       block(spacing: 0pt, width: 100%, header)
       block(above: rule-gap, below: 0pt, width: 100%, rule)
-      block(above: body-gap, below: 0pt, width: 100%, breakable: true, body)
     })
-  }
+    block(above: body-gap, below: 0pt, width: 100%, breakable: true, body)
+  })
 }
 
 // Style: rounded-box - Clean rounded border around entire exercise
@@ -1074,7 +1192,10 @@
     inset: 12pt,
   )[
     #if body-gap == auto [
-      #header
+      #context {
+        set text(size: calc.max(font-size, text.size))
+        context sticky-block(below: par.spacing.to-absolute(), header)
+      }
       #v(2pt)
       #body
     ] else {
@@ -1093,8 +1214,10 @@
     radius: 8pt,
     clip: true,
   )[
-    #block(
+    #sticky-block(
       width: 100%,
+      breakable: false,
+      below: auto,
       fill: header-color,
       inset: (x: 12pt, y: 6pt),
     )[
@@ -1337,18 +1460,6 @@
   )
 }
 
-// Keep a badge header line with what follows it: at a column or page break the
-// header must never stay behind on its own. `block(sticky: true)` does exactly
-// that from Typst 0.13 on; on older compilers it silently degrades to a plain
-// block rather than raising the package's minimum compiler version.
-#let sticky-block(above: 0pt, below: 0pt, body) = {
-  if sys.version >= version(0, 13, 0) {
-    block(above: above, below: below, sticky: true, body)
-  } else {
-    block(above: above, below: below, body)
-  }
-}
-
 #let exo-box(
   label: "Exercice",
   number: 1,
@@ -1374,8 +1485,15 @@
                            // the config — the deferred correction section — does not write
                            // back into it, which would close a cycle in the introspection graph
   title: none,             // Optional exercise title ("Exercise 1 – Pythagorean theorem")
+  ref-data: none,          // Captured by display callers before any body measurement
 ) = context {
   let cfg = exo-config.get()
+  let number = if box-type == "exercise" and exercise-id != none {
+    let info = if ref-data != none { ref-data } else {
+      _exo-reference-data(exercise-id, number, cfg, none)
+    }
+    [#_exo-reference-marker(info)#number]
+  } else { number }
 
   // Title: inline in the header of the full-width styles (after
   // title-separator, in the header's own weight), or as a bold line next to
@@ -1521,7 +1639,14 @@
         // badge-position "above" is a document-wide statement that the badge
         // must not cost column width: the side label folds with it
         margin-fold: if badge-pos == "above" { true } else { none },
-        gaps: (rule: cfg.at("header-rule-gap", default: auto), body: header-body-gap),
+        gaps: (
+          rule: if cfg.at("underline-gap", default: auto) != auto {
+            cfg.underline-gap
+          } else { cfg.at("header-rule-gap", default: auto) },
+          body: if cfg.badge-style == "underline" and cfg.at("underline-below", default: auto) != auto {
+            cfg.underline-below
+          } else { header-body-gap },
+        ),
       )
     ]
   } else {
@@ -2193,6 +2318,10 @@
       number: disp-num,
       exercise,
       exercise-id: exercise-id,
+      ref-data: _exo-reference-data(
+        exercise-id, disp-num, cfg, metadata.at("topic", default: none),
+        group: exo-display-counter.get().first(),
+      ),
       show-id: cfg.show-id,
       label-marker: get-exercise-marker(cfg, metadata),
       badge-sub: get-difficulty-badge-sub(cfg, metadata),
@@ -2247,6 +2376,10 @@
       number: disp-num,
       exercise-body,
       exercise-id: exercise-id,
+      ref-data: _exo-reference-data(
+        exercise-id, disp-num, cfg, metadata.at("topic", default: none),
+        group: exo-display-counter.get().first(),
+      ),
       show-id: cfg.show-id,
       label-marker: get-exercise-marker(cfg, metadata, extra: link-marker),
       badge-sub: get-difficulty-badge-sub(cfg, metadata),
@@ -2735,7 +2868,9 @@
   author: none,  // Filter: matches if author is in exercise's authors array
   custom: none,  // Function (metadata) => bool
   show-solutions: true,
-) = context {
+) = {
+  exo-display-counter.step()
+  context {
   let cfg = exo-config.get()
   let registry = exo-registry.get()
 
@@ -2770,6 +2905,10 @@
           number: exercise.number,
           exercise.exercise,
           exercise-id: exercise.id,
+          ref-data: _exo-reference-data(
+            exercise.id, exercise.number, cfg, meta.at("topic", default: none),
+            group: exo-display-counter.get().first(),
+          ),
           show-id: cfg.show-id,
           label-marker: get-exercise-marker(cfg, meta),
           badge-sub: get-difficulty-badge-sub(cfg, meta),
@@ -2799,6 +2938,7 @@
       }
     }
   }
+}
 }
 
 // =============================================================================
@@ -2969,6 +3109,10 @@
           number: disp-num,
           found.exercise,
           exercise-id: found.id,
+          ref-data: _exo-reference-data(
+            found.id, disp-num, cfg, display-metadata.at("topic", default: none),
+            group: exo-display-counter.get().first(),
+          ),
           show-id: cfg.show-id,
           competencies: comps,
           show-competencies: cfg.show-competencies,
@@ -3030,6 +3174,10 @@
             number: disp-num,
             exercise-body,
             exercise-id: found.id,
+            ref-data: _exo-reference-data(
+              found.id, disp-num, cfg, display-metadata.at("topic", default: none),
+              group: exo-display-counter.get().first(),
+            ),
             show-id: cfg.show-id,
             competencies: comps,
             show-competencies: cfg.show-competencies,
@@ -3217,6 +3365,10 @@
         number: disp-num,
         exercise.exercise,
         exercise-id: exercise.id,
+        ref-data: _exo-reference-data(
+          exercise.id, disp-num, cfg, exercise.metadata.at("topic", default: none),
+          group: call-base,
+        ),
         show-id: cfg.show-id,
         competencies: ex-comps,
         show-competencies: cfg.show-competencies,
@@ -3286,6 +3438,10 @@
           number: disp-num,
           exercise-body,
           exercise-id: exercise.id,
+          ref-data: _exo-reference-data(
+            exercise.id, disp-num, cfg, exercise.metadata.at("topic", default: none),
+            group: call-base,
+          ),
           show-id: cfg.show-id,
           competencies: ex-comps,
           show-competencies: cfg.show-competencies,

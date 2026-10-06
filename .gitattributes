@@ -1,0 +1,2 @@
+# Compiled manuals are binary artifacts.
+*.pdf binary

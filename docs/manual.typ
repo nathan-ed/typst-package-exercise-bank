@@ -1,4 +1,4 @@
-#import "@preview/exercise-bank:0.6.5": *
+#import "@preview/exercise-bank:0.7.0": *
 
 // =============================================================================
 // DOCUMENT SETUP
@@ -95,7 +95,7 @@
   #v(1cm)
   #text(size: 11pt)[
     A comprehensive solution for creating, organizing, and filtering exercises\
-    Version 0.6.5\
+    Version 0.7.0\
     Nathan Scheinmann
   ]
 ]
@@ -139,7 +139,7 @@
 Import the package in your Typst document:
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo, exo-setup
+#import "@preview/exercise-bank:0.7.0": exo, exo-setup
 ```
 
 == Quick Start
@@ -1318,6 +1318,37 @@ The space between the label, its rule and the statement is set with `header-rule
 #exo-setup(badge-style: "underline", header-rule-gap: 0.25em, header-body-gap: 0.5em)
 ```
 
+For the underline style, `underline-gap` and `underline-below` override the
+corresponding general header settings. `none` leaves the current value unchanged;
+`auto` follows `header-rule-gap` or `header-body-gap`. This applies to every
+exercise, solution and correction, including `display: "sol"`.
+
+`underline-gap` runs from the lower edge of the title text block (its last
+baseline with the default text bottom edge) to the centre of the 0.8pt rule.
+`underline-below` runs from that centre to the top of the body block. The stroke
+extends 0.4pt on either side of its centre; body insets and font ink metrics
+can change the visible white space.
+
+The automatic underline defaults are independent of paragraph spacing and
+preserve the previous `par.spacing: 1.2em` geometry:
+`1.2 * calc.max(label-font-size + 1pt, text.size) - 0.3em` above the rule,
+`1.7em` below it. Body paragraphs still inherit the document's paragraph spacing.
+
+For MathALÉA at 11pt:
+
+```typst
+#exo-setup(
+  badge-style: "underline",
+  underline-gap: 0.2em,
+  underline-below: 0.78em + 0.4pt,
+  solution-above: 1.8em,
+)
+```
+
+On Typst 0.13+, the four full-width styles keep their header with the first body
+line at page and column breaks; the remainder of the body is still breakable.
+Older compilers retain the non-sticky fallback.
+
 == Rounded Box
 
 #example-full(
@@ -1463,7 +1494,7 @@ Exercise sheets often read better on two columns, statements and solutions flowi
 `exo-page-columns` is a show rule: it switches the page to `count` columns, draws an optional vertical rule in the middle of every gutter, and (unless told otherwise) moves the badges above the statements so they cost no column width.
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo, exo-page-columns
+#import "@preview/exercise-bank:0.7.0": exo, exo-page-columns
 
 #show: exo-page-columns.with(count: 2, rule: 0.5pt + gray)
 
@@ -1726,6 +1757,8 @@ Same as `exo`, plus:
   [`solution-below`], [length], [0.8em], [Space below solution boxes],
   [`correction-above`], [length], [0.8em], [Space above correction boxes],
   [`correction-below`], [length], [0.8em], [Space below correction boxes],
+  [`underline-gap`], [length/auto], [auto], [underline: title lower edge to rule centre; overrides header-rule-gap; none keeps current value],
+  [`underline-below`], [length/auto], [auto], [underline: rule centre to body top; overrides header-body-gap; none keeps current value],
   [`header-rule-gap`], [length/auto], [auto], [underline style: space between the label and its rule],
   [`header-body-gap`], [length/auto], [auto], [Space between the header and the statement (full-width styles, badge-position "above")],
   [`advanced-symbol`], [content/none], [`"*"`], [Symbol before label for advanced exercises],
@@ -1813,6 +1846,58 @@ Same parameters as `exo-page-columns`, plus the height controls of the block:
 
 `rule-inset` applies to the flowing path only: the split path's grid already stops the rule at the content.
 
+= Citing Exercises
+
+`exo-cite` links to a displayed exercise's actual number and page, before or
+after its display. Chapter files included in the same master document share
+targets; independently compiled PDFs do not.
+
+```typst
+#exo(id: "pythagoras", exercise: [Calculate the hypotenuse.])
+See #exo-cite("pythagoras").
+See #exo-cite("pythagoras", show-part: true).
+```
+
+`show-part: true` adds the beautitled part when parts are enabled, using the
+part's numbering and label at the target. The exercise number remains exactly
+as printed. The exercise label also comes from the target; page numbering uses
+the target page's pattern and counter, including Roman numerals and resets. On
+Typst 0.15+, contextual page numbering functions run at the target; older
+compilers run the function in the citation context.
+
+The first displayed occurrence is cited by default. Use `occurrence: 2`, or a
+label attached to an `exo`, `exo-show`, `exo-select` or `exo-filter` display call:
+
+```typst
+#exo-select(topic: "geometry") <geometry-sheet>
+See #exo-cite("pythagoras", <geometry-sheet>).
+```
+
+The second positional argument can also be passed as `pos-label:`. `topic:`
+optionally restricts targets; citation numbers are taken from display anchors,
+so additional filters, limits and multi-page selections do not change their
+accuracy. `exo-define` alone creates no target. Hidden exercises, missing IDs,
+missing display labels and unavailable occurrences produce an unlinked
+placeholder. Use explicit unique IDs to avoid automatic-ID collisions after
+counter resets. A custom badge must render its provided number to retain the
+anchor.
+
+#table(
+  columns: (1.1fr, 1fr, 0.7fr, 2fr),
+  stroke: (x: none, y: 0.3pt + luma(85%)),
+  inset: 6pt,
+  [*Parameter*], [*Type*], [*Default*], [*Description*],
+  [`id`], [string], [required], [ID of a displayed exercise],
+  [`pos-label`], [label/none], [none], [Display call to cite; optional second positional argument],
+  [`topic`], [string/none], [none], [Restrict matching targets to this topic],
+  [`occurrence`], [positive int], [1], [Matching display in document order],
+  [`show-page`], [bool], [true], [Append the target page],
+  [`show-part`], [bool], [false], [Append its beautitled part, if available],
+  [`prefix`], [content/auto/none], [auto], [Exercise label; auto uses target label, none hides it],
+  [`page-prefix`], [content/string], ["p. "], [Text before page number],
+  [`part-prefix`], [content/auto/none], [auto], [Part label; auto uses target label, none hides it],
+)
+
 = Utility Functions
 
 #table(
@@ -1828,6 +1913,7 @@ Same parameters as `exo-page-columns`, plus the height controls of the block:
   [`exo-section-end()`], [Print solutions pending for end-of-section placement],
   [`exo-chapter-end()`], [Print solutions pending for end-of-chapter placement],
   [`exo-print-solutions()`], [Print collected solutions (for end-section/chapter modes)],
+  [`exo-cite("id")`], [Link to an exercise’s displayed number and page, optionally its beautitled part],
   [`exo-count(topic: ..)`], [Count exercises matching criteria],
   [`exo-show("id")`], [Display exercise by ID],
   [`exo-show-many("a", "b")`], [Display multiple exercises by ID],

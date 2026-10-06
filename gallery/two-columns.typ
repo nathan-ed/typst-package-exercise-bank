@@ -2,7 +2,7 @@
 // exo-columns puts a block of exercises on two columns with a vertical rule;
 // corr-columns does the same for the corrections collected at the chapter end
 
-#import "@preview/exercise-bank:0.6.5": *
+#import "@preview/exercise-bank:0.7.0": *
 
 #set page(width: 13cm, height: auto, margin: 1cm)
 #set text(font: "New Computer Modern", size: 9.5pt)

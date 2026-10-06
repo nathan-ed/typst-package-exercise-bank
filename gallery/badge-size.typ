@@ -2,7 +2,7 @@
 // badge-scale multiplies the paddings of any badge shape; badge-pad-x,
 // badge-pad-y and badge-radius replace them outright
 
-#import "@preview/exercise-bank:0.6.5": *
+#import "@preview/exercise-bank:0.7.0": *
 
 #set page(width: 11cm, height: auto, margin: 1cm)
 #set text(font: "New Computer Modern", size: 10pt)

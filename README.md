@@ -1,6 +1,6 @@
 # exercise-bank
 
-[![exercise-bank on Typst Universe](https://img.shields.io/badge/Typst_Universe-v._0.6.5-239dad?labelColor=eee)](https://typst.app/universe/package/exercise-bank)
+[![exercise-bank on Typst Universe](https://img.shields.io/badge/Typst_Universe-v._0.7.0-239dad?labelColor=eee)](https://typst.app/universe/package/exercise-bank)
 [![Full package manual as PDF](https://img.shields.io/badge/Manual-pdf-333333?labelColor=eee)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/b011bfe6f048c31c5d644410a6b2c3da17afd50d/docs/manual.pdf)
 [![Distributed under the MIT license](https://img.shields.io/badge/License-MIT-333333?labelColor=eee)](LICENSE)
 
@@ -28,6 +28,8 @@ Click on an image to see the source code.
 | Badge Position | Two-Column Layouts | Badge Size |
 | [![Exercise titles and a worked example whose solution stays visible in the student version](gallery/titles-worked.svg)](gallery/titles-worked.typ) | [![Exercises numbered per section with solutions printed before each new section](gallery/section-numbering.svg)](gallery/section-numbering.typ) | |
 | Titles and Worked Examples | Per-Section Numbering | |
+| [![Clickable exercise references with their page and originating beautitled part](gallery/references-1.svg)](gallery/references.typ) | | |
+| Exercise References | | |
 
 ## Features
 
@@ -38,6 +40,7 @@ Click on an image to see the source code.
 - **Badge size** - Scale any badge shape with `badge-scale`, or set its padding and corner radius outright
 - **Two-column layouts** - A whole two-column document, one columned block, or just the collected corrections - each with an optional vertical rule
 - **Difficulty levels** - Encode up to 5 (or more) difficulty levels as badge colors, stars, or symbols
+- **Exercise citations** - Cite a displayed exercise by number and page, optionally its beautitled part, from anywhere in the document
 - **Clickable links** - Jump from an exercise to its deferred correction and back
 - **Split solution/correction placement** - Short solution under the statement (epigraph-style), full correction at the end of the chapter
 - **Chapter-prefixed numbering** - Number exercises as "3.5" using the current heading number, "3.2.5" with two heading levels, or a series number of your choice (`number-prefix: 3`)
@@ -64,7 +67,7 @@ Click on an image to see the source code.
 ## Quick Start
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo
+#import "@preview/exercise-bank:0.7.0": exo
 
 #exo(
   exercise: [
@@ -78,7 +81,7 @@ Click on an image to see the source code.
 ### Simple Exercise
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo
+#import "@preview/exercise-bank:0.7.0": exo
 
 #exo(
   exercise: [
@@ -90,7 +93,7 @@ Click on an image to see the source code.
 ### Exercise with Solution
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo
+#import "@preview/exercise-bank:0.7.0": exo
 
 #exo(
   exercise: [
@@ -105,7 +108,7 @@ Click on an image to see the source code.
 ### Multiple Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo
+#import "@preview/exercise-bank:0.7.0": exo
 
 #exo(exercise: [Simplify $x^2 + 2x + 1$.])
 #exo(exercise: [Factor $x^2 - 4$.])
@@ -125,7 +128,7 @@ Controls what content is displayed:
 - `"sol"` - Show only solutions/corrections (hide exercises)
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo, exo-setup
+#import "@preview/exercise-bank:0.7.0": exo, exo-setup
 
 // Student worksheet - exercises only
 #exo-setup(display: "ex")
@@ -146,7 +149,7 @@ Controls whether to show solutions or corrections:
 - `"mixed"` - Default to solution, but show correction for exercises with `show-corr: true`
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo, exo-setup
+#import "@preview/exercise-bank:0.7.0": exo, exo-setup
 
 // Student version - show solutions
 #exo-setup(corr-display: "solution")
@@ -177,7 +180,7 @@ Controls where solutions/corrections appear:
 **Important:** with `"end-section"` and `"end-chapter"`, the solutions are only *collected* - you decide where they appear by calling `#exo-section-end()` / `#exo-chapter-end()` (or `#exo-print-solutions()`) at that point, or by using `exo-auto-chapter` (see below) to do it automatically.
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo, exo-setup, exo-print-solutions
+#import "@preview/exercise-bank:0.7.0": exo, exo-setup, exo-print-solutions
 
 // Solutions at end of section
 #exo-setup(corr-loc: "end-section")
@@ -194,7 +197,7 @@ Controls where solutions/corrections appear:
 Instead of calling `#exo-chapter-end()` manually, wrap your document with `exo-auto-chapter`: the pending solutions/corrections are printed right before each new level-1 heading and at the end of the document, and the exercise counter resets at each chapter.
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo, exo-setup, exo-auto-chapter
+#import "@preview/exercise-bank:0.7.0": exo, exo-setup, exo-auto-chapter
 
 #exo-setup(corr-loc: "end-chapter", counter-reset: "chapter")
 #show: exo-auto-chapter
@@ -212,7 +215,7 @@ Instead of calling `#exo-chapter-end()` manually, wrap your document with `exo-a
 `sol-loc` controls where *solutions* go, independently of corrections (default `auto` = follow `corr-loc`). A typical setup: the short answer right below the statement, the full correction at the end of the chapter.
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo, exo-setup, exo-auto-chapter
+#import "@preview/exercise-bank:0.7.0": exo, exo-setup, exo-auto-chapter
 
 #exo-setup(
   corr-display: "correction",  // show both the correction and the solution
@@ -261,7 +264,7 @@ Corrections are detailed solutions for teachers, including pedagogical notes and
 ### Exercise with Correction
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo, exo-setup
+#import "@preview/exercise-bank:0.7.0": exo, exo-setup
 
 #exo-setup(corr-display: "correction")
 
@@ -281,7 +284,7 @@ Corrections are detailed solutions for teachers, including pedagogical notes and
 Create teacher answer keys showing only corrections:
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo, exo-setup
+#import "@preview/exercise-bank:0.7.0": exo, exo-setup
 
 #exo-setup(
   display: "sol",              // Only show solutions/corrections
@@ -299,7 +302,7 @@ Create teacher answer keys showing only corrections:
 Use `corr-display: "mixed"` to default to solutions while showing corrections for specific exercises:
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo, exo-setup
+#import "@preview/exercise-bank:0.7.0": exo, exo-setup
 
 #exo-setup(corr-display: "mixed")
 
@@ -349,7 +352,7 @@ When creating exercise documents, you may have incomplete corrections or solutio
 - Hide placeholders in student versions
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo, exo-setup
+#import "@preview/exercise-bank:0.7.0": exo, exo-setup
 
 // Teacher draft version - shows placeholders
 #exo-setup(
@@ -379,7 +382,7 @@ When creating exercise documents, you may have incomplete corrections or solutio
 Tag exercises with metadata for organization and filtering:
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo
+#import "@preview/exercise-bank:0.7.0": exo
 
 #exo(
   exercise: [Solve $x + 1 = 5$.],
@@ -394,7 +397,7 @@ Tag exercises with metadata for organization and filtering:
 Display only exercises matching certain criteria:
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo, exo-filter
+#import "@preview/exercise-bank:0.7.0": exo, exo-filter
 
 // First, define exercises (they display normally)
 #exo(exercise: [Exercise 1], topic: "algebra")
@@ -412,7 +415,7 @@ Define exercises once, use them anywhere. Perfect for creating exercise collecti
 ### Defining Bank Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo-define
+#import "@preview/exercise-bank:0.7.0": exo-define
 
 // These don't display - just registered
 #exo-define(
@@ -435,7 +438,7 @@ Define exercises once, use them anywhere. Perfect for creating exercise collecti
 ### Displaying Bank Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo-show, exo-show-many
+#import "@preview/exercise-bank:0.7.0": exo-show, exo-show-many
 
 // Show a single exercise by ID
 #exo-show("quad-1")
@@ -449,7 +452,7 @@ Define exercises once, use them anywhere. Perfect for creating exercise collecti
 Use powerful filtering to select exercises:
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo-select
+#import "@preview/exercise-bank:0.7.0": exo-select
 
 // All quadratics exercises
 #exo-select(topic: "quadratics")
@@ -472,7 +475,7 @@ Use powerful filtering to select exercises:
 Tag exercises with competencies and display them visually:
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo-define, exo-show, exo-setup
+#import "@preview/exercise-bank:0.7.0": exo-define, exo-show, exo-setup
 
 #exo-setup(show-competencies: true)
 
@@ -489,7 +492,7 @@ Tag exercises with competencies and display them visually:
 ### Filter by Competency
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo-select
+#import "@preview/exercise-bank:0.7.0": exo-select
 
 // Exercises with specific competency
 #exo-select(competency: "C1.1")
@@ -503,7 +506,7 @@ Tag exercises with competencies and display them visually:
 ### Global Setup
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo-setup
+#import "@preview/exercise-bank:0.7.0": exo-setup
 
 #exo-setup(
   // Display control
@@ -541,7 +544,7 @@ Tag exercises with competencies and display them visually:
 Change labels for different languages:
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo-setup
+#import "@preview/exercise-bank:0.7.0": exo-setup
 
 // French
 #exo-setup(
@@ -562,7 +565,7 @@ Change labels for different languages:
 Choose from 12 different badge styles:
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo, exo-setup
+#import "@preview/exercise-bank:0.7.0": exo, exo-setup
 
 // Circled number style
 #exo-setup(badge-style: "circled")
@@ -666,14 +669,49 @@ The header of the full-width styles and of `badge-position: "above"` can be tigh
 )
 ```
 
-Both default to `auto`, the style's own spacing.
+Both default to `auto`, the style's own spacing. For `underline`, the default
+geometry now stays independent of the document's `par.spacing`; paragraph spacing
+inside the statement is still inherited.
+
+`underline-gap` and `underline-below` override these two settings for the
+`underline` style only, on exercises, solutions and corrections (including
+`display: "sol"` and deferred corrections). `none` leaves the current setting
+unchanged; `auto` returns to `header-rule-gap` / `header-body-gap`.
+
+- `underline-gap` measures from the lower edge of the title's text block to the
+  **centre** of the 0.8pt rule. With Typst's default `text(bottom-edge: "baseline")`,
+  this is the last title line's baseline, even for wrapped titles.
+- `underline-below` measures from the rule's **centre** to the top of the body
+  block. The visible stroke extends 0.4pt above and below its centre. Body insets,
+  leading spacing and font ink metrics can change the visible white space.
+
+With both general settings at `auto`, the defaults reproduce the former layout
+with `par.spacing: 1.2em`: the upper gap is
+`1.2 * calc.max(label-font-size + 1pt, text.size) - 0.3em`, and the lower gap is
+`1.7em`. Here `em` uses the surrounding text size.
+
+For MathALÉA at 11pt (a rule centre 2.2pt below the title baseline, and about
+0.78em of white space below the stroke for a body starting with plain text):
+
+```typst
+#exo-setup(
+  badge-style: "underline",
+  underline-gap: 0.2em,
+  underline-below: 0.78em + 0.4pt, // 8.98pt from rule centre to body top at 11pt
+  solution-above: 1.8em,
+)
+```
+
+On Typst 0.13+, `underline`, `border-accent`, `rounded-box` and `header-card`
+keep their header with the first line of the body at page and column breaks.
+The body remains breakable; older compilers retain the non-sticky fallback.
 
 ### Counter Reset Options
 
 Control when exercise numbering resets:
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo-setup, exo-section-start, exo-chapter-start
+#import "@preview/exercise-bank:0.7.0": exo-setup, exo-section-start, exo-chapter-start
 
 // Reset at each section
 #exo-setup(counter-reset: "section")
@@ -744,7 +782,7 @@ Works with [beautitled](https://typst.app/universe/package/beautitled): `number-
 Display exercise IDs for reference:
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo-setup, exo
+#import "@preview/exercise-bank:0.7.0": exo-setup, exo
 
 #exo-setup(show-id: true)
 
@@ -761,7 +799,7 @@ Display exercise IDs for reference:
 Mark exercises as advanced to display a visual cue before the label:
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo, exo-setup
+#import "@preview/exercise-bank:0.7.0": exo, exo-setup
 
 // Default symbol is "*"
 #exo(
@@ -971,12 +1009,71 @@ The styles that wrap the whole exercise (`border-accent`, `underline`, `rounded-
 
 For a document that is *entirely* two-column, use `exo-page-columns` and leave `corr-columns` at 1: the corrections then flow with everything else, under the page rule.
 
+## Citing Exercises
+
+`exo-cite` creates a clickable reference to a displayed exercise, including its
+actual number and page. It works before or after the target, including across
+chapter files included in one compiled document.
+
+```typst
+#import "@preview/exercise-bank:0.7.0": exo, exo-setup, exo-cite
+#set heading(numbering: "1.")
+#exo-setup(exercise-label: "Exercice", number-prefix: "chapter")
+
+= First chapter
+See #exo-cite("pythagoras") for a later exercise.
+
+= Second chapter
+#exo(id: "pythagoras", exercise: [Calculate the hypotenuse.])
+```
+
+The reference uses the number printed on the selected occurrence, including
+literal series prefixes or custom numbering, and the page of its header.
+`exo-define` alone does not create a target: the exercise must be displayed by
+`exo`, `exo-show`, `exo-select`, `exo-filter`, or an exercise `exo-box` with an ID.
+Filtered selections, `where` and `max` are handled using the actual displayed
+exercises, even when a selection spans pages.
+
+For beautitled documents with parts enabled, add `show-part: true`:
+
+```typst
+See #exo-cite("pythagoras", show-part: true).
+// For example: Exercice 1.2 (p. 12, Partie II)
+```
+
+The exercise number stays exactly as printed; the part is added separately.
+The default word before the number, part label and part numbering are captured
+at the target. Page references follow the target page's numbering pattern and
+counter (including Roman numerals or page-counter resets). On Typst 0.15+,
+contextual page numbering functions are evaluated at the target; older compilers
+evaluate the numbering function in the citation context.
+
+If an ID appears several times, the first display in document order is cited
+by default. Use `occurrence: 2` for its second display, or attach a label to a
+specific display call:
+
+```typst
+#exo-select(topic: "geometry") <geometry-sheet>
+See #exo-cite("pythagoras", <geometry-sheet>).
+```
+
+The optional second positional argument is also accepted as `pos-label:`. An
+optional `topic:` restricts matching targets to that topic; it does not recompute
+the exercise number. A missing ID, hidden exercise (`display: "sol"`), missing
+display label or unavailable occurrence produces `Exercice ?? (p. ??)` without
+a link. Exercises with automatically generated IDs can collide after counter
+resets: use explicit unique IDs for references. Custom badges must render the
+provided number to retain the reference anchor.
+
+Separate PDFs compiled independently do not share targets; include the chapter
+files in one master document to resolve these references.
+
 ## Utility Functions
 
 ### Reset Counter
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo-reset-counter
+#import "@preview/exercise-bank:0.7.0": exo-reset-counter
 
 #exo-reset-counter()  // Reset exercise numbering to 0
 ```
@@ -984,7 +1081,7 @@ For a document that is *entirely* two-column, use `exo-page-columns` and leave `
 ### Clear Registry
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo-clear-registry
+#import "@preview/exercise-bank:0.7.0": exo-clear-registry
 
 #exo-clear-registry()  // Clear all registered exercises
 ```
@@ -992,7 +1089,7 @@ For a document that is *entirely* two-column, use `exo-page-columns` and leave `
 ### Count Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": exo-count
+#import "@preview/exercise-bank:0.7.0": exo-count
 
 Total algebra exercises: #exo-count(topic: "algebra")
 Level 1M exercises: #exo-count(level: "1M")
@@ -1059,6 +1156,20 @@ Level 1M exercises: #exo-count(level: "1M")
 | `renumber` | bool | true | Renumber exercises sequentially |
 | `max` | int | none | Maximum exercises to show |
 
+### `exo-cite` Function
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `id` | string | required | ID of a displayed exercise |
+| `pos-label` | label/none | none | Optional label on an `exo`, `exo-show`, `exo-select` or `exo-filter` display call; also accepted as the second positional argument |
+| `topic` | string/none | none | Restrict matching displayed exercises to this topic |
+| `occurrence` | positive int | 1 | Which matching display to cite, in document order |
+| `show-page` | bool | true | Append the target page number |
+| `show-part` | bool | false | Append the beautitled part, when available |
+| `prefix` | content/string/auto/none | auto | Word before the number; auto uses the target exercise label; none hides it |
+| `page-prefix` | content/string | "p. " | Text before the page number |
+| `part-prefix` | content/string/auto/none | auto | Part label; auto uses the target's beautitled label; none hides it |
+
 ### `exo-setup` Function
 
 | Parameter | Type | Default | Description |
@@ -1077,6 +1188,8 @@ Level 1M exercises: #exo-count(level: "1M")
 | `title-separator` | content | `[ -- ]` | Between "Exercise 1" and the title |
 | `title-format` | auto/function | auto | Restyle titles: (title) => content |
 | `title-in-solutions` | bool | false | Repeat the title on solution/correction boxes |
+| `underline-gap` | length/auto | auto | underline only: title lower edge (normally baseline) → rule centre; overrides `header-rule-gap`; `none` keeps current value |
+| `underline-below` | length/auto | auto | underline only: rule centre → body top; overrides `header-body-gap`; `none` keeps current value |
 | `header-rule-gap` | length/auto | auto | underline style: space between the label and its rule |
 | `header-body-gap` | length/auto | auto | Space between the header and the statement (full-width styles, `badge-position: "above"`) |
 | `show-metadata` | bool | false | Display metadata |
@@ -1132,7 +1245,7 @@ This predates 0.6.4 (it reproduces on 0.6.3). Either use `link-style: "icon"`, o
 ## Complete Example
 
 ```typst
-#import "@preview/exercise-bank:0.6.5": *
+#import "@preview/exercise-bank:0.7.0": *
 
 // Setup
 #exo-setup(
@@ -1183,6 +1296,16 @@ This predates 0.6.4 (it reproduces on 0.6.3). Either use `link-style: "icon"`, o
 MIT License - see LICENSE file for details.
 
 ## Changelog
+
+### [0.7.0] - 2026-10-06
+
+#### Added
+- **Exercise citations.** `exo-cite(id)` references the actual displayed number and page, optionally the beautitled part, with forward/backward links, occurrence selection and display-call labels. Works across included chapter files and filtered selections spanning pages. Based on [Arthur Meyer’s proposal in issue #2](https://github.com/nathan-ed/typst-package-exercise-bank/issues/2), extended to use individual display anchors.
+- **Underline spacing controls.** `underline-gap` (title lower edge, normally its baseline, to rule centre) and `underline-below` (rule centre to body top), with `none` leaving configuration unchanged and `auto` following the existing header settings; apply to exercises, solutions and corrections in every display mode.
+
+#### Fixed
+- **Underline spacing depended on document paragraph spacing.** Internal blocks now use explicit spacing; the automatic default preserves the previous `par.spacing: 1.2em` appearance while body paragraphs keep the document's spacing.
+- **Orphaned full-width headers.** On Typst 0.13+, `underline`, `border-accent`, `rounded-box` and `header-card` keep the header (and underline rule) with the first body line across page and column breaks, while long bodies remain breakable.
 
 ### [0.6.5] - 2026-09-15
 
