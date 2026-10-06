@@ -233,6 +233,21 @@ Exercises are automatically numbered:
 
 The full-width styles carry the title in their header line, after `title-separator` (default an en dash): "Exercice 1 – Calculer une longueur…". The badge styles show it in bold next to the badge; `margin` opens the statement with it. `title-format: t => ..` restyles it and `title-in-solutions: true` repeats it on the solution and correction boxes.
 
+== Points
+
+```typst
+#exo-setup(points-label: "points", points-position: "right")
+#exo(title: [Théorème de Pythagore], points: 4, exercise: [...])
+```
+
+`points` shows the value of an exercise. `points-position` places it:
+
+- `"below"` (default): on its own line under the badge, under the side label for `margin`, or right under the header text for the other full-width styles;
+- `"right"`: at the right end of the header line, or of the title line when the badge is in the margin (`margin` once folded: at the end of its label line);
+- `"badge"`: next to the badge, at the start of the statement when the badge is in the margin, so that the label column keeps its width and the badge does not move (`margin` has no room for it next to its label and shows the points below).
+
+`points-label` sets the unit (`"pts"` by default). `points-format: "score"` prints "…… / 4 pts", leaving the mark to fill in, and `points-format: (points, label) => ..` replaces the whole rendering. By default the badge styles show the points in small grey italics, the full-width styles in the colour and size of their header. Solutions and corrections never repeat them.
+
 == Worked Examples
 
 `worked: true` shows the solution (or correction) right under the statement whatever the document-wide settings: also with `display: "ex"`, with a deferred `corr-loc`, and with `corr-display: "solution"` when the exercise only has a correction.
@@ -1638,6 +1653,7 @@ The badge styles that wrap the whole exercise (`border-accent`, `underline`, `ro
   [`correction`], [content], [none], [Correction for teachers],
   [`id`], [string], [auto], [Unique exercise ID],
   [`title`], [content], [none], [Title shown after "Exercise 1"],
+  [`points`], [number/content], [none], [Points of the exercise (see `points-position`)],
   [`worked`], [bool], [false], [Worked example: always show the solution right after the statement],
   [`margin-content`], [content], [none], [Content placed below the badge (e.g. remarks)],
   [`qr`], [string/content], [none], [QR code for the exercise box (URL string or content)],
@@ -1711,6 +1727,9 @@ Same as `exo`, plus:
   [`title-separator`], [content], [`[ -- ]`], [Between "Exercise 1" and the title],
   [`title-format`], [auto/function], [auto], [Restyle titles: (title) => content],
   [`title-in-solutions`], [bool], [false], [Repeat the title on solution/correction boxes],
+  [`points-label`], [string/content], ["pts"], [Unit after the points of an exercise],
+  [`points-position`], [string], ["below"], ["below" (under the badge or header), "right" (end of the header line) or "badge" (next to the badge)],
+  [`points-format`], [auto/"score"/function], [auto], ["score" ("…… / 4 pts") or (points, label) => content],
   [`show-id`], [bool], [false], [Show exercise IDs],
   [`show-competencies`], [bool], [false], [Show competency tags],
   [`draft-mode`], [bool], [false], [Show placeholders for empty content],
