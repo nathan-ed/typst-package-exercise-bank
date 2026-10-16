@@ -1052,6 +1052,71 @@
 }
 
 // Check if style is a "full-width" style (wraps content instead of badge+content grid)
+// =============================================================================
+// Page corner (exo-corner)
+// =============================================================================
+
+// Zone taken by the last exo-corner: (page:, left:, bottom:), in absolute
+// page coordinates, the gap included. A page-level QR code or logo placed at
+// the top right of a sheet, above or next to the first exercise.
+#let _exo-corner-zone = state("exo-corner-zone", none)
+
+// Place `body` at the right edge of the current column, at the current
+// position in the flow, without taking any room in it. Exercise headers
+// (rules, title lines, boxes) that start beside it stop short of it, and
+// exercise statements flow around it, until the flow is past its bottom
+// edge. `gap` is the blank kept around it (left and below).
+#let exo-corner(body, gap: 8pt) = place(right, box(context {
+  let pos = here().position()
+  let size = measure(body)
+  body
+  _exo-corner-zone.update((
+    page: pos.page,
+    left: pos.x - gap,
+    bottom: pos.y + size.height + gap,
+  ))
+}))
+
+// Room the corner zone takes at `pos` in a region of width `width`, as
+// (width:, height:) measured from `pos`; none when the zone is elsewhere.
+#let _corner-reserve(zone, pos, width) = {
+  if zone == none or pos.page != zone.page or pos.y >= zone.bottom { return none }
+  let right = pos.x + width
+  // A corner beside the region takes part of its width, never all of it.
+  // Positions are not known yet on the first layout pass (everything sits at
+  // the page origin), which reads as a corner across the whole width: taking
+  // it at face value sends the following passes off course.
+  if right <= zone.left or right - zone.left >= width { return none }
+  (width: right - zone.left, height: zone.bottom - pos.y)
+}
+
+// Lay `body` out at the full width, or short of the corner zone when it
+// starts beside it (an exercise header line, a rule, a sheet title block).
+#let exo-corner-fit(body) = context {
+  let zone = _exo-corner-zone.get()
+  // read here rather than inside `layout`: a context created only once the
+  // zone is known would learn its own position one layout pass later
+  let pos = here().position()
+  // the same structure whether the zone applies or not: what follows must
+  // not move from one layout pass to the next for that reason alone
+  layout(available => {
+    let r = _corner-reserve(zone, pos, available.width)
+    block(width: if r == none { available.width } else { available.width - r.width }, body)
+  })
+}
+
+// Push what follows below the corner zone when it starts beside it: a framed
+// exercise cannot draw its frame around the zone.
+#let _corner-clear() = context {
+  let zone = _exo-corner-zone.get()
+  let pos = here().position()
+  if zone == none or pos.page != zone.page or pos.y >= zone.bottom { return }
+  layout(available => {
+    let r = _corner-reserve(zone, pos, available.width)
+    if r != none { v(r.height) }
+  })
+}
+
 #let is-fullwidth-style(style) = {
   type(style) == str and style in ("margin", "border-accent", "underline", "rounded-box", "header-card")
 }
@@ -1097,13 +1162,13 @@
     let folded = {
       // Header line: the rule runs the whole measure, the label sits under it
       // on the right, the statement keeps the full width below
-      block(width: 100%, breakable: false, {
+      block(width: 100%, breakable: false, exo-corner-fit({
         line(length: 100%, stroke: 0.45pt + color)
         v(-0.2em)
         align(right, folded-label)
         if sub != none { block(above: 0.15em, width: 100%, align(right, sub)) }
         if qr != none { v(0.45em); align(right, qr) }
-      })
+      }))
       block(above: 0.35em, width: 100%, body)
     }
     let sided = grid(
@@ -1124,7 +1189,7 @@
         #line(length: 0pt, stroke: 0.45pt + white)
         #v(-0.2em)
         #if aside == none { body } else {
-          grid(columns: (1fr, auto), column-gutter: 8pt, body, aside)
+          exo-corner-fit(grid(columns: (1fr, auto), column-gutter: 8pt, body, aside))
         }
       ],
     )
@@ -1157,7 +1222,7 @@
 // both sit in blocks of their own so the paragraph spacing does not add up
 // with the requested gap
 #let _header-then-body(header, body, gap) = {
-  sticky-block(width: 100%, breakable: false, header)
+  sticky-block(width: 100%, breakable: false, exo-corner-fit(header))
   block(above: gap, below: 0pt, width: 100%, breakable: true, body)
 }
 
@@ -1174,7 +1239,7 @@
     #if body-gap == auto [
       #context {
         set text(size: calc.max(font-size, text.size))
-        context sticky-block(below: par.spacing.to-absolute(), header)
+        context sticky-block(below: par.spacing.to-absolute(), exo-corner-fit(header))
       }
       #v(0.3em)
       #body
@@ -1198,10 +1263,10 @@
   let rule-gap = if rule-gap == auto { 1.2 * calc.max(font-size + 1pt, text.size) - 0.3em } else { rule-gap }
   let body-gap = if body-gap == auto { 1.7em } else { body-gap }
   block(width: 100%, {
-    sticky-block(width: 100%, breakable: false, {
+    sticky-block(width: 100%, breakable: false, exo-corner-fit({
       block(spacing: 0pt, width: 100%, header)
       block(above: rule-gap, below: 0pt, width: 100%, rule)
-    })
+    }))
     block(above: body-gap, below: 0pt, width: 100%, breakable: true, body)
   })
 }
@@ -1220,7 +1285,7 @@
     #if body-gap == auto [
       #context {
         set text(size: calc.max(font-size, text.size))
-        context sticky-block(below: par.spacing.to-absolute(), header)
+        context sticky-block(below: par.spacing.to-absolute(), exo-corner-fit(header))
       }
       #v(2pt)
       #body
@@ -1292,6 +1357,58 @@
   )
 }
 
+// True when the first block of a body is a #tasks call, i.e. content that
+// flows around a published wrap zone by itself. taskize's tasks() — and a
+// wrapper defined as `= context {...}` around it — arrives as a contextual
+// element; anything else (figure, table, list) would run under the zone.
+#let _starts-with-flowing-block(body) = {
+  if type(body) != content { return false }
+  let f = repr(body.func())
+  if f == "styled" { return _starts-with-flowing-block(body.child) }
+  if f == "sequence" {
+    for child in body.children {
+      let g = repr(child.func())
+      // spacing and zero-size elements (state updates, metadata, labels)
+      if g in ("space", "parbreak", "linebreak", "h", "v", "metadata", "state-update", "counter-update", "place") { continue }
+      if g == "text" and child.text.trim() == "" { continue }
+      return _starts-with-flowing-block(child)
+    }
+    return false
+  }
+  f == "context"
+}
+
+// Split a body into its first block (after any leading spacing) and what
+// follows it, for the corner zone: the first block goes beside the zone.
+#let _split-first-block(body) = {
+  if type(body) != content { return (none, body) }
+  let f = repr(body.func())
+  if f == "styled" {
+    let (h, t) = _split-first-block(body.child)
+    let g = body.func()
+    return (
+      if h != none { g(h, body.styles) },
+      if t != none { g(t, body.styles) },
+    )
+  }
+  if f != "sequence" { return (body, none) }
+  let skip = ("space", "parbreak", "linebreak", "h", "v", "metadata", "state-update", "counter-update", "place")
+  let children = body.children
+  let i = 0
+  while i < children.len() {
+    let c = children.at(i)
+    let g = repr(c.func())
+    if g in skip or (g == "text" and c.text.trim() == "") { i += 1 } else { break }
+  }
+  if i == children.len() { return (none, body) }
+  let (h, t) = _split-first-block(children.at(i))
+  let after = children.slice(i + 1)
+  (
+    (children.slice(0, i) + (h,)).filter(c => c != none).join(),
+    ((t,) + after).filter(c => c != none).join(),
+  )
+}
+
 // Split a body into the run of inline content that opens it and the rest.
 // An exercise usually reads "instruction sentence, then #tasks": the sentence
 // is inline and ends at the paragraph break, the tasks block follows.
@@ -1331,44 +1448,55 @@
   (head.join(), rest.join())
 }
 
-// qr-position: "tasks" — the QR is an overlay of zero flow height, and the
-// zone it occupies is published for the body's #tasks call to flow around.
+// A body flows around a zone at its top right: the zone is (width:, height:),
+// measured from the top of the body, and nothing is drawn there by this
+// function (the caller places whatever occupies it).
 //
-// Text placed before that #tasks call is not part of the grid taskize lays
-// out, so it would run straight under the overlay. It is therefore set at a
-// reduced width for as long as the overlay lasts, and only the height the
-// overlay still occupies below it is published as the wrap zone. In a wide
-// single column the sentence is one line and the tasks grid gets nearly the
-// whole zone; in a narrow column it takes two or three lines and the zone
-// shrinks accordingly, which is exactly the case that used to collide.
-#let qr-overlay-body(qr, body) = context {
-  let padded = box(inset: (left: 10pt, bottom: 6pt), qr)
-  let size = measure(padded)
-  place(top + right, padded)
-
+// Text placed before a #tasks call is not part of the grid taskize lays out,
+// so it would run straight under the zone. It is therefore set at a reduced
+// width for as long as the zone lasts, and only the height the zone still
+// occupies below it is published as the wrap zone. In a wide single column
+// the sentence is one line and the tasks grid gets nearly the whole zone; in
+// a narrow column it takes two or three lines and the zone shrinks
+// accordingly.
+//
+// Only a #tasks call knows how to flow around the published zone. Any other
+// block (figure, table, list) opening the body, or opening what follows its
+// leading text, is moved down below the zone rather than drawn under it.
+#let _flow-around(zone, body) = {
   let (lead, rest) = _split-leading-text(body)
   // A body that is all text (no tasks call) is entirely "lead": it has to keep
-  // clear of the overlay on its own.
+  // clear of the zone on its own.
   let (lead, rest) = if lead == none and rest != none and _is-all-inline(body) {
     (body, none)
   } else {
     (lead, rest)
   }
 
+  // What follows the leading text, with `height` of the zone still to clear
+  let flow-rest(rest, height) = {
+    if rest == none or height <= 0pt { rest } else if _starts-with-flowing-block(rest) {
+      _taskize-wrap-zone.update((width: zone.width, height: height))
+      rest
+      _taskize-wrap-zone.update(none)
+    } else {
+      block(above: 0pt, below: 0pt, height: height, width: 100%)
+      rest
+    }
+  }
+
   if lead == none {
-    _taskize-wrap-zone.update((width: size.width, height: size.height))
-    body
-    _taskize-wrap-zone.update(none)
+    flow-rest(body, zone.height)
   } else {
     layout(available => {
-      let narrow-width = available.width - size.width
+      let narrow-width = available.width - zone.width
       let lead-height = measure(block(width: narrow-width, lead)).height
-      if lead-height >= size.height {
-        // The text runs past the overlay: let wrap-it flow it around an
-        // invisible stand-in for the code, so it returns to the full width
-        // once it is clear of it, instead of staying narrow to the end.
+      if lead-height >= zone.height {
+        // The text runs past the zone: let wrap-it flow it around an
+        // invisible stand-in, so it returns to the full width once it is
+        // clear of it, instead of staying narrow to the end.
         _wrap-content(
-          box(width: size.width, height: size.height),
+          box(width: zone.width, height: zone.height),
           lead,
           align: top + right,
           column-gutter: 0pt,
@@ -1376,27 +1504,85 @@
         )
         if rest != none { rest }
       } else {
-        // The text fits beside the code; the height the code still occupies
-        // below it is published for the tasks grid to flow around.
+        // The text fits beside the zone; the height the zone still occupies
+        // below it is left for what follows.
         block(width: narrow-width, lead)
-        if rest != none {
-          _taskize-wrap-zone.update((width: size.width, height: size.height - lead-height))
-          rest
-          _taskize-wrap-zone.update(none)
-        }
+        flow-rest(rest, zone.height - lead-height)
       }
     })
   }
 }
 
+// The corner zone, by layout alone. The opening text and the #tasks call
+// that follows it sit in the left column of a grid whose right column is an
+// empty cell as tall as the zone: they stay clear of it, and what comes next
+// starts below it. The tasks rows keep the narrowed width to their end. A
+// split around the zone (narrow rows, then full width ones) would need their
+// heights, and a measured grid only settles one layout pass after the
+// document it is matched against: on top of the passes the zone itself takes
+// (its position), that is one pass too many for the document to converge.
+// Any other block opening the body is moved down below the zone.
+#let _corner-flow(zone, body) = {
+  let (lead, rest) = _split-leading-text(body)
+  let (lead, rest) = if lead == none and rest != none and _is-all-inline(body) {
+    (body, none)
+  } else {
+    (lead, rest)
+  }
+  let (first, after) = if rest == none { (none, none) } else { _split-first-block(rest) }
+  let (first, after) = if first != none and _starts-with-flowing-block(first) {
+    (first, after)
+  } else {
+    (none, rest)
+  }
+  grid(
+    columns: (1fr, zone.width),
+    column-gutter: 0pt,
+    align: top,
+    {
+      if lead != none { lead }
+      if lead != none and first != none { parbreak() }
+      if first != none { first }
+    },
+    box(height: zone.height),
+  )
+  if after != none { after }
+}
+
+// qr-position: "tasks" — the QR is an overlay of zero flow height, and the
+// body flows around the zone it occupies (see _flow-around). `reserve` is the
+// corner zone already taken at the top of the body: the QR goes right under
+// it and the body flows around both.
+#let qr-overlay-body(qr, body) = context {
+  let padded = box(inset: (left: 10pt, bottom: 6pt), qr)
+  let size = measure(padded)
+  place(top + right, padded)
+  _flow-around((width: size.width, height: size.height), body)
+}
+
 // Attach a top-right floater (QR code, page reference) to a body, honoring
-// qr-position: "tasks" (taskize flows around it) vs the wrap-it default.
-#let qr-attach-body(qr, body, cfg) = {
-  if qr == none { body } else if cfg.at("qr-position", default: "auto") == "tasks" {
+// qr-position: "tasks" (taskize flows around it) vs the wrap-it default, and
+// let the body flow around the corner zone when it starts beside it.
+#let qr-attach-body(qr, body, cfg) = context {
+  let zone = _exo-corner-zone.get()
+  let pos = here().position()
+  let plain = if qr == none { body } else if cfg.at("qr-position", default: "auto") == "tasks" {
     qr-overlay-body(qr, body)
   } else {
     qr-wrap-body(qr, body)
   }
+  if zone == none or pos.page != zone.page or pos.y >= zone.bottom { return plain }
+  // the floater, if any, goes right under the corner zone, and the body
+  // flows around both
+  let padded = if qr != none { box(inset: (left: 10pt, bottom: 6pt), qr) }
+  let size = if qr != none { measure(padded) }
+  layout(available => {
+    let r = _corner-reserve(zone, pos, available.width)
+    if r == none { plain } else if qr == none { _corner-flow(r, body) } else {
+      place(top + right, dy: r.height, padded)
+      _corner-flow((width: calc.max(size.width, r.width), height: r.height + size.height), body)
+    }
+  })
 }
 
 // Get full-width style block
@@ -1641,6 +1827,7 @@
     let qr-block = none
     if cfg.badge-style == "margin" and qr-pos != "wrap" and not is-solution {
       qr-block = make-exo-qr(qr, cfg, max-width: cfg.at("margin-label-width", default: 3.35cm))
+      full-body = qr-attach-body(none, full-body, cfg)
     } else {
       full-body = qr-attach-body(make-exo-qr(qr, cfg), full-body, cfg)
     }
@@ -1656,7 +1843,7 @@
     // the layout (see attach-page-ref)
     if header-right != none {
       full-body = {
-        block(width: 100%, spacing: 0pt, align(right, header-right))
+        block(width: 100%, spacing: 0pt, exo-corner-fit(align(right, header-right)))
         v(2pt, weak: true)
         full-body
       }
@@ -1688,6 +1875,9 @@
       width: 100%,
       breakable: true,
     )[
+      // A frame cannot be drawn around the corner zone: the exercise starts
+      // below it
+      #if cfg.badge-style in ("rounded-box", "header-card") { _corner-clear() }
       #get-fullwidth-style(
         cfg.badge-style,
         label,
@@ -1757,6 +1947,7 @@
         stacked-body = qr-attach-body(make-exo-qr(qr, cfg), body, cfg)
       } else {
         qr-block = make-exo-qr(qr, cfg)
+        stacked-body = qr-attach-body(none, body, cfg)
       }
       return block(
         above: space-above,
@@ -1769,7 +1960,7 @@
         } else {
           [#header-right#h(8pt)#points-content]
         }
-        #sticky-block(if header-right == none {
+        #sticky-block(exo-corner-fit(if header-right == none {
           header-left
         } else {
           grid(
@@ -1779,7 +1970,7 @@
             header-left,
             header-right,
           )
-        })
+        }))
         #if points-below { sticky-block(above: 2pt, points-content) }
         #if qr-block != none { sticky-block(above: 4pt, qr-block) }
         #if margin-content != none { sticky-block(above: 4pt, margin-content) }
@@ -1804,6 +1995,7 @@
       content-body = qr-attach-body(make-exo-qr(qr, cfg), body, cfg)
     } else {
       qr-block = make-exo-qr(qr, cfg, max-width: margin-pos + label-extra)
+      content-body = qr-attach-body(none, body, cfg)
     }
 
     // Never let the label column content overflow: the column is `auto`, so it
@@ -1873,7 +2065,7 @@
             } else if points-next {
               [#points-content#h(6pt)#title-strong]
             } else { title-strong }
-            block(spacing: 0pt, below: if header-body-gap == auto { 0.6em } else { header-body-gap }, width: 100%, title-line)
+            block(spacing: 0pt, below: if header-body-gap == auto { 0.6em } else { header-body-gap }, width: 100%, exo-corner-fit(title-line))
           }
           // No title line to carry them: the points sit on the right of the
           // statement's first line, in their own column

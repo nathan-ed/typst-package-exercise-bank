@@ -1,4 +1,4 @@
-#import "@preview/exercise-bank:0.7.0": exo, exo-setup, exo-cite
+#import "@preview/exercise-bank:0.8.0": exo, exo-setup, exo-cite
 #import "@preview/beautitled:0.3.1": beautitled-init, beautitled-setup
 #set page(width: 16cm, height: auto, margin: 1cm, numbering: "1")
 #set text(size: 10pt, lang: "fr")

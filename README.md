@@ -1,6 +1,6 @@
 # exercise-bank
 
-[![exercise-bank on Typst Universe](https://img.shields.io/badge/Typst_Universe-v._0.7.0-239dad?labelColor=eee)](https://typst.app/universe/package/exercise-bank)
+[![exercise-bank on Typst Universe](https://img.shields.io/badge/Typst_Universe-v._0.8.0-239dad?labelColor=eee)](https://typst.app/universe/package/exercise-bank)
 [![Full package manual as PDF](https://img.shields.io/badge/Manual-pdf-333333?labelColor=eee)](https://github.com/nathan-ed/typst-package-exercise-bank/blob/e3110cdf59fdac18c32599cfba23eae2c6b60d1a/docs/manual.pdf)
 [![Distributed under the MIT license](https://img.shields.io/badge/License-MIT-333333?labelColor=eee)](LICENSE)
 
@@ -28,8 +28,8 @@ Click on an image to see the source code.
 | Badge Position | Two-Column Layouts | Badge Size |
 | [![Exercise titles and a worked example whose solution stays visible in the student version](gallery/titles-worked.svg)](gallery/titles-worked.typ) | [![Exercises numbered per section with solutions printed before each new section](gallery/section-numbering.svg)](gallery/section-numbering.typ) | |
 | Titles and Worked Examples | Per-Section Numbering | |
-| [![Clickable exercise references with their page and originating beautitled part](gallery/references-1.svg)](gallery/references.typ) | [![A short test with the points of each exercise and a blank for the mark](gallery/points.svg)](gallery/points.typ) | |
-| Exercise References | Points | |
+| [![Clickable exercise references with their page and originating beautitled part](gallery/references-1.svg)](gallery/references.typ) | [![A short test with the points of each exercise and a blank for the mark](gallery/points.svg)](gallery/points.typ) | [![A worksheet whose title rule, exercise header and first questions keep clear of a QR code in the top right corner](gallery/corner.svg)](gallery/corner.typ) |
+| Exercise References | Points | Page Corner |
 
 ## Features
 
@@ -46,6 +46,7 @@ Click on an image to see the source code.
 - **Chapter-prefixed numbering** - Number exercises as "3.5" using the current heading number, "3.2.5" with two heading levels, or a series number of your choice (`number-prefix: 3`)
 - **Exercise titles** - "Exercise 1 – Pythagorean theorem" with `exo(title: ..)`
 - **Points** - `exo(points: 4)` shows the value of an exercise under the badge, at the end of the header line or next to the badge, optionally as "…… / 4 pts" for the mark
+- **Page corner** - `exo-corner` places a QR code or a logo at the top right of a sheet: exercise headers stop short of it and the first statement keeps clear of it, in every badge style
 - **Worked examples** - `exo(worked: true)` shows its solution right under the statement, even in the student version
 - **Compact headers** - `header-rule-gap` and `header-body-gap` tighten the space between the label, its rule and the statement
 - **Automatic end-of-chapter corrections** - `#show: exo-auto-chapter` prints pending corrections before each new chapter
@@ -68,7 +69,7 @@ Click on an image to see the source code.
 ## Quick Start
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo
+#import "@preview/exercise-bank:0.8.0": exo
 
 #exo(
   exercise: [
@@ -82,7 +83,7 @@ Click on an image to see the source code.
 ### Simple Exercise
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo
+#import "@preview/exercise-bank:0.8.0": exo
 
 #exo(
   exercise: [
@@ -94,7 +95,7 @@ Click on an image to see the source code.
 ### Exercise with Solution
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo
+#import "@preview/exercise-bank:0.8.0": exo
 
 #exo(
   exercise: [
@@ -109,7 +110,7 @@ Click on an image to see the source code.
 ### Multiple Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo
+#import "@preview/exercise-bank:0.8.0": exo
 
 #exo(exercise: [Simplify $x^2 + 2x + 1$.])
 #exo(exercise: [Factor $x^2 - 4$.])
@@ -129,7 +130,7 @@ Controls what content is displayed:
 - `"sol"` - Show only solutions/corrections (hide exercises)
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo, exo-setup
+#import "@preview/exercise-bank:0.8.0": exo, exo-setup
 
 // Student worksheet - exercises only
 #exo-setup(display: "ex")
@@ -150,7 +151,7 @@ Controls whether to show solutions or corrections:
 - `"mixed"` - Default to solution, but show correction for exercises with `show-corr: true`
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo, exo-setup
+#import "@preview/exercise-bank:0.8.0": exo, exo-setup
 
 // Student version - show solutions
 #exo-setup(corr-display: "solution")
@@ -181,7 +182,7 @@ Controls where solutions/corrections appear:
 **Important:** with `"end-section"` and `"end-chapter"`, the solutions are only *collected* - you decide where they appear by calling `#exo-section-end()` / `#exo-chapter-end()` (or `#exo-print-solutions()`) at that point, or by using `exo-auto-chapter` (see below) to do it automatically.
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo, exo-setup, exo-print-solutions
+#import "@preview/exercise-bank:0.8.0": exo, exo-setup, exo-print-solutions
 
 // Solutions at end of section
 #exo-setup(corr-loc: "end-section")
@@ -198,7 +199,7 @@ Controls where solutions/corrections appear:
 Instead of calling `#exo-chapter-end()` manually, wrap your document with `exo-auto-chapter`: the pending solutions/corrections are printed right before each new level-1 heading and at the end of the document, and the exercise counter resets at each chapter.
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo, exo-setup, exo-auto-chapter
+#import "@preview/exercise-bank:0.8.0": exo, exo-setup, exo-auto-chapter
 
 #exo-setup(corr-loc: "end-chapter", counter-reset: "chapter")
 #show: exo-auto-chapter
@@ -216,7 +217,7 @@ Instead of calling `#exo-chapter-end()` manually, wrap your document with `exo-a
 `sol-loc` controls where *solutions* go, independently of corrections (default `auto` = follow `corr-loc`). A typical setup: the short answer right below the statement, the full correction at the end of the chapter.
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo, exo-setup, exo-auto-chapter
+#import "@preview/exercise-bank:0.8.0": exo, exo-setup, exo-auto-chapter
 
 #exo-setup(
   corr-display: "correction",  // show both the correction and the solution
@@ -265,7 +266,7 @@ Corrections are detailed solutions for teachers, including pedagogical notes and
 ### Exercise with Correction
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo, exo-setup
+#import "@preview/exercise-bank:0.8.0": exo, exo-setup
 
 #exo-setup(corr-display: "correction")
 
@@ -285,7 +286,7 @@ Corrections are detailed solutions for teachers, including pedagogical notes and
 Create teacher answer keys showing only corrections:
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo, exo-setup
+#import "@preview/exercise-bank:0.8.0": exo, exo-setup
 
 #exo-setup(
   display: "sol",              // Only show solutions/corrections
@@ -303,7 +304,7 @@ Create teacher answer keys showing only corrections:
 Use `corr-display: "mixed"` to default to solutions while showing corrections for specific exercises:
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo, exo-setup
+#import "@preview/exercise-bank:0.8.0": exo, exo-setup
 
 #exo-setup(corr-display: "mixed")
 
@@ -353,7 +354,7 @@ When creating exercise documents, you may have incomplete corrections or solutio
 - Hide placeholders in student versions
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo, exo-setup
+#import "@preview/exercise-bank:0.8.0": exo, exo-setup
 
 // Teacher draft version - shows placeholders
 #exo-setup(
@@ -383,7 +384,7 @@ When creating exercise documents, you may have incomplete corrections or solutio
 Tag exercises with metadata for organization and filtering:
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo
+#import "@preview/exercise-bank:0.8.0": exo
 
 #exo(
   exercise: [Solve $x + 1 = 5$.],
@@ -398,7 +399,7 @@ Tag exercises with metadata for organization and filtering:
 Display only exercises matching certain criteria:
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo, exo-filter
+#import "@preview/exercise-bank:0.8.0": exo, exo-filter
 
 // First, define exercises (they display normally)
 #exo(exercise: [Exercise 1], topic: "algebra")
@@ -416,7 +417,7 @@ Define exercises once, use them anywhere. Perfect for creating exercise collecti
 ### Defining Bank Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo-define
+#import "@preview/exercise-bank:0.8.0": exo-define
 
 // These don't display - just registered
 #exo-define(
@@ -439,7 +440,7 @@ Define exercises once, use them anywhere. Perfect for creating exercise collecti
 ### Displaying Bank Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo-show, exo-show-many
+#import "@preview/exercise-bank:0.8.0": exo-show, exo-show-many
 
 // Show a single exercise by ID
 #exo-show("quad-1")
@@ -453,7 +454,7 @@ Define exercises once, use them anywhere. Perfect for creating exercise collecti
 Use powerful filtering to select exercises:
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo-select
+#import "@preview/exercise-bank:0.8.0": exo-select
 
 // All quadratics exercises
 #exo-select(topic: "quadratics")
@@ -476,7 +477,7 @@ Use powerful filtering to select exercises:
 Tag exercises with competencies and display them visually:
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo-define, exo-show, exo-setup
+#import "@preview/exercise-bank:0.8.0": exo-define, exo-show, exo-setup
 
 #exo-setup(show-competencies: true)
 
@@ -493,7 +494,7 @@ Tag exercises with competencies and display them visually:
 ### Filter by Competency
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo-select
+#import "@preview/exercise-bank:0.8.0": exo-select
 
 // Exercises with specific competency
 #exo-select(competency: "C1.1")
@@ -507,7 +508,7 @@ Tag exercises with competencies and display them visually:
 ### Global Setup
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo-setup
+#import "@preview/exercise-bank:0.8.0": exo-setup
 
 #exo-setup(
   // Display control
@@ -545,7 +546,7 @@ Tag exercises with competencies and display them visually:
 Change labels for different languages:
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo-setup
+#import "@preview/exercise-bank:0.8.0": exo-setup
 
 // French
 #exo-setup(
@@ -566,7 +567,7 @@ Change labels for different languages:
 Choose from 12 different badge styles:
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo, exo-setup
+#import "@preview/exercise-bank:0.8.0": exo, exo-setup
 
 // Circled number style
 #exo-setup(badge-style: "circled")
@@ -727,7 +728,7 @@ The body remains breakable; older compilers retain the non-sticky fallback.
 Control when exercise numbering resets:
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo-setup, exo-section-start, exo-chapter-start
+#import "@preview/exercise-bank:0.8.0": exo-setup, exo-section-start, exo-chapter-start
 
 // Reset at each section
 #exo-setup(counter-reset: "section")
@@ -798,7 +799,7 @@ Works with [beautitled](https://typst.app/universe/package/beautitled): `number-
 Display exercise IDs for reference:
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo-setup, exo
+#import "@preview/exercise-bank:0.8.0": exo-setup, exo
 
 #exo-setup(show-id: true)
 
@@ -815,7 +816,7 @@ Display exercise IDs for reference:
 Mark exercises as advanced to display a visual cue before the label:
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo, exo-setup
+#import "@preview/exercise-bank:0.8.0": exo, exo-setup
 
 // Default symbol is "*"
 #exo(
@@ -1032,7 +1033,7 @@ actual number and page. It works before or after the target, including across
 chapter files included in one compiled document.
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo, exo-setup, exo-cite
+#import "@preview/exercise-bank:0.8.0": exo, exo-setup, exo-cite
 #set heading(numbering: "1.")
 #exo-setup(exercise-label: "Exercice", number-prefix: "chapter")
 
@@ -1089,7 +1090,7 @@ files in one master document to resolve these references.
 ### Reset Counter
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo-reset-counter
+#import "@preview/exercise-bank:0.8.0": exo-reset-counter
 
 #exo-reset-counter()  // Reset exercise numbering to 0
 ```
@@ -1097,7 +1098,7 @@ files in one master document to resolve these references.
 ### Clear Registry
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo-clear-registry
+#import "@preview/exercise-bank:0.8.0": exo-clear-registry
 
 #exo-clear-registry()  // Clear all registered exercises
 ```
@@ -1105,7 +1106,7 @@ files in one master document to resolve these references.
 ### Count Exercises
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo-count
+#import "@preview/exercise-bank:0.8.0": exo-count
 
 Total algebra exercises: #exo-count(topic: "algebra")
 Level 1M exercises: #exo-count(level: "1M")
@@ -1266,7 +1267,7 @@ This predates 0.6.4 (it reproduces on 0.6.3). Either use `link-style: "icon"`, o
 ## Complete Example
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": *
+#import "@preview/exercise-bank:0.8.0": *
 
 // Setup
 #exo-setup(
@@ -1317,6 +1318,14 @@ This predates 0.6.4 (it reproduces on 0.6.3). Either use `link-style: "icon"`, o
 MIT License - see LICENSE file for details.
 
 ## Changelog
+
+### [0.8.0] - 2026-10-16
+
+#### Added
+- **Page corner.** `exo-corner(body, gap: 8pt)` places content (a QR code for the whole sheet, a logo) at the right edge of the column, where it appears in the flow, without taking any room, and publishes the zone it occupies. Until the flow is past it, exercise headers stop short of it in every badge style (header text, rules, title and points line), the statement of an exercise starting beside it is set in the remaining width (opening text and `#tasks` call on the left, any other block below the zone), and framed styles start below it. `exo-corner-fit(body)` lays out any other content (a sheet title block) short of the zone when it starts beside it.
+
+#### Fixed
+- **`qr-position: "tasks"` drew blocks under the QR code.** A statement opening with a figure, table or list (rather than text or a `#tasks` call) ran under the overlaid QR code; that block now starts below it.
 
 ### [0.7.0] - 2026-10-06
 

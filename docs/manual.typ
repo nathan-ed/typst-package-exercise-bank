@@ -1,4 +1,4 @@
-#import "@preview/exercise-bank:0.7.0": *
+#import "@preview/exercise-bank:0.8.0": *
 
 // =============================================================================
 // DOCUMENT SETUP
@@ -95,7 +95,7 @@
   #v(1cm)
   #text(size: 11pt)[
     A comprehensive solution for creating, organizing, and filtering exercises\
-    Version 0.7.0\
+    Version 0.8.0\
     Nathan Scheinmann
   ]
 ]
@@ -139,7 +139,7 @@
 Import the package in your Typst document:
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo, exo-setup
+#import "@preview/exercise-bank:0.8.0": exo, exo-setup
 ```
 
 == Quick Start
@@ -971,6 +971,50 @@ Use `show-qr: false` to suppress all QR codes (e.g. for a print version) without
   []
 )
 
+== Page Corner
+
+`exo-corner` places content at the right edge of the column, where it appears in the flow, without taking any room there: typically a QR code for the whole sheet, next to the sheet title or the first exercise. It also publishes the zone it occupies, and everything that follows keeps clear of it until the flow is past its bottom edge:
+
+- exercise headers stop short of it (header text, rules, the title and points line), in every badge style;
+- an exercise statement opening beside it is set in the remaining width: its opening text and the `#tasks` call that follows sit to the left of the zone, and any other block (figure, table, list) starts below it;
+- framed styles (`rounded-box`, `header-card`) start below it, since their frame cannot go around it.
+
+`exo-corner-fit` lays out any other content short of the zone when it starts beside it (a sheet title block, a rule), and at the full width otherwise.
+
+#example-full(
+  [```typst
+#exo-corner(rect(width: 1.6cm, height: 1.6cm)[QR])
+#exo-corner-fit[
+  #text(size: 1.3em, weight: "bold")[Worksheet]
+  #line(length: 100%)
+]
+#exo(exercise: [Compute. $2 times 3 = $ ...])
+  ```],
+  [
+    #exo-reset-counter()
+    #exo-setup(badge-style: "underline")
+    #exo-corner(rect(width: 1.6cm, height: 1.6cm, fill: luma(90%))[QR])
+    #exo-corner-fit[
+      #text(size: 1.3em, weight: "bold")[Worksheet]
+      #line(length: 100%)
+    ]
+    #exo(exercise: [Compute. $2 times 3 = $ #h(1cm) $4 times 5 = $ #h(1cm) $6 times 7 = $])
+    #exo(exercise: [Simplify $3x + 2x$.])
+    #exo-setup(badge-style: "box")
+  ]
+)
+
+#table(
+  columns: (auto, auto, auto, 1fr),
+  stroke: (x: none, y: 0.3pt + luma(85%)),
+  inset: 6pt,
+  [*Parameter*], [*Type*], [*Default*], [*Description*],
+  [`body`], [content], [—], [What to place in the corner (QR code, logo...)],
+  [`gap`], [length], [`8pt`], [Blank kept to the left of and below `body`],
+)
+
+The zone holds for the rest of the page it is on; a later `exo-corner` replaces it.
+
 // =============================================================================
 // DIFFICULTY LEVELS
 // =============================================================================
@@ -1509,7 +1553,7 @@ Exercise sheets often read better on two columns, statements and solutions flowi
 `exo-page-columns` is a show rule: it switches the page to `count` columns, draws an optional vertical rule in the middle of every gutter, and (unless told otherwise) moves the badges above the statements so they cost no column width.
 
 ```typst
-#import "@preview/exercise-bank:0.7.0": exo, exo-page-columns
+#import "@preview/exercise-bank:0.8.0": exo, exo-page-columns
 
 #show: exo-page-columns.with(count: 2, rule: 0.5pt + gray)
 

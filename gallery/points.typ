@@ -1,7 +1,7 @@
 // Points of an exercise - exercise-bank
 // A short test: the scale on the right, a blank for the mark
 
-#import "@preview/exercise-bank:0.7.0": *
+#import "@preview/exercise-bank:0.8.0": *
 
 #set page(width: 14cm, height: auto, margin: 1cm)
 #set text(font: "New Computer Modern", size: 11pt, lang: "fr")

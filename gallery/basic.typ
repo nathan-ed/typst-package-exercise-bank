@@ -1,4 +1,4 @@
-#import "@preview/exercise-bank:0.7.0": exo
+#import "@preview/exercise-bank:0.8.0": exo
 
 #set page(width: 14cm, height: auto, margin: 1cm)
 
